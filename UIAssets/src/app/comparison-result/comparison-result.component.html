@@ -1,0 +1,189 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/comparison', comparison._id]">
+      <span class="icon-back"></span>
+    </a>
+    Comparison results for {{key}} {{value}}
+    <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResults()'>
+      <span class="icon-refresh"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--success">{{subtotal_equal | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle">Equal</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--warning-alt">{{subtotal_created | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--warning-alt">Created</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--warning">{{subtotal_modified | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--warning">Modified</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--danger">{{subtotal_deleted | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--danger">Deleted</div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel--raised">
+            <div class="row">
+              <div class="col-md-12">
+                <label class="switch">
+                  <input
+                    #includeEmptyCheckBox
+                    id="includeEmptyCheckBox"
+                    type="checkbox"
+                    [checked]="includeEmpty"
+                    name="classMode"
+                    (change)="onIncludeChanged(includeEmptyCheckBox.checked)"
+                  >
+                  <span class="switch__input"></span>
+                  <span class="switch__label">Include empty results</span>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">&nbsp;</div>
+            </div>
+            <ngx-datatable
+              #myTable
+              [columnMode]="'flex'"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [sorts]="[
+                {prop: 'classname', dir: 'asc'},
+                {prop: 'node_id', dir: 'asc'}
+                ]"
+              [rows]="rows"
+              [externalPaging]="true"
+              [externalSorting]="true"
+              [count]="page.totalElements"
+              [offset]="page.pageNumber"
+              [limit]="page.size"
+              [loadingIndicator]="loading"
+              (page)='setPage($event)'
+              (sort)="onSort($event)"
+              [cssClasses]="{
+            sortAscending: 'icon-chevron-down',
+            sortDescending: 'icon-chevron-up',
+            pagerLeftArrow: 'icon-step-prev',
+            pagerRightArrow: 'icon-step-next',
+            pagerPrevious: 'icon-step-backward',
+            pagerNext: 'icon-step-forward'
+          }"
+            >
+              <ngx-datatable-column
+                *ngIf="key=='class'" prop="node_id" name="Node" [sortable]="true" [flexGrow]="0.2">
+              </ngx-datatable-column>
+              <ngx-datatable-column
+                *ngIf="key=='node'" prop="classname" name="Class" [sortable]="true" [flexGrow]="0.2">
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Equal" [sortable]="true" [flexGrow]="0.1">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+                  <a
+                    *ngIf="row['total']['equal'] > 0"
+                    [routerLink]="[
+                    '/comparison',
+                    comparison._id,
+                    'results',
+                    key,
+                    value,
+                    'equal',
+                    key=='class'?'node':'class',
+                    key=='class'?row['node_id']:row['classname']
+                    ]"
+                  >
+                    {{row['total']['equal'] | number}}
+                  </a>
+                  <span *ngIf="row['total']['equal'] == 0">{{row['total']['equal'] | number}}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Created" [sortable]="true" [flexGrow]="0.2">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+                  <a
+                    *ngIf="row['total']['created'] > 0"
+                    [routerLink]="[
+                    '/comparison',
+                    comparison._id,
+                    'results',
+                    key,
+                    value,
+                    'created',
+                    key=='class'?'node':'class',
+                    key=='class'?row['node_id']:row['classname']
+                    ]"
+                  >
+                    {{row['total']['created'] | number}}
+                  </a>
+                  <span *ngIf="row['total']['created'] == 0">{{row['total']['created'] | number}}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Modified" [sortable]="true" [flexGrow]="0.2">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+                  <a
+                    *ngIf="row['total']['modified'] > 0"
+                    [routerLink]="[
+                    '/comparison',
+                    comparison._id,
+                    'results',
+                    key,
+                    value,
+                    'modified',
+                    key=='class'?'node':'class',
+                    key=='class'?row['node_id']:row['classname']
+                    ]"
+                  >
+                    {{row['total']['modified'] | number}}
+                  </a>
+                  <span *ngIf="row['total']['modified'] == 0">{{row['total']['modified'] | number}}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Deleted" [sortable]="true" [flexGrow]="0.2">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+                  <a
+                    *ngIf="row['total']['deleted'] > 0"
+                    [routerLink]="[
+                    '/comparison',
+                    comparison._id,
+                    'results',
+                    key,
+                    value,
+                    'deleted',
+                    key=='class'?'node':'class',
+                    key=='class'?row['node_id']:row['classname']
+                    ]"
+                  >
+                    {{row['total']['deleted'] | number}}
+                  </a>
+                  <span *ngIf="row['total']['deleted'] == 0">{{row['total']['deleted'] | number}}</span>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

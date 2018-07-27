@@ -1,0 +1,143 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/']">
+      <span class="icon-back"></span>
+    </a>
+    Available definitions
+    <button class="btn btn--icon btn--small btn--primary" (click)='getDefinitions()'>
+      <span class="icon-refresh"></span>
+    </button>
+    <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
+      <span class="icon-add"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised">
+        <div class="row">
+          <div class="col-md-12">
+            <form>
+              <div class="form-group">
+                <div class="form-group__text">
+                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <label for="search">Search definitions</label>
+                  <button type="button" class="link">
+                    <span class="icon-search"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ngx-datatable
+              class="fullscreen"
+              [columnMode]="'flex'"
+              [headerHeight]="25"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [limit]="10"
+              [sorts]="[{prop: 'classname', dir: 'asc'}]"
+              [rows]="rows"
+              [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }">
+              <ngx-datatable-column prop="definition" [sortable]="true" [flexGrow]="0.4"></ngx-datatable-column>
+              <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.4"></ngx-datatable-column>
+              <ngx-datatable-column name="# Objects" [sortable]="true" [flexGrow]="0.2">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  {{row['managed_objects'].length | number}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/definition', row.definition]">
+                    <span class="icon-search"></span>
+                  </a>
+                  <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
+                    <span class="icon-trash"></span>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #deletetemplate>
+  <div class="modal-body">
+    <p>
+      Are you sure you want to delete this definition?
+    </p>
+  </div>
+  <br>
+  <div class="modal-footer">
+    <button class="btn btn--small btn--negative" (click)="deleteDefinition()">Delete</button>
+    <button class="btn btn--small" (click)="hideModal()">Cancel</button>
+  </div>
+</ng-template>
+<ng-template #addtemplate>
+  <form #comparisonForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="modal-body">
+      <h6>
+        Create a new definition
+      </h6>
+      <div class="row">
+        <div class="col-md-12">
+          &nbsp;
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="definition" type="text" required [(ngModel)]="definition.definition" name="name">
+              <label for="definition">Name</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="description" type="text" required [(ngModel)]="definition.description" name="description">
+              <label for="description">Description</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="managed_objects">Classes</label>
+            <ng-select
+              class="text-left"
+              id="managed_objects"
+              name="managed_objects"
+              [items]="managedObjects"
+              [multiple]="true"
+              [hideSelected]="true"
+              bindLabel="label"
+              bindValue="value"
+              [(ngModel)]="definition.managed_objects"
+            >
+            </ng-select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!comparisonForm.form.valid">Create</button>
+      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+    </div>
+  </form>
+</ng-template>

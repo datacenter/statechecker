@@ -1,0 +1,221 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/']">
+      <span class="icon-back"></span>
+    </a>
+    Available comparisons
+    <button class="btn btn--icon btn--small btn--primary" (click)='getComparisons()'>
+      <span class="icon-refresh"></span>
+    </button>
+    <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
+      <span class="icon-add"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised">
+        <div class="row">
+          <div class="col-md-12">
+            <form>
+              <div class="form-group">
+                <div class="form-group__text">
+                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <label for="search">Search comparison</label>
+                  <button type="button" class="link">
+                    <span class="icon-search"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ngx-datatable
+              class="fullscreen"
+              [columnMode]="'flex'"
+              [headerHeight]="25"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [sorts]="[{prop: 'start_time', dir: 'desc'}]"
+              [limit]="10"
+              [loadingIndicator]="loading"
+              [rows]="rows"
+              [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }"
+            >
+              <ngx-datatable-column prop="start_time" name="Timestamp" [sortable]="true" [flexGrow]="0.2">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  {{ (row
+                    ['start_time'] | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="snapshot1" [sortable]="true" [flexGrow]="0.3">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  {{row.snapshot1_description}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="snapshot2" [sortable]="true" [flexGrow]="0.3">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  {{row.snapshot2_description}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="status" [sortable]="true" [flexGrow]="0.1">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+                  <span class='text--danger' *ngIf="row['status'] == 'error'">
+                    {{row['status']}}
+                  </span>
+                  <span class='text--success' *ngIf="row['status'] == 'complete'">
+                    {{row['status']}}
+                  </span>
+                  <span class='text--secondary' *ngIf="row['status'] == 'running'">
+                    {{row['progress']*100}}%
+                  </span>
+                  <span class='text--default'
+                        *ngIf="row['status'] != 'error' && row['status'] != 'complete' && row['status'] != 'running'">
+                    {{row['status']}}
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/comparison', row._id]">
+                    <span class="icon-search"></span>
+                  </a>
+                  <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
+                    <span class="icon-trash"></span>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #deletetemplate>
+  <div class="modal-body">
+    <p>
+      Are you sure you want to delete this comparison?
+    </p>
+  </div>
+  <br>
+  <div class="modal-footer">
+    <button class="btn btn--small btn--negative" (click)="deleteComparison()">Delete</button>
+    <button class="btn btn--small" (click)="hideModal()">Cancel</button>
+  </div>
+</ng-template>
+<ng-template #addtemplate>
+  <form #comparisonForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="modal-body">
+      <h6>
+        Create a new comparison
+      </h6>
+      <div class="row">
+        <div class="col-md-12">
+          &nbsp;
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select (change)="onSelectSnapshot($event.target.value)"
+                      [(ngModel)]="comparison.snapshot1"
+                      class="form-control" id="snapshot1" required name="snapshot1">
+                <option *ngFor="let snapshot of snapshots" [value]="snapshot._id">
+                  {{snapshot.fabric}} - {{snapshot.description}}
+                </option>
+              </select>
+              <label for="snapshot1">Snapshot 1</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select class="form-control" id="snapshot2" required [(ngModel)]="comparison.snapshot2" name="snapshot2">
+                <option *ngFor="let snapshot of snapshots" [value]="snapshot._id">
+                  {{snapshot.fabric}} - {{snapshot.description}}
+                </option>
+              </select>
+              <label for="snapshot2">Snapshot 2</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select class="form-control" id="severity" required [(ngModel)]="comparison.severity" name="severity">
+                <option *ngFor="let severity of severities" [value]="severity">
+                  {{severity}}
+                </option>
+              </select>
+              <label for="severity">Severity</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="comparison.dynamic" name="dynamic">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Dynamic</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="comparison.remap" name="remap">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Remap</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="comparison.serialize" name="serialize">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Serialize</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="comparison.statistic" name="statistic">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Statistic</span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="comparison.timestamp" name="timestamp">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Timestamp</span>
+            </label>
+          </div>
+        </div>
+        <div class="col-md-12">
+            <div class="form-group">
+              <div class="form-group__text select">
+                <select class="form-control" id="definition" required [(ngModel)]="comparison.definition" name="definition">
+                  <option *ngFor="let definition of definitions" [value]="definition.definition">
+                    {{definition.definition}}
+                  </option>
+                </select>
+                <label for="definition">Definition</label>
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+    <br>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!comparisonForm.form.valid">Compare</button>
+      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+    </div>
+  </form>
+</ng-template>

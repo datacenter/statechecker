@@ -1,0 +1,173 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary"
+       [routerLink]="['/comparison',comparison._id, 'results',key,value]">
+      <span class="icon-back"></span>
+    </a>
+    {{type | titlecase}} entries for {{key}} {{value}} and {{subkey}} {{subvalue}}
+    <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResultDetails()'>
+      <span class="icon-refresh"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised">
+        <div class="row">
+          <div class="col-md-12">
+            <form>
+              <div class="form-group">
+                <div class="form-group__text">
+                  <input id="search" type="search" (keyup)='onFilterChanged($event)'>
+                  <label for="search">Search</label>
+                  <button type="button" class="link">
+                    <span class="icon-search"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ngx-datatable
+              #myTable
+              class="fullscreen"
+              [columnMode]="'flex'"
+              [headerHeight]="25"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [sorts]="[{prop: 'start_time', dir: 'asc'}]"
+              [limit]="10"
+              [loadingIndicator]="loading"
+              [rows]="rows"
+              [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }"
+            >
+              <ngx-datatable-column *ngIf="type=='modified'" prop="_key" name="Key" [sortable]="true" [flexGrow]="1">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a *ngIf="row['_key'] != ''" (click)='openModal(template, row)'>{{row['_key']}}</a>
+                  <a *ngIf="row['_key'] == ''" (click)='openModal(template, row)'>{{value}}</a>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column *ngIf="type!='modified'" prop="_key" name="Key" [sortable]="true" [flexGrow]="1">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a (click)='openModal(template, row)'>{{row['_key']}}</a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #template>
+  <div class="modal-body">
+    <h6>
+      {{type | titlecase}} object
+    </h6>
+    <div class="row">
+      <div class="col-md-12">
+        &nbsp;
+      </div>
+    </div>
+    <div *ngIf="type=='modified'" class="row">
+      <div class="col-4">
+        <label class="switch-icon">
+          <input
+            #diffModeCheckBox
+            id="diffModeCheckBox"
+            type="checkbox"
+            [checked]="semanticDiff"
+            name="classMode"
+            (change)="onModeChanged(diffModeCheckBox.checked)"
+          >
+          <span class="switch__label">Line diff mode</span>
+          <span class="switch__input">
+            <span class="icon-list-view"></span>
+            <span class="icon-list-view"></span>
+          </span>
+          <span class="switch__label">Semantic diff mode</span>
+        </label>
+      </div>
+      <div class="col-md-8">
+        <label class="switch">
+          <input
+            #includeEqualCheckBox
+            id="includeEqualCheckBox"
+            type="checkbox"
+            [checked]="includeEqual"
+            name="includeEqual"
+            (change)="onIncludeEqual(includeEqualCheckBox.checked)"
+          >
+          <span class="switch__input"></span>
+          <span class="switch__label">Include equal results</span>
+        </label>
+      </div>
+    </div>
+    <div *ngIf="type=='modified'" class="row">
+      <div class="col-12">
+        &nbsp;
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <ngx-datatable
+          *ngIf="!loading"
+          class="text-left"
+          [columnMode]="'flex'"
+          [footerHeight]="50"
+          [rowHeight]="'auto'"
+          [limit]="10"
+          [rows]="selectedComparisonResultProperties"
+          [sorts]="[{prop: 'attribute', dir: 'asc'}]"
+          [cssClasses]="{
+            sortAscending: 'icon-chevron-down',
+            sortDescending: 'icon-chevron-up',
+            pagerLeftArrow: 'icon-step-prev',
+            pagerRightArrow: 'icon-step-next',
+            pagerPrevious: 'icon-step-backward',
+            pagerNext: 'icon-step-forward'
+          }"
+        >
+          <ngx-datatable-column prop="attribute" [sortable]="true" [flexGrow]="0.2">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+              <span class="text-left">{{row['attribute']}}</span>
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column *ngIf="type!='modified'" name="Value" prop="value" [sortable]="true" [flexGrow]="0.8">
+          </ngx-datatable-column>
+          <ngx-datatable-column
+            *ngIf="type=='modified'" name="Current value" prop="value" [sortable]="true"
+            [flexGrow]="0.8">
+            <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
+              <span *ngIf="type=='modified' && !semanticDiff" lineDiff [left]="row['value1']"
+                    [right]="row['value2']">
+              </span>
+              <span *ngIf="type=='modified' && semanticDiff" semanticDiff [left]="row['value1']"
+                    [right]="row['value2']">
+              </span>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+    <br>
+  </div>
+  <div class="modal-footer modal-lg">
+    <button class="btn btn--small btn--primary" (click)="hideModal()">Close</button>
+  </div>
+</ng-template>

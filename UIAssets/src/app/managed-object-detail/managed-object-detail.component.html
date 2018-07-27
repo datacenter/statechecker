@@ -1,0 +1,86 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    Managed object details
+    <button class="btn btn--icon btn--small btn--primary" (click)='getManagedObject()'>
+      <span class="icon-refresh"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised panel--dkblue">
+        <div class="row">
+          <div class="col-md-2"><b>Name</b></div>
+          <div class="col-md-10">{{ managedObject['classname'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Key</b></div>
+          <div class="col-md-10">{{ managedObject['key'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Description</b></div>
+          <div class="col-md-10">{{ managedObject['description'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>URI</b></div>
+          <div class="col-md-10">{{ managedObject['uri'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Severity</b></div>
+          <div class="col-md-10">{{ managedObject['severity'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Analyzer</b></div>
+          <div class="col-md-10">{{ managedObject['analyzer'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Include</b></div>
+          <div class="col-md-10">{{ managedObject['include'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Exclude</b></div>
+          <div class="col-md-10">{{ managedObject['exclude'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Labels</b></div>
+          <div class="col-md-10">{{ managedObject['labels'] }}</div>
+        </div>
+        <div class="row">
+          <div class="col-md-2"><b>Remap</b></div>
+          <div class="col-md-10">{{ managedObject['remap'] }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12">
+      &nbsp;
+    </div>
+    <div class="col-md-12" *ngIf="managedObject['attributes'].length > 0">
+      <div class="panel panel--raised">
+        <h3>Attributes</h3>
+        <ngx-datatable
+          class="fullscreen"
+          [columnMode]="'flex'"
+          [headerHeight]="25"
+          [footerHeight]="50"
+          [rowHeight]="'auto'"
+          [limit]="10"
+          [sorts]="[{prop: 'classname', dir: 'asc'}]"
+          [rows]="managedObject['attributes']"
+          [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }">
+          <ngx-datatable-column prop="name" [sortable]="true" [flexGrow]="0.3"></ngx-datatable-column>
+          <ngx-datatable-column prop="severity" [sortable]="true" [flexGrow]="0.3"></ngx-datatable-column>
+          <ngx-datatable-column prop="labels" [sortable]="true" [flexGrow]="0.2"></ngx-datatable-column>
+          <ngx-datatable-column prop="remap" [sortable]="true" [flexGrow]="0.2"></ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+  </div>
+</div>

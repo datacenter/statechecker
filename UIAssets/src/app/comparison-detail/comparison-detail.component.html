@@ -1,0 +1,262 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/comparisons']">
+      <span class="icon-back"></span>
+    </a>
+    Comparison details
+    <button class="btn btn--icon btn--small btn--primary" (click)='getComparison()'>
+      <span class="icon-refresh"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row">
+        <div class="col-md-12" *ngIf="comparison.status == 'error'">
+          <div class="panel panel--danger panel--raised">
+            Error: {{comparison.error}}
+          </div>
+        </div>
+      </div>
+      <div class="row" *ngIf="comparison.status == 'error'">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--success">{{comparison.total.equal | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle">Equal</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--warning-alt">{{comparison.total.created | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--warning-alt">Created</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--warning">{{comparison.total.modified | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--warning">Modified</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--danger">{{comparison.total.deleted | number}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle text--danger">Deleted</div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Comparison</h3>
+            <div class="row">
+              <div class="col-md-3">Id</div>
+              <div class="col-md-9">{{comparison._id}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Snapshot 1</div>
+              <div class="col-md-9">{{comparison.snapshot1_obj.description}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Snapshot 2</div>
+              <div class="col-md-9">{{comparison.snapshot2_obj.description}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Severity</div>
+              <div class="col-md-9">{{comparison.severity}}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Runtime</h3>
+            <div class="row">
+              <div class="col-md-3">Status</div>
+              <div class="col-md-9">{{comparison.status}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Progress</div>
+              <div class="col-md-9">{{comparison.progress | percent}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Start time</div>
+              <div class="col-md-9">{{ (comparison.start_time | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Total time</div>
+              <div class="col-md-9">{{comparison.total_time | amDuration:'seconds'}}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Parameters</h3>
+            <div class="row">
+              <div class="col-md-3">Remap</div>
+              <div class="col-md-9">{{comparison.remap}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Serialize</div>
+              <div class="col-md-9">{{comparison.serialize}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Statistic</div>
+              <div class="col-md-9">{{comparison.statistic}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Timestamp</div>
+              <div class="col-md-9">{{comparison.timestamp}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel--raised">
+            <div class="row">
+              <div class="col-md-3">
+                <label class="switch-icon">
+                  <input
+                    #classModeCheckBox
+                    id="classModeCheckBox"
+                    type="checkbox"
+                    [checked]="nodeMode"
+                    name="classMode"
+                    (change)="onModeChanged(classModeCheckBox.checked)"
+                  >
+                  <span class="switch__label">Class view</span>
+                  <span class="switch__input">
+                      <span class="icon-list-view"></span>
+                      <span class="icon-list-view"></span>
+                    </span>
+                  <span class="switch__label">Node view</span>
+                </label>
+              </div>
+              <div class="col-md-3">
+                <label class="switch">
+                  <input
+                    #includeEmptyCheckBox
+                    id="includeEmptyCheckBox"
+                    type="checkbox"
+                    [checked]="includeEmpty"
+                    name="classMode"
+                    (change)="onIncludeChanged(includeEmptyCheckBox.checked)"
+                  >
+                  <span class="switch__input"></span>
+                  <span class="switch__label">Include empty results</span>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <form>
+                  <div class="form-group">
+                    <div class="form-group__text">
+                      <input id="search" type="search" (keyup)='onFilterChanged($event)'>
+                      <label for="search">Search</label>
+                      <button type="button" class="link">
+                        <span class="icon-search"></span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                &nbsp;
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <ngx-datatable
+                  class="fullscreen"
+                  [columnMode]="'flex'"
+                  [footerHeight]="50"
+                  [rowHeight]="'auto'"
+                  [sorts]="[
+                    {prop: 'classname', dir: 'asc'},
+                    {prop: 'node_id', dir: 'asc'}
+                    ]"
+                  [limit]="10"
+                  [rows]="rows"
+                  [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }">
+                  <ngx-datatable-column
+                    *ngIf="!nodeMode"
+                    prop="classname"
+                    name="Class"
+                    [sortable]="true"
+                    [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      {{row['classname']}}
+                    </ng-template>
+                  </ngx-datatable-column>
+                  <ngx-datatable-column
+                    *ngIf="nodeMode"
+                    prop="node_id"
+                    name="Node"
+                    [sortable]="true"
+                    [flexGrow]="0.2">
+                  </ngx-datatable-column>
+                  <ngx-datatable-column prop="equal" [sortable]="true" [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      {{row['equal'] | number}}
+                    </ng-template>
+                  </ngx-datatable-column>
+                  <ngx-datatable-column prop="created" [sortable]="true" [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      {{row['created'] | number}}
+                    </ng-template>
+                  </ngx-datatable-column>
+                  <ngx-datatable-column prop="modified" [sortable]="true" [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      {{row['modified'] | number}}
+                    </ng-template>
+                  </ngx-datatable-column>
+                  <ngx-datatable-column prop="deleted" [sortable]="true" [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      {{row['deleted'] | number}}
+                    </ng-template>
+                  </ngx-datatable-column>
+                  <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      <a *ngIf="nodeMode" class="btn btn--small btn--icon btn--primary"
+                         [routerLink]="['/comparison', comparison._id, 'results', 'node', row.node_id]">
+                        <span class="icon-search"></span>
+                      </a>
+                      <a *ngIf="!nodeMode" class="btn btn--small btn--icon btn--primary"
+                         [routerLink]="['/comparison', comparison._id, 'results', 'class', row.classname]">
+                        <span class="icon-search"></span>
+                      </a>
+                    </ng-template>
+                  </ngx-datatable-column>
+                </ngx-datatable>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

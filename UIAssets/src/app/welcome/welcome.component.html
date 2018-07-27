@@ -1,0 +1,24 @@
+<h4>Welcome to State Checker !</h4>
+<br>
+<div class="row">
+  <div *ngIf="!app_mode" class="col-md-4">
+    <div class="panel panel--raised panel--loose panel--blue pointer" (click)='goToFabric()'>
+      <h3><span class="icon-computer icon-medium"></span>&nbsp;Fabric</h3>
+      <div>Manage fabric entries</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="panel panel--raised panel--loose panel--dkblue pointer" (click)='goToSnapshot()'>
+      <h3><span class="icon-document-camera icon-medium"></span>&nbsp;Snapshot
+      </h3>
+      <div>Create or delete snapshots</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="panel panel--raised panel--loose panel--indigo pointer" (click)='goToComparison()'>
+      <h3><span class="icon-diagnostics icon-medium"></span>&nbsp;Comparison</h3>
+      <div>Compare existing snapshots</div>
+    </div>
+  </div>
+</div>
+<br>

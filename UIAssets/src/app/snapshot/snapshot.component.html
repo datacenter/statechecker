@@ -1,0 +1,167 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/']">
+      <span class="icon-back"></span>
+    </a>
+    Available snapshots
+    <button class="btn btn--icon btn--small btn--primary" (click)='getSnapshots()'>
+      <span class="icon-refresh"></span>
+    </button>
+    <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
+      <span class="icon-add"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised">
+        <div class="row">
+          <div class="col-md-12">
+            <form>
+              <div class="form-group">
+                <div class="form-group__text">
+                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <label for="search">Search snapshots</label>
+                  <button type="button" class="link">
+                    <span class="icon-search"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ngx-datatable
+              class="fullscreen"
+              [columnMode]="'flex'"
+              [headerHeight]="25"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [sorts]="[{prop: 'start_time', dir: 'desc'}]"
+              [limit]="10"
+              [loadingIndicator]="loading"
+              [rows]="rows"
+              [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }"
+            >
+              <ngx-datatable-column prop="start_time" name="Timestamp" [sortable]="true" [flexGrow]="0.2">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  {{ (row['start_time'] | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="fabric" [sortable]="true" [flexGrow]="0.2"></ngx-datatable-column>
+              <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.3"></ngx-datatable-column>
+              <ngx-datatable-column prop="status" [sortable]="true" [flexGrow]="0.1">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+                  <span class='text--danger' *ngIf="row['status'] == 'error'">
+                    {{row['status']}}
+                  </span>
+                  <span class='text--success' *ngIf="row['status'] == 'complete'">
+                    {{row['status']}}
+                  </span>
+                  <span class='text--secondary' *ngIf="row['status'] == 'running'">
+                    {{row['progress'] | percent : '2.00'}}
+                  </span>
+                  <span class='text--default'
+                        *ngIf="row['status'] != 'error' && row['status'] != 'complete' && row['status'] != 'running'">
+                    {{row['status']}}
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/snapshot', row._id]">
+                    <span class="icon-search"></span>
+                  </a>
+                  <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
+                    <span class="icon-trash"></span>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #deletetemplate>
+  <div class="modal-body">
+    <p>
+      Are you sure you want to delete snapshot {{selectedSnapshot.filename}}?
+    </p>
+  </div>
+  <br>
+  <div class="modal-footer">
+    <button class="btn btn--small btn--negative" (click)="deleteSnapshot()">Delete</button>
+    <button class="btn btn--small" (click)="hideModal()">Cancel</button>
+  </div>
+</ng-template>
+<ng-template #addtemplate>
+  <form #snapshotForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="modal-body">
+      <h6>
+        Create a new snapshot
+      </h6>
+      <div class="row">
+        <div class="col-md-12">
+          &nbsp;
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="description" type="text" required [(ngModel)]="snapshot.description" name="description">
+              <label for="description">Description</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select class="form-control" id="fabric" required [(ngModel)]="snapshot.fabric" name="fabric">
+                <option *ngFor="let fabric of fabrics" [value]="fabric.fabric">{{fabric.fabric}}</option>
+              </select>
+              <label for="fabric">Fabric</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select class="form-control" id="definition" required [(ngModel)]="snapshot.definition" name="definition">
+                <option *ngFor="let definition of definitions" [value]="definition.definition">
+                  {{definition.definition}}
+                </option>
+              </select>
+              <label for="definition">Definition</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          &nbsp;
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!snapshotForm.form.valid">Create snapshot
+      </button>
+      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+    </div>
+  </form>
+</ng-template>

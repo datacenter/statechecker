@@ -1,0 +1,99 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/snapshots']">
+      <span class="icon-back"></span>
+    </a>
+    Snapshot details
+    <button class="btn btn--icon btn--small btn--primary" (click)='getSnapshot()'>
+      <span class="icon-refresh"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row">
+        <div class="col-md-12" *ngIf="snapshot.status == 'error'">
+          <div class="panel panel--danger panel--raised">
+            Error: {{snapshot.error}}
+          </div>
+        </div>
+      </div>
+      <div class="row" *ngIf="snapshot.status == 'error'">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title text--success">{{snapshot.progress | percent}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle">Progress</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="scoreboard scoreboard--raised">
+            <div class="scoreboard__title">{{snapshot.filesize | filesize}}</div>
+            <hr class="text-muted">
+            <div class="scoreboard__subtitle">Size</div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">&nbsp;</div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="panel panel--dkblue panel--raised">
+            <h3>Snapshot</h3>
+            <div class="row">
+              <div class="col-md-3">Id</div>
+              <div class="col-md-9">{{snapshot._id}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Description</div>
+              <div class="col-md-9">{{snapshot.description}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Definition</div>
+              <div class="col-md-9">{{snapshot.definition}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Fabric</div>
+              <div class="col-md-9">{{snapshot.fabric}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Fabric domain</div>
+              <div class="col-md-9">{{snapshot.fabric_domain}}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel panel--dkblue panel--raised">
+            <h3>Runtime</h3>
+            <div class="row">
+              <div class="col-md-3">Status</div>
+              <div class="col-md-9">{{snapshot.status}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Start time</div>
+              <div class="col-md-9">{{ (snapshot.start_time | amFromUnix ) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Total time</div>
+              <div class="col-md-9">{{snapshot.total_time | amDuration:'seconds'}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Wait time</div>
+              <div class="col-md-9">{{snapshot.wait_time | amDuration:'seconds'}}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">File name</div>
+              <div class="col-md-9">{{snapshot.filename}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

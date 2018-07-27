@@ -1,0 +1,27 @@
+{
+    "api":{
+        "proxy.json":"dynamic api workaround"
+    },
+    "apicversion":"2.2(1n)",
+    "appid":"StateChangeChecker",
+    "author":"Andy Gossett, Axel Bodart, Hrishikesh Deshpande",
+    "category":[
+        "Visibility and Monitoring"
+    ],
+    "contact":{
+        "contact-email":"aciappcenter-support@external.cisco.com ",
+        "contact-phone":"1-800-553-2447",
+        "contact-url":"https://github.com/datacenter/StateChangeChecker"
+    },
+    "iconfile":"logo.png",
+    "name":"StateChangeChecker",
+    "permissions":[
+        "admin"
+    ],
+    "permissionslevel":"read",
+    "shortdescr":"Create and compare snapshots of switch state for interesting objects across all switches in the fabric",
+    "vendor":"Cisco",
+    "vendordomain":"Cisco",
+    "version":"1.0"
+}
+

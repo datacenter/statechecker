@@ -1,0 +1,206 @@
+<loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
+<div *ngIf="!loading">
+  <h4>
+    <a class="btn btn--icon btn--primary" [routerLink]="['/']">
+      <span class="icon-back"></span>
+    </a>
+    Available fabrics
+    <button class="btn btn--icon btn--small btn--primary" (click)='getFabrics()'>
+      <span class="icon-refresh"></span>
+    </button>
+    <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
+      <span class="icon-add"></span>
+    </button>
+  </h4>
+  <br>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="panel panel--raised">
+        <div class="row">
+          <div class="col-md-12">
+            <form>
+              <div class="form-group">
+                <div class="form-group__text">
+                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <label for="search">Search fabrics</label>
+                  <button type="button" class="link">
+                    <span class="icon-search"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <ngx-datatable
+              class="fullscreen"
+              [columnMode]="'flex'"
+              [footerHeight]="50"
+              [rowHeight]="'auto'"
+              [limit]="10"
+              [rows]="rows"
+              [sorts]="[{prop: 'fabric', dir: 'asc'}]"
+              [cssClasses]="{
+                sortAscending: 'icon-chevron-down',
+                sortDescending: 'icon-chevron-up',
+                pagerLeftArrow: 'icon-step-prev',
+                pagerRightArrow: 'icon-step-next',
+                pagerPrevious: 'icon-step-backward',
+                pagerNext: 'icon-step-forward'
+              }">
+              <ngx-datatable-column prop="fabric" [sortable]="true" [flexGrow]="0.1">
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="apic_hostname" name="Hostname" [sortable]="true" [flexGrow]="0.2">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+                  <span
+                    (dblclick)="editing[rowIndex + '-apic_hostname'] = true"
+                    *ngIf="!editing[rowIndex + '-apic_hostname']">
+                    <span
+                      *ngIf="value == ''">
+                      <i>undefined</i>
+                    </span>
+                    {{value}}
+                  </span>
+                  <div class="form-group">
+                    <div class="form-group__text">
+                      <input
+                        autofocus
+                        (blur)="updateValue($event, 'apic_hostname', rowIndex)"
+                        *ngIf="editing[rowIndex+ '-apic_hostname']"
+                        type="text"
+                        [value]="value"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="apic_username" name="Username" [sortable]="true" [flexGrow]="0.1">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+                  <span
+                    (dblclick)="editing[rowIndex + '-apic_username'] = true"
+                    *ngIf="!editing[rowIndex + '-apic_username']">
+                    <span
+                      *ngIf="value == ''">
+                      <i>undefined</i>
+                    </span>
+                    {{value}}
+                  </span>
+                  <div class="form-group">
+                    <div class="form-group__text">
+                      <input
+                        autofocus
+                        (blur)="updateValue($event, 'apic_username', rowIndex)"
+                        *ngIf="editing[rowIndex+ '-apic_username']"
+                        type="text"
+                        [value]="value"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="apic_password" name="Password" [sortable]="true" [flexGrow]="0.1">
+                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
+                  <span
+                    (dblclick)="editing[rowIndex + '-apic_password'] = true"
+                    *ngIf="!editing[rowIndex + '-apic_password']">
+                      <i>hidden</i>
+                  </span>
+                  <div class="form-group">
+                    <div class="form-group__text">
+                      <input
+                        autofocus
+                        (blur)="updateValue($event, 'apic_password', rowIndex)"
+                        *ngIf="editing[rowIndex+ '-apic_password']"
+                        type="password"
+                        [value]="value"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column prop="apic_controllers" name="Controllers" [sortable]="true" [flexGrow]="0.4">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.controllers}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <a class="btn btn--small btn--icon btn--primary" (click)='verifyFabric(row)'>
+                    <span class="icon-sign-in"></span>
+                  </a>
+                  <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
+                    <span class="icon-trash"></span>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #deletetemplate>
+  <div class="modal-body">
+    <p>
+      Are you sure you want to delete fabric {{selectedFabric.fabric}}?
+    </p>
+  </div>
+  <br>
+  <div class="modal-footer">
+    <button class="btn btn--small btn--negative" (click)="deleteFabric()">Delete</button>
+    <button class="btn btn--small" (click)="hideModal()">Cancel</button>
+  </div>
+</ng-template>
+<ng-template #addtemplate>
+  <form #fabricForm="ngForm" (ngSubmit)="onSubmit()">
+    <div class="modal-body">
+      <h6>
+        Add a new fabric
+      </h6>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="fabric" type="text" required [(ngModel)]="fabric.fabric" name="name">
+              <label for="fabric">Name</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="apic_hostname" type="text" required [(ngModel)]="fabric.apic_hostname" name="apic_hostname">
+              <label for="apic_hostname">Hostname</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="apic_username" type="text" required [(ngModel)]="fabric.apic_username" name="apic_username">
+              <label for="apic_username">Username</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="form-group__text">
+              <input id="apic_password" type="password" required [(ngModel)]="fabric.apic_password"
+                     name="apic_password">
+              <label for="apic_password">Password</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          &nbsp;
+        </div>
+      </div>
+    </div>
+    <br>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!fabricForm.form.valid">Add</button>
+      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+    </div>
+  </form>
+</ng-template>

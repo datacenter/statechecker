@@ -1,0 +1,120 @@
+<simple-notifications [options]="{timeOut:15000}"></simple-notifications>
+<div (konami)="onKonami()"></div>
+<div class="content-fluid">
+    <div *ngIf="!app_loaded">
+        <div class="loading">
+            <br>
+            <h4 class="text-center">Loading StateChecker</h4>
+            <h6 class="text-center">{{app_status}}</h6>
+            <div class="loading-dots loading-dots--info">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <br>
+          </div>
+    </div>
+  <main *ngIf="!login_required && (cookies_acquired || !app_mode) && app_loaded">
+    <header [ngClass]="{'header':true, 'header--compressed': app_mode}">
+      <div class="header-bar container">
+        <a *ngIf="!app_mode" class="header-bar__logo">
+          <span class="icon-cisco"></span>
+        </a>
+        <div class="header-bar__main">
+          <div class="header-breadcrumbs">
+            <ul class="breadcrumb">
+              <li><a routerLink="/">State Checker</a></li>
+              <li *ngFor="let breadcrumb of breadcrumbs">
+                <a *ngIf="breadcrumb.params.length > 0" routerLink="{{breadcrumb.url}}">
+                  {{breadcrumb.label}} / {{breadcrumb.params.join(' / ')}}
+                </a>
+                <a *ngIf="breadcrumb.params.length == 0" routerLink="{{breadcrumb.url}}">
+                  {{breadcrumb.label}}
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="!app_mode" class="header-heading">
+            <h1 class="page-title">State Checker</h1>
+          </div>
+        </div>
+        <div class="header-toolbar">
+          <a *ngIf="!app_mode" class="btn btn--small btn--icon" title="Users" routerLink="/users">
+            <span data-balloon="Users" data-balloon-pos="left">
+              <span class="icon-user"></span>
+            </span>
+          </a>
+          <a class="btn btn--small btn--icon" title="Definitions" routerLink="/definitions">
+            <span data-balloon="Definitions" data-balloon-pos="left">
+              <span class="icon-pencil"></span>
+            </span>
+          </a>
+          <a class="btn btn--small btn--icon" title="Help" href="http://statechecker.readthedocs.io/en/latest/" target="_blank">
+            <span data-balloon="Help" data-balloon-pos="left">
+              <span class="icon-help"></span>
+            </span>
+          </a>
+          <a class="btn btn--small btn--icon" title="Feedback" href="mailto:aciappcenter-support@external.cisco.com?Subject=Feedback">
+            <span data-balloon="Feedback" data-balloon-pos="left">
+              <span class="icon-feedback"></span>
+            </span>
+          </a>
+          <a *ngIf="!app_mode" class="btn btn--small btn--icon" title="Logout" (click)="logout()">
+              <span data-balloon="Logout" data-balloon-pos="left">
+                <span class="icon-sign-out"></span>
+              </span>
+            </a>  
+        </div>
+      </div>
+    </header>
+    <div class="content">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+        <div *ngIf="konami">
+          <h4>
+            <button class="btn btn--icon btn--primary" (click)='noKonami()'>
+              <span class="icon-back"></span>
+            </button>
+            Credits
+          </h4>
+        </div>
+        <div *ngIf="!konami">
+          <router-outlet>
+          </router-outlet>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer *ngIf="!app_mode" class="footer footer--new footer--basic">
+      <div class="footer__links">
+        <ul class="list">
+          <li><a href="http://www.cisco.com/cisco/web/siteassets/contacts/index.html" target="_blank">Contacts</a></li>
+          <li><a href="https://secure.opinionlab.com/ccc01/o.asp?id=jBjOhqOJ" target="_blank">Feedback</a></li>
+          <li><a href="http://www.cisco.com/c/en/us/about/sitemap.html" target="_blank">Site Map</a></li>
+          <li><a href="http://www.cisco.com/web/siteassets/legal/terms_condition.html" target="_blank">
+            Terms & Conditions
+          </a></li>
+          <li><a href="http://www.cisco.com/web/siteassets/legal/privacy_full.html" target="_blank">
+            Privacy Statement
+          </a></li>
+          <li><a href="http://www.cisco.com/web/siteassets/legal/privacy_full.html#cookies" target="_blank">
+            Cookie Policy
+          </a></li>
+          <li><a href="http://www.cisco.com/web/siteassets/legal/trademark.html" target="_blank">Trademarks</a></li>
+        </ul>
+      </div>
+    </footer>
+  </main>
+  <main *ngIf="login_required" class="background-blue">
+    <router-outlet>
+    </router-outlet>
+  </main>
+</div>
