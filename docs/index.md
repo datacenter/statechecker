@@ -4,13 +4,13 @@
 * [What is State Checker ?](#what-is-state-checker)
 * [Starting app on local in standalone mode](#starting-app-on-local-in-standalone-mode)
   
-  * [Requirements](#requirements)
-  * [Building the app](#building-the-app)
+  * [Standalone mode requirements](#standalone-mode-requirements)
+  * [Building for standalone mode](#building-for-standalone-mode)
 
 * [Starting app on APIC(The app mode)](#starting-app-on-apic-the-app-mode)
 
-  * [Requirements](#requirements2)
-  * [Building the app](#bldngapp2)
+  * [App mode requirements](#app-mode-requirements)
+  * [Building for app mode](#building-for-app-mode)
 
  ### What is State Checker ?
 State Checker is an ACI app that will allow you to snapshot a subset of objects in the fabric and compare them. This will allow you to answer questions like -
@@ -64,7 +64,7 @@ For standalone mode user will need ability to configure three objects which are 
             8. The back button marked by 5 can be used to go back to previous page.
     
 #### Operations in app mode
-App mode is when the application is deployed and run on the APIC. The procedure for which is specified in the [build in app mode section](#building-the-app-for-apic).
+App mode is when the application is deployed and run on the APIC. The procedure for which is specified in the [build in app mode section](#building-for-app-mode).
 In this mode, their is no feature for users. The users who have credentials for logging into the APIC can access the app. Also, there is no fabrics section as the fabric will be auto discovered based on the APIC. 
 This app is written to confirm to good/modern restful interface.  Unfortunately, ACI app heavily restricts stateful app backend calls, specifically due to the following restrictions:
 
@@ -88,14 +88,41 @@ These are the actual operations you can do with the app and these can be perform
         6. The default definition cannot be deleted by default.
 
 2. Snapshots
+    * Snapshot, as the name suggests is the record of the state of different components in the fabric.
+    * This section can be accessed from the home page of the app.
+    * Steps to create a new snapshot :
+
+        1. Ensure that you have created a definition that you want the snapshot to cover.
+        2. Go to snapshots section.
+        3. Click on the plus button to add a new snapshot
+        4. A popup will show up. Name your snapshot , select the fabric you want to snapshot and select the definition the snapshot must cover.
+        5. Click create. Your snapshot will appear in the list and the status of the snapshot will be listed.
+        6. Depending on the size of the fabric and the classes included in the definition , the snapshot may require some time to process. 
 3. Comparisons
+   
+   *  Comparison, again as the name suggests, compares two snapshots and shows the difference between them.
+   *  The results may be affected by definitions the snapshots are covering.
+   *  Here are the steps for creating a new comparison :
+    1. From the main page, go to the comparison section.
+    2. Click the add button.
+    3. Select snapshots you want to compare in snapshot 1 and snapshot 2 dropdown.
+    4. Select the severity of the comparison.
+    5. There are five additional parameters that affect the calculation of the comparision.
+        1. Dynamic
+        2. Remap
+        3. Serialize
+        4. Statistic
+        5. Timestamp
+    6. Finally, you can select the definition who will govern the context of the comparison.
+    7. Click compare. The comparison will appear in the list of comparisons and the status will be updated. 
+    8. Depending on the size of fabric, selected definition and the calculation parameter, the calculation may take some time.
 
 
     
 
 ### Starting app on local in standalone mode
 
-#### Requirements
+#### Standalone mode requirements
 * Linux/ macOS
 * Python 2.7.9
 * [Docker](https://www.docker.com/get-docker)
@@ -117,7 +144,7 @@ These are the actual operations you can do with the app and these can be perform
   * Pyenv may be installed using package managers as well. But ultimate goal is to have python version 2.7.9.
 * In case of windows, the build must be done on a linux vm.
   
-#### Building the app
+#### Building for standalone mode
 
 Once the requirements listed above are installed, the docker container that will host the application in standalone mode can be built from dockerfile and started. Once the container is started, the application can be accessed from the host environment.
 Following the steps listed below will build the container :
@@ -131,11 +158,11 @@ Following the steps listed below will build the container :
 
 ### Starting App on APIC (The app mode)
 
-#### <div id="requirements2">Requirements</div>
+#### App Mode Requirements
 
 The requirements for building the app in apic mode is same as that for standalone mode.
 
-#### <div id="bldngapp2">Building the app</div>
+#### Building for app mode
 Following the steps listed below will build the container :
 * Clone this [repository](https://wwwin-gitlab-sjc.cisco.com/aci-escalate/StateChangeChecker) using git clone.
 * Ensure that the working directory of terminal is inside the cloned directory.
