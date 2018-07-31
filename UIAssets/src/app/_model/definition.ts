@@ -13,5 +13,6 @@ export class DefinitionList {
 export class Definition {
   definition: string;
   description: string;
-  managed_objects: ManagedObject[]
+  managed_objects: ManagedObject[];
+  template: boolean;
 }

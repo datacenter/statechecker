@@ -27,15 +27,23 @@ def before_definition_update(filters, data, **kwargs):
         check_all_mo_exist(data["managed_objects"])
     return (filters, data)
 
+def before_definition_delete(filters, **kwargs):
+    if "definition" in filters:
+        obj = Definitions.load(defintion=filters["definition"])
+        if obj.exists() and obj.template is True :
+            abort( 400, "Cannot delete a predefined template")
+    return filters
+
 @api_register(path="/aci/definitions")
 class Definitions(Rest):
     """ ACI Definition model """
 
     logger = logging.getLogger(__name__)
-
+    
     META_ACCESS = {
         "before_create": before_definition_create,
         "before_update": before_definition_update,
+        "before_delete": before_definition_delete
     }
 
     META = {
@@ -60,6 +68,12 @@ class Definitions(Rest):
             list of managed objects (classes) compared in this definition
             """,
         },
+        "template":{
+            "type": bool,
+            "default": False,
+            "write": False,
+            "description": "template definitions are statically defined and cannot be changed by the user"
+        }
     }
 
     def get_managed_objects(self, include_description=False):
