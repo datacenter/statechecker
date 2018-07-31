@@ -1867,7 +1867,7 @@ class Rest(object):
                 cls.logger.debug("%s before delete callback assert: %s", classname, emsg)
             except Exception as e:
                 cls.logger.warn("%s before delete callback failed: %s", classname, e)
-
+                cls.logger.debug(traceback.format_exc())
         # trigger delete on all child objects. This requires exact list of objects that match user
         # provided filter and limit that filter to appropriate keys only. This will require a read
         # operation to get list of delete objects followed by delete on corresponding children

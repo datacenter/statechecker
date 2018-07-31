@@ -28,9 +28,10 @@ def before_definition_update(filters, data, **kwargs):
     return (filters, data)
 
 def before_definition_delete(filters, **kwargs):
-    obj = Definitions.load(_filters = filters , **kwargs)
-    if obj.template == True:
-        abort( 400, "Cannot delete a predefined template")
+    if "definition" in filters:
+        obj = Definitions.load(defintion=filters["definition"])
+        if obj.exists() and obj.template is True :
+            abort( 400, "Cannot delete a predefined template")
     return filters
 
 @api_register(path="/aci/definitions")
