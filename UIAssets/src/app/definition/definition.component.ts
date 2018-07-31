@@ -19,7 +19,8 @@ export class DefinitionComponent implements OnInit {
   definitions: Definition[];
   managedObjects: any[];
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService,
+    private modalService: BsModalService) {
     this.loadingMessage = 'Loading definitions';
   }
 
@@ -41,11 +42,15 @@ export class DefinitionComponent implements OnInit {
 
   deleteDefinition() {
     this.loading = true;
+    this.modalRef.hide();
     this.backendService.deleteDefinition(this.selectedDefinition).subscribe((results) => {
       this.getDefinitions();
-      this.modalRef.hide();
     }, (err) => {
-      this.notificationService.error('Error', 'Could not delete definition');
+      if (err['error']['error'] !== undefined) {
+        this.notificationService.error(err['error']['error']);
+        } else {
+          this.notificationService.error('Error', 'Could not delete definition') ;
+        }
       this.loading = false;
     });
   }
@@ -59,7 +64,7 @@ export class DefinitionComponent implements OnInit {
       if (err['error']['error'] !== undefined){
       this.notificationService.error(err['error']['error']);
       } else {
-        this.notificationService.error('Error', 'Could not create Comparison') ;
+        this.notificationService.error('Error', 'Could not create definition') ;
       }
       this.loading = false;
     });
@@ -108,5 +113,13 @@ export class DefinitionComponent implements OnInit {
 
   public hideModal() {
     this.modalRef.hide();
+  }
+
+  public getDefinitionClass(row): any {
+    if (row.hasOwnProperty('row') && row['row'].hasOwnProperty('template')) {
+      if (row['row']['template'] === true) {
+      return ' datatable-header-cell-label' ;
+      }
+    }
   }
 }

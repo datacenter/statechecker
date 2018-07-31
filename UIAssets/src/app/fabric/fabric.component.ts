@@ -33,7 +33,6 @@ export class FabricComponent implements OnInit {
     this.backendService.getFabrics().subscribe((results: FabricList) => {
       this.fabrics = results.objects;
       this.rows = results.objects;
-      const isVerified = this.rows[this.rows.length - 1]['verified'] ;
       if (toBeVerified) {
         this.verifyFabric(this.fabric) ;
       }

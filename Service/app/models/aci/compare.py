@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # set sorted as natsort if available
 try: from natsort import natsorted as sorted
 except ImportError as e: pass
-
+# before_compare_delete
 def before_compare_create(data, **kwargs):
     """ before creation validation for compare object """
     s1 = Snapshots.load(_id=data["snapshot1"])

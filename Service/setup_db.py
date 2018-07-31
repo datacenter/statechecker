@@ -224,7 +224,7 @@ def db_setup(args):
             logger.warn("failed to save static managed object: %s" % o)
         else:
             classnames.append(mo.classname)
-    d = Definitions(definition="default", managed_objects=classnames)
+    d = Definitions(definition="default", managed_objects=classnames, template=True)
     d.description="default definition which includes all objects"
     if not d.save():
         logger.warn("failed to save default definition...")
