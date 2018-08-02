@@ -4,7 +4,7 @@ State Checker App
 Contents
 --------
 
--  `What is State Checker ? <#what-is-state-checker>`__
+-  `What is State Checker ? <#what-is-state-checker>`
 -  `Starting app on local in standalone
    mode <#starting-app-on-local-in-standalone-mode>`__
 

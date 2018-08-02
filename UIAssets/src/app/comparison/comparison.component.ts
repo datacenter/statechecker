@@ -24,8 +24,10 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   managedObjects: any[];
   definitions: Definition[] ;
   updateQueue: any = [] ;
+  predefinedNodes: any = ['global'] ;
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService, 
+    private modalService: BsModalService) {
     this.loadingMessage = 'Loading comparisons';
   }
 
@@ -79,6 +81,7 @@ export class ComparisonComponent implements OnInit, OnDestroy {
 
   public onSubmit() {
     this.loading = true;
+    this.comparison.nodes = this.filterNodes(this.comparison.nodes) ;
     this.backendService.createComparison(this.comparison).subscribe((results) => {
       this.modalRef.hide();
       this.getComparisons();
@@ -86,6 +89,42 @@ export class ComparisonComponent implements OnInit, OnDestroy {
       this.notificationService.error(err['error']['error']);
       this.loading = false;
     });
+  }
+
+  public filterNodes(nodes): any[] {
+    let newarr: any[] = [] ;
+    for (let i = 0 ; i < nodes.length ; i++) {
+     if (typeof(nodes[i]) === 'string') {
+       if(nodes[i] === 'global') {
+         newarr.push(0) ;
+         continue ;
+       }
+       if (nodes[i].includes(',')) {
+         nodes[i] = nodes[i].replace(/\s/g, '') ;
+         const csv = nodes[i].split(',') ;
+         for ( let j = 0 ; j < csv.length ; j++) {
+          if (csv[j].includes('-')) {
+            newarr = newarr.concat(this.getArrayForRange(csv[j])) ;
+          }
+         }
+       } else if (nodes[i].includes('-')) {
+         newarr = newarr.concat(this.getArrayForRange(nodes[i])) ;
+       } else {
+         newarr.push(nodes[i]) ;
+       }
+     }
+    }
+    return newarr ;
+  }
+
+  public getArrayForRange(range: string) {
+      const r = range.split('-') ;
+      const arr = [] ;
+      r.sort() ;
+      for (let i = parseInt(r[0], 10) ; i <= parseInt(r[1], 10) ; i ++) {
+        arr.push(i) ;
+      }
+      return arr ;
   }
 
   updateFilter(event) {
@@ -193,5 +232,9 @@ export class ComparisonComponent implements OnInit, OnDestroy {
       this.notificationService.error(error['error']['error']) ;
       progressSubscription.unsubscribe() ;
     }) ;
+  }
+
+  addNodes = (term) => {
+    return {label: term, value: term} ;
   }
 }

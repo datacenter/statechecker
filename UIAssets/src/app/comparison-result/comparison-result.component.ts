@@ -28,7 +28,8 @@ export class ComparisonResultComponent implements OnInit {
   public subtotal_deleted: number;
   private sort: any;
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService,
+    private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison results';
     this.includeEmpty = false;
     this.sort = [
