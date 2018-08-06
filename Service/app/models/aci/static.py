@@ -6,20 +6,20 @@ See /app/models/aci/managed_objects for expected format.
 
 STATIC_MANAGED_OBJECTS = [
 
-    {
-        "classname": "acls",
-        "description": "pseudo class representing concrete ACLs. This MO collects and analyzes actrlRule and actrlEntry objects",
-        "analyzer": "acls",
-        "pseudo": True,
-    },
-    {
-        "classname": "actrlRsToCopyDestGrp",
-        "description": "ACL relationship to copy service group",
-    },
-    {
-        "classname": "actrlRsToRedirDestGrp",
-        "description": "ACL relationship to redirect group",
-    },
+    #{
+    #    "classname": "acls",
+    #    "description": "pseudo class representing concrete ACLs. This MO collects and analyzes actrlRule and actrlEntry objects",
+    #    "analyzer": "acls",
+    #    "pseudo": True,
+    #},
+    #{
+    #    "classname": "actrlRsToCopyDestGrp",
+    #    "description": "ACL relationship to copy service group",
+    #},
+    #{
+    #    "classname": "actrlRsToRedirDestGrp",
+    #    "description": "ACL relationship to redirect group",
+    #},
     {
         "classname": "arpAdjEp",
         "description": "ARP adjacency",
@@ -105,15 +105,15 @@ STATIC_MANAGED_OBJECTS = [
             },
         ],
     },
-    {
-        "classname": "bgpRoute",
-        "description": "BGP route table for a particular address family (IPv4 unicast and IPv6 unicast), which contains all the routes advertised by peers and also redistributed into BGP from other routing protocols. This route table is per tenant context (per VRF)",
-    },
-    {
-        "classname": "bgpPath",
-        "description": "BGP AS path",
-        "severity": "info",
-    },
+    #{
+    #    "classname": "bgpRoute",
+    #    "description": "BGP route table for a particular address family (IPv4 unicast and IPv6 unicast), which contains all the routes advertised by peers and also redistributed into BGP from other routing protocols. This route table is per tenant context (per VRF)",
+    #},
+    #{
+    #    "classname": "bgpPath",
+    #    "description": "BGP AS path",
+    #    "severity": "info",
+    #},
     {
         "classname": "cdpAdjEp",
         "description": "CDP neighbor information",
@@ -1045,30 +1045,30 @@ STATIC_MANAGED_OBJECTS = [
             },
         ],
     },
-    {
-        "classname": "svccopyDest",
-        "description": "Copy destination, represents a destination to which a copy is sent",
-    },
-    {
-        "classname": "svccopyDestGrp",
-        "description": "Copy destination group, represents a group of analyzers/destinations",
-    },
-    {
-        "classname": "svccopyRsCopyDestAtt",
-        "description": "Attachment to copy destination",
-    },
-    {
-        "classname": "svcredirDest",
-        "description": "Redirect destination, represents a destination service ",
-    },
-    {
-        "classname": "svcredirDestGrp",
-        "description": "Redirect destination group, represents a service node group ",
-    },
-    {
-        "classname": "svcredirRsDestAtt",
-        "description": "Attachment to redirect destination",
-    },
+    #{
+    #    "classname": "svccopyDest",
+    #    "description": "Copy destination, represents a destination to which a copy is sent",
+    #},
+    #{
+    #    "classname": "svccopyDestGrp",
+    #    "description": "Copy destination group, represents a group of analyzers/destinations",
+    #},
+    #{
+    #    "classname": "svccopyRsCopyDestAtt",
+    #    "description": "Attachment to copy destination",
+    #},
+    #{
+    #    "classname": "svcredirDest",
+    #    "description": "Redirect destination, represents a destination service ",
+    #},
+    #{
+    #    "classname": "svcredirDestGrp",
+    #    "description": "Redirect destination group, represents a service node group ",
+    #},
+    #{
+    #    "classname": "svcredirRsDestAtt",
+    #    "description": "Attachment to redirect destination",
+    #},
     {
         "classname": "tunnelIf",
         "description": "Tunnel interface",
@@ -1188,6 +1188,14 @@ STATIC_MANAGED_OBJECTS = [
     {
         "classname": "hvsExtPol",
         "description": "Hypervisor extension policy. The extended policies, which are common policies for VM interfaces. For example, when implementing VMware, this represents the distributed virtual port group",
+    },
+    {
+        "classname": "hvsAdj",
+        "description": "hypervisor adjacency. The connectivity to an external network. ",
+    },
+    {
+        "classname": "leqptRsLsNodeToIf",
+        "description": "node connectivity to an externally unmanaged node (i.e., blade switch connection to the fabric)",
     },
 
 
