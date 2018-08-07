@@ -894,3 +894,14 @@ def test_rest_callback_delete(app, rest_cleanup):
     assert r["count"] == 1
     assert d["before"] and d["after"]
 
+def test_rest_update_no_change(app, rest_cleanup):
+    # this test uses .save() method to create a new instance of an object and then calls the save()
+    # again when no changes have occurred.  This should return a success and no update should occur
+    # to the DB
+
+    t = Rest_Secure.load(key="key1")
+    assert t.save()
+    assert t.save()
+
+
+

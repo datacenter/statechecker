@@ -661,6 +661,9 @@ class Rest(object):
                         if attr in self._original_attributes and \
                             self._original_attributes[attr]==getattr(self,attr):
                             continue
+                        # keys are sent as part of kwargs in update call so they should be
+                        # excluded from update obj
+                        if attr in keys: continue
                         obj[attr] = getattr(self, attr)
                         # secure encrypt/hash attributes only if skip_validation is disabled
                         if skip_validation:
