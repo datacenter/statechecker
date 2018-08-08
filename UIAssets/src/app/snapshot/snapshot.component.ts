@@ -5,6 +5,8 @@ import {Snapshot, SnapshotList} from '../_model/snapshot';
 import {Fabric} from '../_model/fabric';
 import {BackendService} from '../_service/backend.service';
 import {Definition} from '../_model/definition';
+import {environment} from '../../environments/environment';
+
 
 @Component({
   templateUrl: './snapshot.component.html',
@@ -16,15 +18,21 @@ export class SnapshotComponent implements OnInit {
   modalRef: BsModalRef;
   loading: boolean;
   loadingMessage: string;
+  fileUploadMessage: string;
+  appLoadMessage: string;
   selectedSnapshot: Snapshot;
   snapshot: Snapshot;
   fabrics: Fabric[];
   snapshots: Snapshot[];
   definitions: Definition[];
+  app_mode: boolean ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService) {
-    this.loadingMessage = 'Loading snapshots';
+    this.fileUploadMessage = 'Uploading file' ;
+    this.appLoadMessage = 'Loading Snapshots' ;
+    this.loadingMessage = this.appLoadMessage ;
+    this.app_mode = environment.app_mode ;
   }
 
   ngOnInit(): void {
@@ -154,5 +162,63 @@ export class SnapshotComponent implements OnInit {
       this.notificationService.error(error['error']['error']) ;
       progressSubscription.unsubscribe() ;
     }) ;
+  }
+
+  fileUploadHandler(event) {
+    const reader = new FileReader();
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      if (file.type !== 'application/gzip') {
+        this.notificationService.error('Only tgz files supported !') ;
+        return ;
+      }
+      if (file.size > 1073741824) {
+        this.notificationService.error('Maximum allowed file size is 1 Gigabyte') ;
+        return ;
+      }
+      const formData = new FormData() ;
+      formData.append(file.name, file) ;
+      this.loadingMessage = this.fileUploadMessage ;
+      this.loading = true ;
+      this.backendService.uploadSnapshot(formData).subscribe( (data) => {
+        this.loading = false ;
+        this.loadingMessage = this.appLoadMessage ;
+        this.notificationService.success('File upload complete!') ;
+      }, (error) => {
+        let msg = 'File Upload Failed !' ;
+        if (error['error']['error']) {
+          msg = error['error']['error'] ;
+        }
+        this.notificationService.error(msg) ;
+        this.loading = false ;
+        this.loadingMessage = this.appLoadMessage ;
+      }) ;
+  }
+  }
+
+
+  fileDownloadHandler(row) {
+    if (row.status === 'complete') {
+      this.backendService.downloadSnapshot(row._id, row.filename).subscribe(
+        (data) => {
+          console.log(data) ;
+          const blob = new Blob([data.data], { type: 'application/gzip' });
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          document.body.appendChild(a);
+          a.setAttribute('style', 'display: none');
+          a.href = blobUrl;
+          a.download = data.filename;
+          a.click();
+          window.URL.revokeObjectURL(blobUrl);
+          a.remove();
+        },
+        (error) => {
+          this.notificationService.error(error['error']['error']) ;
+        }
+      ) ;
+    } else {
+      this.notificationService.error('Snapshot is still being processed') ;
+    }
   }
 }

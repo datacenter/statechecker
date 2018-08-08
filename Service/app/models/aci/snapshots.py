@@ -5,10 +5,10 @@ from .managed_objects import ManagedObjects
 from .remap import Remap
 from .fabrics import Fabrics
 from ..rest import (Rest, api_register)
-from ..utils import format_timestamp
-from flask import abort
+from ..utils import format_timestamp, get_user_data
+from flask import abort,jsonify,send_from_directory, request, current_app
 
-import traceback, time, os, shutil, json, re, hashlib
+import traceback, time, os, shutil, json, re, hashlib, uuid
 import logging
 
 # set sorted as natsort if available
@@ -26,6 +26,8 @@ def background_snapshot(obj, **kwargs):
         return
     s = Snapshots.load(_id=_id)
     if not s.exists(): abort(500, "failed to create snapshot")
+    # don't execute runtime snapshotshot collection for non-runtime sources
+    if s.source != "runtime": return
     # set start time to 'now' before executing background worker
     s.start_time = time.time()
     s.save()
@@ -54,6 +56,8 @@ def before_snapshot_create(data, **kwargs):
     f = Fabrics.load(fabric=fabric)
     if not f.exists():
         abort(400, "fabric %s does not exist" % fabric)
+    # relax checks for uploaded file as already verifed during upload extraction
+    if data["source"] == "upload": return data
     d = Definitions.load(definition=data["definition"])
     if not d.exists():
         abort(400, "definition '%s' does not exist"  % data["definition"])
@@ -62,6 +66,88 @@ def before_snapshot_create(data, **kwargs):
         data["description"] = "%s.snapshot.%s" % (fabric, 
             format_timestamp(time.time()))
     return data
+
+def download_snapshot(_id):
+    # download a snapshot .tgz file 
+    snapshot = Snapshots.load(_id=_id)
+    if not snapshot.exists():
+        abort(400, "snapshot %s not found" % _id)
+    else:
+        if snapshot.filename is not None:
+            if os.path.isfile(snapshot.filename) is False:
+                abort(400, "File not found")
+            try: 
+                path = snapshot.filename.split('/')
+                filename = path[len(path) - 1]
+                parent_dir_path = "/".join(path[:-1])
+                return send_from_directory(parent_dir_path,filename, as_attachment = True)
+            except Exception as err:
+                abort(400,str(err))
+    abort(400, "File metadata not found")
+
+def upload_snapshot():
+    from ..utils import get_app_config
+    if request.files is None:
+        abort(400, "No files uploaded")
+    else:
+        tmp_dir = os.path.realpath("%s/%s" % (current_app.config["TMP_DIR"],uuid.uuid4()))
+        config = get_app_config()
+        dst = config.get("DATA_DIR", "/tmp/")
+        try:
+            for filename in request.files:
+                f = request.files[filename] 
+                # validate file is .tgz file and allowed name
+                if not re.search("^[^\/]+\.tgz$", f.filename):
+                    abort(400, "Invalid filename for snapshot: %s" % f.filename)
+                temp_filename = os.path.join(tmp_dir , f.filename)
+                # create the directory
+                os.mkdir(tmp_dir)
+                os.chdir(tmp_dir)
+                # unzip and stuff..
+                f.save(temp_filename)
+                aci_utils.run_command('tar --force-local -zxf ' + temp_filename)
+                aci_utils.run_command('tar --force-local -zxf bundle.tgz')
+                checksum = json.loads(open( os.path.join(tmp_dir,'md5checksum.json')).read()).get('md5checksum')
+                bundle_checksum = aci_utils.get_file_md5('bundle.tgz') 
+                if bundle_checksum != checksum:
+                    abort(400,"Corrupt file")
+                fnew = open(os.path.join(tmp_dir,'snapshot.json'), 'r')
+                fileJson = json.loads(fnew.read())
+                for node in fileJson.get('nodes'):
+                    if os.path.exists(os.path.join(tmp_dir,'node-') + node) is False:
+                        abort(400,'One or more nodes missing in provided snapshots')
+                    snap = Snapshots()
+                    for attr in fileJson:
+                        try:
+                            setattr(snap,attr,fileJson.get(attr)) 
+                        except Exception as err:
+                            logger.debug('Tried setting unknown attribute %s', attr )
+                    snap._id = None
+                    snap.progress = 1.00
+                    snap.status = 'complete'
+                    snap.source = 'upload'
+                    snap.start_time = time.time()
+                    snap.filename = "snapshot.%s.%s.tgz"% (snap.fabric, format_timestamp(snap.start_time,msec=True))
+                    snap.filename = os.path.join(dst,snap.filename)
+                    try:
+                        aci_utils.run_command('cp ' + temp_filename + ' ' + snap.filename) 
+                    except Exception as err:
+                        abort(400,str(err))
+                    finally:
+                        f.close()
+                    snap.save()
+                    return jsonify({"success": True})
+        except Exception as err:
+            abort(400,str(err)) 
+        finally:
+            # ensure tmp directories are always cleaned up
+            logger.debug("removing tmp directory: %s", tmp_dir)
+            shutil.rmtree(tmp_dir)
+    abort(400,"Error in request")
+
+         
+    
+    
 
 @api_register(path="/aci/snapshots")
 class Snapshots(Rest):
@@ -74,7 +160,19 @@ class Snapshots(Rest):
         "bulk_delete": False,
         "before_create": before_snapshot_create,
         "after_create": background_snapshot,
-        "before_delete": delete_cleanup
+        "before_delete": delete_cleanup,
+        "routes":[{
+            "path":"download",
+            "keyed_url": True,
+            "methods":["GET"],
+            "function":download_snapshot
+        }, 
+        {
+            "path":"upload",
+            "keyed_url": False,
+            "methods":["POST"],
+            "function": upload_snapshot
+        }]
     }
     META = {
         "fabric":{
@@ -137,6 +235,12 @@ class Snapshots(Rest):
             "type":str,
             "default":"",
             "write":False,
+        },
+        "source":{
+            "type":str,
+            "values":["upload","runtime"],
+            "default": "runtime",
+            "write": False,
         },
     }
 

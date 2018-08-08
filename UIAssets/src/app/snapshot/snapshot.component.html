@@ -11,6 +11,10 @@
     <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
       <span class="icon-add"></span>
     </button>
+    <button (click)="fileInput.click()" class="btn btn--icon btn--small">
+      <span class="icon-upload-contain"></span>
+    </button>
+    <input type="file" style="display:none;" (change)="fileUploadHandler($event)" accept="tgz,application/gzip" #fileInput/>
   </h4>
   <br>
   <div class="row">
@@ -89,6 +93,9 @@
                   <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
                   </a>
+                  <a class="btn btn--small btn--icon" (click) = 'fileDownloadHandler(row)'>
+                    <span class="icon-download-contain"></span>
+                  </a>
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
@@ -130,12 +137,20 @@
             </div>
           </div>
         </div>
-        <div class="col-md-12">
+        <div *ngIf="!app_mode" class="col-md-12">
           <div class="form-group">
             <div class="form-group__text select">
               <select class="form-control" id="fabric" required [(ngModel)]="snapshot.fabric" name="fabric">
                 <option *ngFor="let fabric of fabrics" [value]="fabric.fabric">{{fabric.fabric}}</option>
               </select>
+              <label for="fabric">Fabric</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text">
+              <p id="fabric">{{fabrics[0].fabric}}</p>
               <label for="fabric">Fabric</label>
             </div>
           </div>
