@@ -47,7 +47,7 @@ JSONIFY_PRETTYPRINT_REGULAR = bool(int(
 
 # authentication settings
 REMEMBER_COOKIE_DURATION = timedelta(
-    days=int(os.environ.get("REMEMBER_COOKIE_DURATION",0)))
+    days=int(os.environ.get("REMEMBER_COOKIE_DURATION",1)))
 BCRYPT_LOG_ROUNDS = 12
 LOGIN_ENABLED = bool(int(os.environ.get("LOGIN_ENABLED",1)))
 DEFAULT_USERNAME = os.environ.get("DEFAULT_USERNAME", "admin")

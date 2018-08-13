@@ -92,6 +92,9 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   }
 
   public filterNodes(nodes): any[] {
+    if (nodes === undefined) {
+      return [];
+    }
     let newarr: any[] = [] ;
     for (let i = 0 ; i < nodes.length ; i++) {
      if (typeof(nodes[i]) === 'string') {

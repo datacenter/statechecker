@@ -78,6 +78,9 @@ export class SnapshotComponent implements OnInit {
 
   public onSubmit() {
     this.loading = true;
+    if (this.app_mode) {
+      this.snapshot.fabric = this.fabrics[0].fabric ;
+    }
     this.backendService.createSnapshot(this.snapshot).subscribe((results) => {
       this.getSnapshots();
       this.modalRef.hide();

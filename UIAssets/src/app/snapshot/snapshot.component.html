@@ -147,10 +147,10 @@
             </div>
           </div>
         </div>
-        <div class="col-md-12">
+        <div *ngIf="app_mode" class="col-md-12">
           <div class="form-group">
             <div class="form-group__text">
-              <p id="fabric">{{fabrics[0].fabric}}</p>
+              <input [ngModel] = "fabrics[0].fabric" readonly id="fabric"/>
               <label for="fabric">Fabric</label>
             </div>
           </div>
