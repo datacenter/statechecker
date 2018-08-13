@@ -18,6 +18,7 @@ from app.models.aci.fabrics import Fabrics
 from app.models.aci.definitions import Definitions
 from app.models.aci.managed_objects import ManagedObjects
 from app.models.aci.static import STATIC_MANAGED_OBJECTS
+from app.models.aci.templates import TEMPLATES
 
 # setup logger
 logger = logging.getLogger(__name__)
@@ -216,7 +217,7 @@ def db_setup(args):
         return False
 
     # create new definition for each object within definitions file
-    # create a default definition named 'default' with all objects
+    # create a default definition named 'full' with all objects
     classnames = []
     for o in STATIC_MANAGED_OBJECTS:
         mo = ManagedObjects(**o)
@@ -224,10 +225,18 @@ def db_setup(args):
             logger.warn("failed to save static managed object: %s" % o)
         else:
             classnames.append(mo.classname)
-    d = Definitions(definition="default", managed_objects=classnames, template=True)
+    d = Definitions(definition="Full", managed_objects=classnames, template=True)
     d.description="default definition which includes all objects"
     if not d.save():
         logger.warn("failed to save default definition...")
+
+    # create additional template definitions as defined in TEMPLATES
+    for tname in TEMPLATES:    
+        template = TEMPLATES[tname]
+        d = Definitions(definition=tname, managed_objects=template["objects"], template=True)
+        d.description = template["description"]
+        if not d.save():
+            logger.warn("failed to save template %s", tname)
 
     #successful setup
     return True
