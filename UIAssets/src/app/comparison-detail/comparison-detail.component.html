@@ -218,6 +218,10 @@
                     name="Node"
                     [sortable]="true"
                     [flexGrow]="0.2">
+                    <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                      <span *ngIf="row['node_id'] === 0 ; spanElse">Global</span>
+                      <span *ngIf="row['node_id'] !== 0">{{ row['node_id'] | number }}</span>
+                    </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column prop="equal" [sortable]="true" [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>

@@ -57,58 +57,26 @@
             >
               <ngx-datatable-column prop="username" name="Username" [sortable]="true" [flexGrow]="0.3">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  {{value}}
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column prop="password" name="Password" [sortable]="true" [flexGrow]="0.3">
-                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  <span
-                    (dblclick)="editing[rowIndex + '-password'] = true"
-                    *ngIf="!editing[rowIndex + '-password']">
-                      <i>hidden</i>
+                  <span>
+                      {{ value }}
                   </span>
-                  <div class="form-group">
-                    <div class="form-group__text">
-                      <input
-                        autofocus
-                        (blur)="updateValue($event, 'password', rowIndex)"
-                        *ngIf="editing[rowIndex+ '-password']"
-                        type="password"
-                        [value]="value"
-                      />
-                    </div>
-                  </div>
                 </ng-template>
               </ngx-datatable-column>
+              
               <ngx-datatable-column prop="role" name="Role" [sortable]="true" [flexGrow]="0.3">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  <span
-                    (dblclick)="editing[rowIndex + '-role'] = true"
-                    *ngIf="!editing[rowIndex + '-role']">
+                  <span>
                     {{value==0?'Admin':value==1?'User':value==2?'Blacklist':value}}
                   </span>
-                  <div class="form-group">
-                    <div class="form-group__text">
-                      <select
-                        name="role"
-                        autofocus
-                        (blur)="updateValue($event, 'role', rowIndex)"
-                        *ngIf="editing[rowIndex+ '-role']"
-                        type="text"
-                        [value]="value"
-                      >
-                        <option value="Admin" selected="selected">Admin</option>
-                        <option value="User">User</option>
-                        <option value="Blacklist">Blacklist</option>
-                      </select>
-                    </div>
-                  </div>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
+                  </a>
+                  <a  class="btn btn--small btn--icon" (click)="editMode(editTemplate,row)">
+                    <span class="icon-pencil"></span>
                   </a>
                 </ng-template>
               </ngx-datatable-column>
@@ -172,3 +140,50 @@
     </div>
   </form>
 </ng-template>
+<ng-template #editTemplate>
+    <form #editForm="ngForm" (ngSubmit)="updateValue()">
+      <div class="modal-body">
+        <h6>
+          Update user 
+        </h6>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <div class="form-group__text">
+                  <input id="update_username" name="update_username" [ngModel] = "user.username" readonly>
+                  <label for="update_username">Username</label>
+              </div>
+            </div>
+            <div class="form-group">
+                <div class="form-group__text select">
+                  <select class="form-control" id="update_role" required [(ngModel)]="user.role" name="update_role">
+                    <option *ngFor="let role of roles" [value]="role.id">{{role.name}}</option>
+                  </select>
+                  <label for="update_role">Role</label>
+                </div>
+              </div>
+            <div class="form-group">
+              <div class="form-group__text">
+                <input id="update_password" type="password" required [(ngModel)]="user.password" name="update_password">
+                <label for="update_password">Password</label>
+              </div>
+            </div>
+            <div class="form-group">
+                <div class="form-group__text">
+                    <input id="confirmPassword" type="password" required [(ngModel)]="confirmPassword" name="confirmPassword">
+                    <label for="confirmPassword">Confirm Password</label>
+                  </div>
+            </div>
+          </div>
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn--small btn--primary" [disabled]="!editForm.form.valid">Update</button>
+        <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+      </div>
+    </form>
+  </ng-template>

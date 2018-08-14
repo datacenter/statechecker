@@ -210,6 +210,25 @@
               </div>
             </div>
           </div>
+          <div class="col-md-12">
+              <div class="form-group">
+                  
+                      <label for="nodes">Nodes</label>
+                      <ng-select
+                        class="text-left"
+                        id="nodes"
+                        name="nodes"
+                        [items]="predefinedNodes"
+                        [multiple]="true"
+                        [hideSelected]="true"
+                        bindLabel="label"
+                        bindValue="value"
+                        [addTag] = "addNodes"
+                        [(ngModel)]="comparison.nodes"
+                      >
+                      </ng-select>  
+              </div>
+          </div>
       </div>
     </div>
     <br>

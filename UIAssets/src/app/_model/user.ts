@@ -11,6 +11,7 @@ export class UserList {
 export class User {
   username: string;
   role: any;
+  password: string;
   last_login: number;
 
   public constructor() {

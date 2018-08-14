@@ -11,6 +11,12 @@
     <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
       <span class="icon-add"></span>
     </button>
+    <button (click)="fileInput.click()" class="btn btn--icon btn--small" title="Upload">
+      <span data-balloon="Upload" data-balloon-pos="right">
+      <span class="icon-upload-contain"></span>
+    </span>
+    </button>
+    <input type="file" style="display:none;" (change)="fileUploadHandler($event)" accept="tgz,application/gzip" #fileInput/>
   </h4>
   <br>
   <div class="row">
@@ -89,6 +95,11 @@
                   <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
                   </a>
+                  <a class="btn btn--small btn--icon" title = "Download" (click) = 'fileDownloadHandler(row)'>
+                    <span data-balloon="Download" data-balloon-pos="left">
+                    <span class="icon-download-contain"></span>
+                    </span>
+                  </a>
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
@@ -130,12 +141,20 @@
             </div>
           </div>
         </div>
-        <div class="col-md-12">
+        <div *ngIf="!app_mode" class="col-md-12">
           <div class="form-group">
             <div class="form-group__text select">
               <select class="form-control" id="fabric" required [(ngModel)]="snapshot.fabric" name="fabric">
                 <option *ngFor="let fabric of fabrics" [value]="fabric.fabric">{{fabric.fabric}}</option>
               </select>
+              <label for="fabric">Fabric</label>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="app_mode" class="col-md-12">
+          <div class="form-group">
+            <div class="form-group__text">
+              <input [ngModel] = "fabrics[0].fabric" readonly id="fabric"/>
               <label for="fabric">Fabric</label>
             </div>
           </div>

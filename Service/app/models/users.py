@@ -257,7 +257,7 @@ class Users(Rest):
             if not force:
                 u.last_login = time.time()
                 u.save()
-            login_user(u, remember=True)
+            login_user(u, remember=False)
         return success
 
     @staticmethod

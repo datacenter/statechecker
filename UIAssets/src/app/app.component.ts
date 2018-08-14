@@ -132,6 +132,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopListening();
+    if (!this.app_mode) {
+      localStorage.removeItem('isLoggedIn');
+    this.backendService.logout().subscribe(() => {
+    });
+    }
   }
 
   logout() {

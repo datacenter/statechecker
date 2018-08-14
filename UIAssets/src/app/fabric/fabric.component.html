@@ -58,70 +58,15 @@
               </ngx-datatable-column>
               <ngx-datatable-column prop="apic_hostname" name="Hostname" [sortable]="true" [flexGrow]="0.2">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  <span
-                    (dblclick)="editing[rowIndex + '-apic_hostname'] = true"
-                    *ngIf="!editing[rowIndex + '-apic_hostname']">
-                    <span
-                      *ngIf="value == ''">
-                      <i>undefined</i>
-                    </span>
+                  <span>
                     {{value}}
                   </span>
-                  <div class="form-group">
-                    <div class="form-group__text">
-                      <input
-                        autofocus
-                        (blur)="updateValue($event, 'apic_hostname', rowIndex)"
-                        *ngIf="editing[rowIndex+ '-apic_hostname']"
-                        type="text"
-                        [value]="value"
-                      />
-                    </div>
-                  </div>
+                  
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column prop="apic_username" name="Username" [sortable]="true" [flexGrow]="0.1">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  <span
-                    (dblclick)="editing[rowIndex + '-apic_username'] = true"
-                    *ngIf="!editing[rowIndex + '-apic_username']">
-                    <span
-                      *ngIf="value == ''">
-                      <i>undefined</i>
-                    </span>
                     {{value}}
-                  </span>
-                  <div class="form-group">
-                    <div class="form-group__text">
-                      <input
-                        autofocus
-                        (blur)="updateValue($event, 'apic_username', rowIndex)"
-                        *ngIf="editing[rowIndex+ '-apic_username']"
-                        type="text"
-                        [value]="value"
-                      />
-                    </div>
-                  </div>
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column prop="apic_password" name="Password" [sortable]="true" [flexGrow]="0.1">
-                <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
-                  <span
-                    (dblclick)="editing[rowIndex + '-apic_password'] = true"
-                    *ngIf="!editing[rowIndex + '-apic_password']">
-                      <i>hidden</i>
-                  </span>
-                  <div class="form-group">
-                    <div class="form-group__text">
-                      <input
-                        autofocus
-                        (blur)="updateValue($event, 'apic_password', rowIndex)"
-                        *ngIf="editing[rowIndex+ '-apic_password']"
-                        type="password"
-                        [value]="value"
-                      />
-                    </div>
-                  </div>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column prop="apic_controllers" name="Controllers" [sortable]="true" [flexGrow]="0.4">
@@ -136,6 +81,11 @@
                   </a>
                   <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
+                  </a>
+                  <a class="btn btn--small btn--icon" title="Update" (click)='openModal(editTemplate,row)'>
+                    <span data-balloon="Update" data-balloon-pos="left">
+                    <span class="icon-pencil"></span>
+                  </span>
                   </a>
                 </ng-template>
               </ngx-datatable-column>
@@ -204,3 +154,56 @@
     </div>
   </form>
 </ng-template>
+<ng-template #editTemplate>
+    <form #editfabricForm="ngForm" (ngSubmit)="updateValue()">
+      <div class="modal-body">
+        <h6>
+          Edit fabric
+        </h6>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <div class="form-group__text">
+                <input id="editfabric" type="text" required [ngModel]="fabric.fabric" name="name" readonly>
+                <label for="editfabric">Name</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-group__text">
+                <input id="edit_apic_hostname" type="text" required [(ngModel)]="fabric.apic_hostname" name="apic_hostname">
+                <label for="edit_apic_hostname">Hostname</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-group__text">
+                <input id="edit_apic_username" type="text" required [(ngModel)]="fabric.apic_username" name="apic_username">
+                <label for="edit_apic_username">Username</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="form-group__text">
+                <input id="edit_apic_password" type="password" required [(ngModel)]="fabric.apic_password"
+                       name="apic_password">
+                <label for="edit_apic_password">Password</label>
+              </div>
+            </div>
+            <div class="form-group">
+                <div class="form-group__text">
+                  <input id="confirm_apic_password" type="password" required [(ngModel)]="confirmPassword"
+                         name="confirm_apic_password">
+                  <label for="confirm_apic_password">Confirm Password</label>
+                </div>
+              </div>
+          </div>
+          <div class="col-md-12">
+            &nbsp;
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn--small btn--primary" [disabled]="!editfabricForm.form.valid">Update</button>
+        <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
+      </div>
+    </form>
+  </ng-template>

@@ -21,7 +21,8 @@ export class ComparisonDetailComponent implements OnInit {
   public rows;
   private filter: string;
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService,
+    private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison';
     this.nodeMode = false;
     this.includeEmpty = false;
@@ -96,4 +97,5 @@ export class ComparisonDetailComponent implements OnInit {
     this.filter = event.target.value.toLowerCase();
     this.filterRows();
   }
+
 }

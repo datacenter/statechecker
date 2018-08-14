@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpParams} from '@angular/common/http';
+import {HttpClient, HttpParams, HttpRequest, HttpEvent, HttpEventType } from '@angular/common/http';
 import {User, UserList} from '../_model/user';
 import {Definition, DefinitionList} from '../_model/definition';
 import {Fabric, FabricList} from '../_model/fabric';
@@ -10,6 +10,7 @@ import {ComparisonResultList} from '../_model/comparison-result';
 import {Observable} from 'rxjs/Observable';
 import {environment} from '../../environments/environment';
 import {ManagedObjectList} from '../_model/managed-object';
+
 
 @Injectable()
 export class BackendService {
@@ -222,6 +223,24 @@ export class BackendService {
   const url = this.baseUrl + '/aci/' + type + '/' + id + '?include=progress,status' ;
   const httpCopy = this.http ;
   return Observable.interval(1000).switchMap(() => httpCopy.get(url).map((data: Response) => data)) ;
+  }
+
+  downloadSnapshot(id , filepath) {
+    const url = this.baseUrl + 'aci/snapshots/' + id + '/download' ;
+    const path = filepath.split('/') ;
+
+    return this.http.get(url, {responseType: 'blob'}).map( (data) => {
+      return {
+        data: data,
+        filename: path[path.length - 1]
+      } ;
+    }) ;
+  }
+
+  uploadSnapshot(filedata) {
+    const currentTime = new Date() ;
+    const url = this.baseUrl  + 'aci/snapshots/' +  'upload' ;
+    return this.http.post(url, filedata, {reportProgress: true}) ;
   }
 
 }

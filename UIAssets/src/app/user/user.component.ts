@@ -3,6 +3,7 @@ import {NotificationsService} from 'angular2-notifications';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {User, UserList} from '../_model/user';
 import {BackendService} from '../_service/backend.service';
+import {ViewChild, ElementRef} from '@angular/core' ;
 
 @Component({
   templateUrl: './user.component.html',
@@ -19,19 +20,26 @@ export class UserComponent implements OnInit {
   user: User;
   roles: any[];
   editing = {};
-
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService) {
+  modalMessage = 'Add' ;
+  confirmPassword: string ;
+  constructor(private backendService: BackendService, private notificationService: NotificationsService,
+    private modalService: BsModalService) {
     this.loadingMessage = 'Loading users';
+    this.roles = [
+      {'id': 0, name: 'Admin'},
+      {'id': 1, name: 'User'},
+      {'id': 2, name: 'Blacklist'},
+    ];
   }
 
   ngOnInit(): void {
     this.getUsers();
-  }
+   }
 
   getUsers() {
     this.loading = true;
     this.backendService.getUsers().subscribe((results: UserList) => {
-      let objects = results.objects;
+      const objects = results.objects;
       this.users = objects;
       this.rows = objects;
       this.loading = false;
@@ -70,27 +78,23 @@ export class UserComponent implements OnInit {
     });
   }
 
-  public updateValue(event, cell, rowIndex) {
-    this.editing[rowIndex + '-' + cell] = false;
-    if (this.rows[rowIndex][cell] != event.target.value) {
-      this.rows[rowIndex][cell] = event.target.value;
-      this.rows = [...this.rows];
-      const user = this.rows[rowIndex];
-      this.backendService.updateUser(user).subscribe((results) => {
+  public updateValue() {
+    if (this.confirmPassword !== this.user.password) {
+      this.notificationService.error('Passwords do not match') ;
+      return ;
+    }
+      this.backendService.updateUser(this.user).subscribe((results) => {
         this.notificationService.success('Success', 'Changes saved');
+        this.hideModal() ;
+        this.getUsers() ;
       }, (err) => {
         this.notificationService.error('Error', 'Could not update user');
         this.loading = false;
       });
     }
-  }
+
 
   public openAddModal(template: TemplateRef<any>) {
-    this.roles = [
-      {'id': 0, name: 'Admin'},
-      {'id': 1, name: 'User'},
-      {'id': 2, name: 'Blacklist'},
-    ];
     this.user = new User();
     this.modalRef = this.modalService.show(template, {
       animated: true,
@@ -114,5 +118,16 @@ export class UserComponent implements OnInit {
 
   public hideModal() {
     this.modalRef.hide();
+  }
+
+  public editMode(template: TemplateRef<any> , user: User) {
+    this.user = user ;
+    this.modalRef = this.modalService.show(template, {
+      animated: true,
+      keyboard: true,
+      backdrop: false,
+      ignoreBackdropClick: false,
+      class: 'modal-lg',
+    });
   }
 }
