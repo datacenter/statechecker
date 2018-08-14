@@ -136,11 +136,9 @@ def upload_snapshot():
                     # ensure fabric and definition exists as that will trigger save to fail
                     f = Fabrics.load(fabric=snap.fabric)
                     if not f.exists():
-                        logger.debug("Traceback: \n %s", traceback.format_exc())
                         abort(400, "fabric %s does not exist" % fabric)
                     d = Definitions.load(definition=snap.definition)
                     if not d.exists():
-                        logger.debug("Traceback: \n %s", traceback.format_exc())
                         abort(400, "definition '%s' does not exist"  % data["definition"])
                         # set a default description if one was not provided
                     if len(snap.description.strip()) == 0:
@@ -149,15 +147,14 @@ def upload_snapshot():
                     snap.status = 'complete'
                     snap.error = False
                     snap.source = 'upload'
-                    snap.filename = "snapshot.%s.%s.tgz"% (snap.fabric, format_timestamp(snap.start_time,msec=True))
+                    snap.filename = "snapshot.%s.%s.tgz" % (snap.fabric, 
+                                                format_timestamp(snap.start_time,msec=True))
                     snap.filename = os.path.join(dst,snap.filename)
-                    if aci_utils.run_command('cp ' + temp_filename + ' ' + snap.filename) is None:
-                        logger.debug("Traceback:\n %s", traceback.format_exc())
-                        abort(500, "failed to save snapshot file")
+                    # create the directory if not present
+                    if not os.path.isdir(dst): os.makedirs(dst)
+                    shutil.copyfile(temp_filename, snap.filename)
                     snap.filesize = os.path.getsize(snap.filename)
-                    if not snap.save():
-                        logger.debug("Traceback:\n %s", traceback.format_exc())
-                        abort(500, "failed to save snapshot")
+                    if not snap.save(): abort(500, "failed to save snapshot")
                     return jsonify({"success": True})
             # no valid file found
             abort(400, "no filename provided in upload")
@@ -516,7 +513,10 @@ def execute_snapshot(snapshot_id):
         # to prevent race condition of 'delete' operation during compression,
         # perform one last abort check before moving complete file to dst
         abort_snapshot()
-        
+
+        # create the directory if not present
+        if not os.path.isdir(dst): os.makedirs(dst)
+
         # move final bundle to dst directory and cleanup tmp directory
         if aci_utils.run_command("mv %s/%s %s/" % (src,filename, dst)):
             return fail("failed to save snapshot bundle")
