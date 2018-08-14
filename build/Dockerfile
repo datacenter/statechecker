@@ -84,7 +84,6 @@ RUN if [ "$APP_MODE" = "0" ] ; then \
         curl -sL https://deb.nodesource.com/setup_9.x | bash - ; \
         apt-get install -y nodejs ; \
         chown node:node /usr/lib/node_modules -R ; \
-        npm install -g @angular/cli ; \
     fi
 
 USER root

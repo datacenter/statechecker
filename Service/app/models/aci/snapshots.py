@@ -133,12 +133,11 @@ def upload_snapshot():
                         if attr in fileJson:
                             setattr(snap, attr, fileJson[attr])
                     # ensure fabric and definition exists as that will trigger save to fail
-                    fabric = fileJson["fabric"]
-                    f = Fabrics.load(fabric=fabric)
+                    f = Fabrics.load(fabric=snap.fabric)
                     if not f.exists():
                         logger.debug("Traceback: \n %s", traceback.format_exc())
                         abort(400, "fabric %s does not exist" % fabric)
-                    d = Definitions.load(definition=fileJson["definition"])
+                    d = Definitions.load(definition=snap.definition)
                     if not d.exists():
                         logger.debug("Traceback: \n %s", traceback.format_exc())
                         abort(400, "definition '%s' does not exist"  % data["definition"])
@@ -170,7 +169,7 @@ def upload_snapshot():
                 shutil.rmtree(tmp_dir)
     
     # if for some reason did not hit return...
-    abort(400,"Error in request")
+    abort(500,"Error in request")
 
          
     
