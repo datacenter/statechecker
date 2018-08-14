@@ -107,10 +107,8 @@ def upload_snapshot():
                 # unzip and stuff..
                 f.save(temp_filename)
                 if aci_utils.run_command('tar --force-local -zxf ' + temp_filename) is None:
-                    logger.debug("Traceback:\n %s",traceback.format_exc())
                     abort(500,"Failed to unzip snapshot")
                 if aci_utils.run_command('tar --force-local -zxf bundle.tgz') is None:
-                    logger.debug("Traceback: \n %s", traceback.format_exc())
                     abort(500,"Failed to unzip snapshot")
                 # try to extract required data, abort if not in correct format which triggers exception
                 try:
@@ -135,7 +133,18 @@ def upload_snapshot():
                         if attr in fileJson:
                             setattr(snap, attr, fileJson[attr])
                     # ensure fabric and definition exists as that will trigger save to fail
-                    before_snapshot_create(fileJson) 
+                    fabric = fileJson["fabric"]
+                    f = Fabrics.load(fabric=fabric)
+                    if not f.exists():
+                        logger.debug("Traceback: \n %s", traceback.format_exc())
+                        abort(400, "fabric %s does not exist" % fabric)
+                    d = Definitions.load(definition=fileJson["definition"])
+                    if not d.exists():
+                        logger.debug("Traceback: \n %s", traceback.format_exc())
+                        abort(400, "definition '%s' does not exist"  % data["definition"])
+                        # set a default description if one was not provided
+                    if len(snap.description.strip()) == 0:
+                        snap.description = "%s.snapshot.%s" % (fabric,format_timestamp(time.time()))
                     snap.progress = 1.00
                     snap.status = 'complete'
                     snap.error = False
@@ -157,7 +166,8 @@ def upload_snapshot():
         finally:
             # ensure tmp directories are always cleaned up
             logger.debug("removing tmp directory: %s", tmp_dir)
-            shutil.rmtree(tmp_dir)
+            if os.path.exists(tmp_dir):
+                shutil.rmtree(tmp_dir)
     
     # if for some reason did not hit return...
     abort(400,"Error in request")

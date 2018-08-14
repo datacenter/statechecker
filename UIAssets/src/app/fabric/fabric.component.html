@@ -82,8 +82,10 @@
                   <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
                   </a>
-                  <a class="btn btn--small btn--icon" (click)='openModal(editTemplate,row)'>
+                  <a class="btn btn--small btn--icon" title="Update" (click)='openModal(editTemplate,row)'>
+                    <span data-balloon="Update" data-balloon-pos="left">
                     <span class="icon-pencil"></span>
+                  </span>
                   </a>
                 </ng-template>
               </ngx-datatable-column>
