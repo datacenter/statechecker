@@ -98,7 +98,7 @@ def upload_snapshot():
             for filename in request.files:
                 f = request.files[filename] 
                 # validate file is .tgz file and allowed name
-                if not re.search("^[^\/]+\.tgz$", f.filename):
+                if not re.search("(?i)^[a-z0-9\-_\.:]+?\.tgz$", f.filename):
                     abort(400, "Invalid filename for snapshot: %s" % f.filename)
                 temp_filename = os.path.join(tmp_dir , f.filename)
                 # create the directory

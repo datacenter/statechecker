@@ -2,10 +2,12 @@
 from flask import current_app, Blueprint
 base = Blueprint("base", __name__)
 
-from flask import jsonify, redirect, abort, g, make_response, request
+from flask import jsonify, redirect, abort, g, make_response, request, send_from_directory
 from werkzeug.exceptions import BadRequest
 from ..models.rest import (Role, Rest)
-import json, re, requests
+import json, re, requests, logging, traceback, os, uuid, shutil
+
+logger = logging.getLogger(__name__)
 
 # redirect for base folder to UIAssets folder
 @base.route("/")
@@ -105,6 +107,26 @@ def aci_app_proxy():
             if "error" in js: text = js["error"] 
         except Exception as e: pass
         abort(r.status_code, text)
+
+    # support proxy of downloaded file
+    if "Content-Disposition" in r.headers:
+        reg = "^attachment; filename=\"(?P<fname>[^\"]+)\""
+        r1 = re.search(reg, r.headers["Content-Disposition"], re.IGNORECASE)
+        if r1 is not None:
+            tmp_file = "%s/%s/%s" % (current_app.config["TMP_DIR"], uuid.uuid4(), r1.group("fname"))
+            tmp_file = os.path.realpath(tmp_file)
+            tmp_dir = os.path.dirname(tmp_file)
+            logger.debug("proxying file %s through tmp file %s", r1.group("fname"), tmp_file)
+            try:
+                if not os.path.isdir(tmp_dir): os.makedirs(tmp_dir)
+                with open(tmp_file, "wb") as f: f.write(r.content)
+                return send_from_directory(tmp_dir, tmp_file.split("/")[-1], as_attachment = True)
+            except Exception as e:
+                logger.error("Traceback:\n%s", traceback.format_exc())
+                abort(500, "proxy download failed: %s" % e)
+            finally:
+                if os.path.exists(tmp_dir): shutil.rmtree(tmp_dir)
+
     if is_json:
         try: return jsonify(r.json())
         except Exception as e:
