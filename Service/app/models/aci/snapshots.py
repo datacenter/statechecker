@@ -100,6 +100,7 @@ def upload_snapshot():
                 # validate file is .tgz file and allowed name
                 if not re.search("(?i)^[a-z0-9\-_\.:]+?\.tgz$", f.filename):
                     abort(400, "Invalid filename for snapshot: %s" % f.filename)
+                logger.debug("upload request for file: %s", f.filename)
                 temp_filename = os.path.join(tmp_dir , f.filename)
                 # create the directory
                 os.mkdir(tmp_dir)
@@ -158,6 +159,8 @@ def upload_snapshot():
                         logger.debug("Traceback:\n %s", traceback.format_exc())
                         abort(500, "failed to save snapshot")
                     return jsonify({"success": True})
+            # no valid file found
+            abort(400, "no filename provided in upload")
         except BadRequest as e: raise e
         except Exception as err:
             logger.debug("Traceback:\n %s", traceback.format_exc())
@@ -170,10 +173,6 @@ def upload_snapshot():
     
     # if for some reason did not hit return...
     abort(500,"Error in request")
-
-         
-    
-    
 
 @api_register(path="/aci/snapshots")
 class Snapshots(Rest):

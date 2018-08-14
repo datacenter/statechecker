@@ -4,6 +4,7 @@ base = Blueprint("base", __name__)
 
 from flask import jsonify, redirect, abort, g, make_response, request, send_from_directory
 from werkzeug.exceptions import BadRequest
+from werkzeug.utils import secure_filename
 from ..models.rest import (Role, Rest)
 import json, re, requests, logging, traceback, os, uuid, shutil
 
@@ -81,14 +82,35 @@ def aci_app_proxy():
     url = "%s%s"%(current_app.config.get("PROXY_URL", "http://localhost"),url)
     header = {}
     if "/api/" in url: 
-        header = {"content-type":"application/json"}
+        header = {"Content-Type":"application/json"}
         is_json = True
     if method == "get":
         r = requests.get(url, verify=False, data=data, params=params,
             cookies=request.cookies,headers=header)
     elif method == "post":
-        r = requests.post(url, verify=False, data=data, params=params,
-            cookies=request.cookies,headers=header)
+        if len(request.files)>0:
+            files = {}
+            tmp_dir = "%s/%s" % (current_app.config["TMP_DIR"], uuid.uuid4())
+            tmp_dir = os.path.realpath(tmp_dir)
+            try:
+                if not os.path.isdir(tmp_dir): os.makedirs(tmp_dir)
+                for f in request.files:
+                    tmp_file = "%s/%s" % (tmp_dir, secure_filename(request.files[f].filename))
+                    request.files[f].save(tmp_file)
+                    files[f] = open(tmp_file, "rb")
+                    logger.debug("proxy file %s from %s", f, tmp_file)
+
+                # perform post preserving only cookies and override header content type
+                r = requests.post(url, verify=False, params=params, cookies=request.cookies, 
+                        files=files)
+            except Exception as e:
+                logger.debug("Traceback:\n%s", traceback.format_exc())
+                abort(500, "failed to proxy uploaded file: %s" % e)
+            finally: 
+                if os.path.exists(tmp_dir): shutil.rmtree(tmp_dir)
+        else:
+            r = requests.post(url, verify=False, data=data, params=params,
+                cookies=request.cookies, headers=header)
     elif method == "patch":
         r = requests.patch(url, verify=False, data=data, params=params,
             cookies=request.cookies,headers=header)

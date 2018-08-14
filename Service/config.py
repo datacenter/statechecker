@@ -70,7 +70,7 @@ SIMULATION_MODE = bool(int(os.environ.get("SIMULATION_MODE",0)))
 
 # tmp directory for creating tmp files and data directory for persistent data
 TMP_DIR = os.environ.get("TMP_DIR", "/tmp")
-DATA_DIR = os.environ.get("DATA_DIR", "/tmp")
+DATA_DIR = os.environ.get("DATA_DIR", "/home/app/data/snapshots")
 
 # max pool size for multiprocessing (decrease for aci_app_mode)
 from multiprocessing import cpu_count
