@@ -60,7 +60,7 @@ export class BackendService {
 
   getDefinitions(): Observable<DefinitionList> {
     const options = {
-      params: new HttpParams().set('sort', 'classname|asc')
+      params: new HttpParams().set('sort', 'definition,template')
     };
     return this.http.get<DefinitionList>(this.baseUrl + 'aci/definitions', options);
   }

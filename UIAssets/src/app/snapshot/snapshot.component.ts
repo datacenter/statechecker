@@ -108,6 +108,15 @@ export class SnapshotComponent implements OnInit {
          this.notificationService.error('No fabrics discovered!') ;
          return ;
        }
+       if(this.definitions.length > 0) {
+         for(let definition of this.definitions) {
+           if(definition.definition.toLowerCase() === 'full' && definition.template === true) {
+             this.snapshot.definition = definition.definition
+           }
+         } 
+       }else{
+         this.notificationService.error('No definitions found!') ;
+       }
         this.modalRef = this.modalService.show(template, {
           animated: true,
           keyboard: true,

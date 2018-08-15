@@ -20,6 +20,7 @@ export class ComparisonDetailComponent implements OnInit {
   public includeEmpty: boolean;
   public rows;
   private filter: string;
+  public isExpanded = false ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
