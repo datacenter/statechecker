@@ -83,7 +83,8 @@ def download_snapshot(_id):
                 parent_dir_path = "/".join(path[:-1])
                 return send_from_directory(parent_dir_path,filename, as_attachment = True)
             except Exception as err:
-                abort(400,str(err))
+                logger.debug('Traceback :\n %s', traceback.format_exc())
+                abort(500,'Error downloading the file') 
     abort(400, "File metadata not found")
 
 def upload_snapshot():

@@ -12,15 +12,36 @@ import {Observable} from 'rxjs/Observable';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
 import {Router} from '@angular/router';
+import {BackendService} from "../_service/backend.service";
 
 @Injectable()
 export class BackendInterceptor implements HttpInterceptor {
 
-  constructor(public router: Router, private cookieService: CookieService) {
+  constructor(public router: Router, private cookieService: CookieService, private backendService: BackendService) {
   }
 
+  
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    
     if (environment.app_mode) {
+      if(this.backendService.getFileUploadMode()) {
+        console.log(req) ;
+        console.log(req.body);
+        const formData = req.body ;
+        const reqUrl = '/api/' + req.url ;
+        const reqParams = new HttpParams() ;
+        reqParams.set('url',reqUrl) ;
+        req = req.clone({
+          setHeaders: {
+            'DevCookie': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token'),
+            'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken'),
+          },body:formData,
+          url:environment.api_entry,
+          params: reqParams,
+          method:'POST'
+        })
+      } else if(!this.backendService.getFileUploadMode()) {
       const initialUrlWithParams = req.urlWithParams;
       const initialBody = req.body || {};
       const initialMethod = req.method;
@@ -43,6 +64,7 @@ export class BackendInterceptor implements HttpInterceptor {
         withCredentials: true
       });
     }
+  }
     return next.handle(req).map(resp => {
       if (resp instanceof HttpResponse) {
         return resp;
@@ -54,5 +76,6 @@ export class BackendInterceptor implements HttpInterceptor {
       }
       return Observable.throw(err);
     });
-  }
+  
+}
 }

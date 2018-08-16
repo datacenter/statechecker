@@ -18,18 +18,17 @@
             <div class="col-md-11">
                 <div class="pull-left text-large">Comparison Details</div>
             </div>
-            <div class="col-md-1">
+            <div *ngIf="!isExpanded" class="col-md-1">
                 <span class="icon-chevron-down pull-right"></span>
             </div>
-            </div> 
+            <div *ngIf="isExpanded" class="col-md-1">
+              <span class="icon-chevron-up pull-right"></span>
+            </div>
+        </div> 
     </button>
   </div>
-        <div class="row">
-          <div class="col-md-12">
-              &nbsp;
-          </div>
-        </div>
-        <div [collapse]="!isExpanded" id="collapseEvent">
+        
+        <div [collapse]="!isExpanded" id="collapseEvent" class="panel panel--well">
         <div class="row">
             <div class="col-md-4">
               <div class="panel panel--indigo panel--raised">

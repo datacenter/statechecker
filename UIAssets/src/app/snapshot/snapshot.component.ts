@@ -192,6 +192,7 @@ export class SnapshotComponent implements OnInit {
       formData.append(file.name, file) ;
       this.loadingMessage = this.fileUploadMessage ;
       this.loading = true ;
+      this.backendService.setFileUploadMode(true) ;
       this.backendService.uploadSnapshot(formData).subscribe( (data) => {
         this.loading = false ;
         this.loadingMessage = this.appLoadMessage ;
