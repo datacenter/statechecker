@@ -99,4 +99,16 @@ export class ComparisonDetailComponent implements OnInit {
     this.filterRows();
   }
 
+  getNodesCSV(comparison) {
+    let nodesCSV = '' ;
+    if(comparison.nodes.length === 0) {
+      return 'No Filter' ;
+    }
+    for(let node of comparison.nodes) {
+      nodesCSV += node + ',' ;
+    }
+    
+    return nodesCSV.substring(0,nodesCSV.length - 1) ;
+  }
+
 }

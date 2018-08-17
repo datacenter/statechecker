@@ -26,21 +26,21 @@ export class BackendInterceptor implements HttpInterceptor {
     
     if (environment.app_mode) {
       if(this.backendService.getFileUploadMode()) {
-        console.log(req) ;
-        console.log(req.body);
+        this.backendService.setFileUploadMode(false) ;
         const formData = req.body ;
         const reqUrl = '/api/' + req.url ;
-        const reqParams = new HttpParams() ;
-        reqParams.set('url',reqUrl) ;
+        let reqParams = new HttpParams() ;
+        reqParams = reqParams.set('url',reqUrl).set('method',"POST") ;
         req = req.clone({
           setHeaders: {
             'DevCookie': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token'),
-            'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken'),
-          },body:formData,
+            'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken')
+          },
+          body:formData,
           url:environment.api_entry,
           params: reqParams,
-          method:'POST'
-        })
+          method:'POST',
+        }) ;
       } else if(!this.backendService.getFileUploadMode()) {
       const initialUrlWithParams = req.urlWithParams;
       const initialBody = req.body || {};
@@ -72,7 +72,9 @@ export class BackendInterceptor implements HttpInterceptor {
     }).catch(err => {
       if (err instanceof HttpErrorResponse && err.status === 401 && localStorage.getItem('isLoggedIn') === 'true') {
         localStorage.removeItem('isLoggedIn');
+        if(!environment.app_mode){
         this.router.navigate(['login']);
+        }
       }
       return Observable.throw(err);
     });

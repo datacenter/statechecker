@@ -197,10 +197,13 @@ export class SnapshotComponent implements OnInit {
         this.loading = false ;
         this.loadingMessage = this.appLoadMessage ;
         this.notificationService.success('File upload complete!') ;
+        this.getSnapshots() ;
       }, (error) => {
         let msg = 'File Upload Failed !' ;
         if (error['error']['error']) {
           msg = error['error']['error'] ;
+        } else if(error['error'] instanceof Blob && error['statusText']) {
+          msg = error['statusText']
         }
         this.notificationService.error(msg) ;
         this.loading = false ;

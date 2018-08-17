@@ -4,7 +4,7 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparisons']">
       <span class="icon-back"></span>
     </a>
-    Comparison details
+    Comparison : {{comparison.definition}}
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparison()'>
       <span class="icon-refresh"></span>
     </button>
@@ -46,8 +46,8 @@
                   <div class="col-md-9">{{comparison.definition}}</div>
                 </div>
                 <div class="row">
-                  <div class="col-md-3">Severity</div>
-                  <div class="col-md-9">{{comparison.severity}}</div>
+                  <div class="col-md-3">Node Filter</div>
+                  <div class="col-md-9">{{getNodesCSV(comparison)}}</div>
                 </div>
               </div>
             </div>

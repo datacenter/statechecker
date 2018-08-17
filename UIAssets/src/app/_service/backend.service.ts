@@ -248,7 +248,6 @@ export class BackendService {
   }
 
   uploadSnapshot(filedata) {
-    const currentTime = new Date() ;
     const url = this.baseUrl  + 'aci/snapshots/' +  'upload' ;
     return this.http.post(url, filedata, {reportProgress: true}) ;
   }
