@@ -136,7 +136,7 @@ def upload_snapshot():
                     # ensure fabric and definition exists as that will trigger save to fail
                     f = Fabrics.load(fabric=snap.fabric)
                     if not f.exists():
-                        abort(400, "fabric %s does not exist" % fabric)
+                        abort(400, "fabric %s does not exist" % snap.fabric)
                     d = Definitions.load(definition=snap.definition)
                     if not d.exists():
                         abort(400, "definition '%s' does not exist"  % data["definition"])
