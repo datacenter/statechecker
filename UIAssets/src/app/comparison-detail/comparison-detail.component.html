@@ -4,12 +4,99 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparisons']">
       <span class="icon-back"></span>
     </a>
-    Comparison details
+    Comparison : {{comparison.definition}}
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparison()'>
       <span class="icon-refresh"></span>
     </button>
   </h4>
   <br>
+  <br>
+    <div class="dropdown" class="accordionPanel">
+    <button class="panel panel--indigo accordionButton" style="width:100%" (click)="isExpanded = !isExpanded" 
+    [attr.aria-expanded]="isExpanded" aria-controls="collapseEvent">
+        <div class="row">
+            <div class="col-md-11">
+                <div class="pull-left text-large">Comparison Details</div>
+            </div>
+            <div *ngIf="!isExpanded" class="col-md-1">
+                <span class="icon-chevron-down pull-right"></span>
+            </div>
+            <div *ngIf="isExpanded" class="col-md-1">
+              <span class="icon-chevron-up pull-right"></span>
+            </div>
+        </div> 
+    </button>
+  </div>
+        
+        <div [collapse]="!isExpanded" id="collapseEvent" class="panel panel--well">
+        <div class="row">
+            <div class="col-md-4">
+              <div class="panel panel--indigo panel--raised">
+                <h3>Comparison</h3>
+                <div class="row">
+                  <div class="col-md-3">Snapshot 1</div>
+                  <div class="col-md-9">{{comparison.snapshot1_obj.description}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Snapshot 2</div>
+                  <div class="col-md-9">{{comparison.snapshot2_obj.description}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Definition</div>
+                  <div class="col-md-9">{{comparison.definition}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Node Filter</div>
+                  <div class="col-md-9">{{getNodesCSV(comparison)}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="panel panel--indigo panel--raised">
+                <h3>Runtime</h3>
+                <div class="row">
+                  <div class="col-md-3">Status</div>
+                  <div class="col-md-9">{{comparison.status}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Progress</div>
+                  <div class="col-md-9">{{comparison.progress | percent}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Start time</div>
+                  <div class="col-md-9">{{ (comparison.start_time | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Total time</div>
+                  <div class="col-md-9">{{comparison.total_time | amDuration:'seconds'}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="panel panel--indigo panel--raised">
+                <h3>Parameters</h3>
+                <div class="row">
+                  <div class="col-md-3">Remap</div>
+                  <div class="col-md-9">{{comparison.remap}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Serialize</div>
+                  <div class="col-md-9">{{comparison.serialize}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Statistic</div>
+                  <div class="col-md-9">{{comparison.statistic}}</div>
+                </div>
+                <div class="row">
+                  <div class="col-md-3">Timestamp</div>
+                  <div class="col-md-9">{{comparison.timestamp}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>   
+        <br>
   <div class="row">
     <div class="col-md-12">
       <div class="row">
@@ -53,77 +140,10 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-md-12">&nbsp;</div>
-      </div>
-      <div class="row">
-        <div class="col-md-4">
-          <div class="panel panel--indigo panel--raised">
-            <h3>Comparison</h3>
-            <div class="row">
-              <div class="col-md-3">Id</div>
-              <div class="col-md-9">{{comparison._id}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Snapshot 1</div>
-              <div class="col-md-9">{{comparison.snapshot1_obj.description}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Snapshot 2</div>
-              <div class="col-md-9">{{comparison.snapshot2_obj.description}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Severity</div>
-              <div class="col-md-9">{{comparison.severity}}</div>
-            </div>
+          <div class="col-md-12">
+              &nbsp;
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="panel panel--indigo panel--raised">
-            <h3>Runtime</h3>
-            <div class="row">
-              <div class="col-md-3">Status</div>
-              <div class="col-md-9">{{comparison.status}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Progress</div>
-              <div class="col-md-9">{{comparison.progress | percent}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Start time</div>
-              <div class="col-md-9">{{ (comparison.start_time | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Total time</div>
-              <div class="col-md-9">{{comparison.total_time | amDuration:'seconds'}}</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="panel panel--indigo panel--raised">
-            <h3>Parameters</h3>
-            <div class="row">
-              <div class="col-md-3">Remap</div>
-              <div class="col-md-9">{{comparison.remap}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Serialize</div>
-              <div class="col-md-9">{{comparison.serialize}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Statistic</div>
-              <div class="col-md-9">{{comparison.statistic}}</div>
-            </div>
-            <div class="row">
-              <div class="col-md-3">Timestamp</div>
-              <div class="col-md-9">{{comparison.timestamp}}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">&nbsp;</div>
-      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel--raised">

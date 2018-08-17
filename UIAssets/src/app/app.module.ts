@@ -14,7 +14,7 @@ import {HashLocationStrategy, LocationStrategy} from "@angular/common";
 import {NgxDatatableModule} from "@swimlane/ngx-datatable";
 import {UserComponent} from "./user/user.component";
 import {LoadingDotsComponent} from "./common/loading-dots.component";
-import {ModalModule, TooltipModule} from "ngx-bootstrap";
+import {ModalModule, TooltipModule, AccordionModule, CollapseModule} from "ngx-bootstrap";
 import {DefinitionComponent} from "./definition/definition.component";
 import {FabricComponent} from "./fabric/fabric.component";
 import {SnapshotComponent} from "./snapshot/snapshot.component";
@@ -103,6 +103,8 @@ const routes: Routes = [
     HttpClientModule,
     KonamiModule,
     ModalModule.forRoot(),
+    AccordionModule.forRoot(),
+    CollapseModule.forRoot(),
     RouterModule.forRoot(routes),
     NgxDatatableModule,
     SimpleNotificationsModule.forRoot(),

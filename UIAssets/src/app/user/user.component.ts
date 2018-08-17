@@ -83,6 +83,7 @@ export class UserComponent implements OnInit {
       this.notificationService.error('Passwords do not match') ;
       return ;
     }
+    this.confirmPassword='' ;
       this.backendService.updateUser(this.user).subscribe((results) => {
         this.notificationService.success('Success', 'Changes saved');
         this.hideModal() ;

@@ -20,6 +20,7 @@ export class ComparisonDetailComponent implements OnInit {
   public includeEmpty: boolean;
   public rows;
   private filter: string;
+  public isExpanded = false ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
@@ -96,6 +97,18 @@ export class ComparisonDetailComponent implements OnInit {
   onFilterChanged(event) {
     this.filter = event.target.value.toLowerCase();
     this.filterRows();
+  }
+
+  getNodesCSV(comparison) {
+    let nodesCSV = '' ;
+    if(comparison.nodes.length === 0) {
+      return 'No Filter' ;
+    }
+    for(let node of comparison.nodes) {
+      nodesCSV += node + ',' ;
+    }
+    
+    return nodesCSV.substring(0,nodesCSV.length - 1) ;
   }
 
 }
