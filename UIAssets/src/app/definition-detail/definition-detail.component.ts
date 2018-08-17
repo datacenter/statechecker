@@ -36,6 +36,10 @@ export class DefinitionDetailComponent implements OnInit {
             const moEntry = {'name': managed_object};
             managed_objects.push(moEntry);
           }
+          this.definition = new Definition() ;
+          this.definition.definition = results.objects[0].definition ;
+          this.definition.description = results.objects[0].description ;
+          this.definition.template = true ;
           this.managed_objects = managed_objects;
           this.rows = managed_objects;
           this.loading = false;
