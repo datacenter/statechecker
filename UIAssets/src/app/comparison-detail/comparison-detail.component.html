@@ -4,7 +4,7 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparisons']">
       <span class="icon-back"></span>
     </a>
-    Comparison : {{comparison.definition}}
+    Comparison Details
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparison()'>
       <span class="icon-refresh"></span>
     </button>
@@ -16,7 +16,7 @@
     [attr.aria-expanded]="isExpanded" aria-controls="collapseEvent">
         <div class="row">
             <div class="col-md-11">
-                <div class="pull-left text-large">Comparison Details</div>
+                <div class="pull-left text-large">Definition: <strong>{{comparison.definition}}</strong></div>
             </div>
             <div *ngIf="!isExpanded" class="col-md-1">
                 <span class="icon-chevron-down pull-right"></span>
