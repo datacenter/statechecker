@@ -102,7 +102,7 @@ export class ComparisonDetailComponent implements OnInit {
   getNodesCSV(comparison) {
     let nodesCSV = '' ;
     if(comparison.nodes.length === 0) {
-      return 'No Filter' ;
+      return 'All Nodes' ;
     }
     for(let node of comparison.nodes) {
       nodesCSV += node + ',' ;
