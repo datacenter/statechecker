@@ -27,6 +27,7 @@ function build_standalone_container() {
     # build docker container
     log "building container"
     docker_name=`echo "aci/$APP_ID:$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
+    container_name=`echo "$APP_ID\_$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
     ba="--build-arg APP_MODE=0 "
     if [ "$enable_proxy" == "1" ] ; then
         if [ "$https_proxy" ] ; then ba="$ba --build-arg https_proxy=$https_proxy" ; fi
@@ -37,7 +38,7 @@ function build_standalone_container() {
     docker build -t $docker_name $ba ./build/
 
     # run the container with volume mount based on BASE_DIR and user provided http and https ports
-    local cmd="docker run -dit --name $APP_ID\_$APP_VERSION "
+    local cmd="docker run -dit --restart always --name $container_name "
     cmd="$cmd -v $BASE_DIR/Service:/home/app/src/Service:ro "
     cmd="$cmd -v $BASE_DIR/UIAssets:/home/app/src/UIAssets.src:ro "
     cmd="$cmd -v $BASE_DIR/build:/home/app/src/build:ro "
