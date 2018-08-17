@@ -108,6 +108,15 @@ export class SnapshotComponent implements OnInit {
          this.notificationService.error('No fabrics discovered!') ;
          return ;
        }
+       if(this.definitions.length > 0) {
+         for(let definition of this.definitions) {
+           if(definition.definition.toLowerCase() === 'full' && definition.template === true) {
+             this.snapshot.definition = definition.definition
+           }
+         } 
+       }else{
+         this.notificationService.error('No definitions found!') ;
+       }
         this.modalRef = this.modalService.show(template, {
           animated: true,
           keyboard: true,
@@ -183,14 +192,18 @@ export class SnapshotComponent implements OnInit {
       formData.append(file.name, file) ;
       this.loadingMessage = this.fileUploadMessage ;
       this.loading = true ;
+      this.backendService.setFileUploadMode(true) ;
       this.backendService.uploadSnapshot(formData).subscribe( (data) => {
         this.loading = false ;
         this.loadingMessage = this.appLoadMessage ;
         this.notificationService.success('File upload complete!') ;
+        this.getSnapshots() ;
       }, (error) => {
         let msg = 'File Upload Failed !' ;
         if (error['error']['error']) {
           msg = error['error']['error'] ;
+        } else if(error['error'] instanceof Blob && error['statusText']) {
+          msg = error['statusText']
         }
         this.notificationService.error(msg) ;
         this.loading = false ;

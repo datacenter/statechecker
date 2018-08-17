@@ -126,6 +126,7 @@ export class FabricComponent implements OnInit {
       this.notificationService.error('Passwords do not match') ;
       return ;
     }
+    this.confirmPassword = '' ;
       this.backendService.updateFabric(this.fabric).subscribe((results) => {
         this.notificationService.success('Success', 'Changes saved');
         this.getFabrics(true) ;

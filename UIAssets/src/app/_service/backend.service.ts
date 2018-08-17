@@ -16,10 +16,20 @@ import {ManagedObjectList} from '../_model/managed-object';
 export class BackendService {
   private baseUrl = '';
   public app_status = 'starting app components' ;
+  fileUploadMode = false ;
   constructor(private http: HttpClient) {
     if (!environment.app_mode) {
       this.baseUrl = environment.api_entry;
     }
+  }
+  
+
+  setFileUploadMode(mode: boolean) {
+    this.fileUploadMode = mode ; 
+  }
+
+  getFileUploadMode():boolean {
+    return this.fileUploadMode ;
   }
 
 
@@ -60,7 +70,7 @@ export class BackendService {
 
   getDefinitions(): Observable<DefinitionList> {
     const options = {
-      params: new HttpParams().set('sort', 'classname|asc')
+      params: new HttpParams().set('sort', 'template,definition')
     };
     return this.http.get<DefinitionList>(this.baseUrl + 'aci/definitions', options);
   }
@@ -238,7 +248,6 @@ export class BackendService {
   }
 
   uploadSnapshot(filedata) {
-    const currentTime = new Date() ;
     const url = this.baseUrl  + 'aci/snapshots/' +  'upload' ;
     return this.http.post(url, filedata, {reportProgress: true}) ;
   }
