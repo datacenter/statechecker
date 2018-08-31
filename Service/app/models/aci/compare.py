@@ -294,7 +294,7 @@ class Compare(Rest):
         c.background_compare()
 
 
-    @api_route(path="restart", methods=["POST"])    
+    @api_route(path="restart", methods=["POST"], swag_ret=["success"])    
     def start_compare(self):
         """ start/restart compare operation """
 
@@ -309,7 +309,7 @@ class Compare(Rest):
             abort(500, "failed to start background snapshot process")
         return jsonify({"success":True})
 
-    @api_route(path="abort", methods=["POST"])
+    @api_route(path="abort", methods=["POST"], swag_ret=["success"])
     def abort_compare(self):
         """ stop/abort running compare operation """
         is_running = (self.status == "running")

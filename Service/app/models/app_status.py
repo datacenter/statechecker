@@ -8,7 +8,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-@api_register(path="/app-status")
+@api_register(path="/aci/app-status")
 class AppStatus(Rest):
     META_ACCESS = {
         "read": False,

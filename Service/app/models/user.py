@@ -16,7 +16,7 @@ import uuid
 # module level logger
 logger = logging.getLogger(__name__)
 
-@api_register()
+@api_register(path="/users")
 class User(Rest):
 
     logger = logger

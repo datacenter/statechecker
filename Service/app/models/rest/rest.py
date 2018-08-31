@@ -1477,7 +1477,8 @@ class Rest(object):
                 if cls._access["dn"] and "dn" not in obj:
                     _vars = [obj.get(attr,"") for attr in cls._dn_attributes]
                     obj["dn"] = cls._dn_path.format(*_vars)
-                ret["objects"].append({cls._classname: obj})
+                #ret["objects"].append({cls._classname: obj})
+                ret["objects"].append(obj)
 
             # for rsp_include children/subtree need to perform recursive call on child objects
             if rsp_include != "self":

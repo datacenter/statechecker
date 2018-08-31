@@ -32,6 +32,7 @@ import uuid
 logger = logging.getLogger(__name__)
 
 def upload_snapshot():
+    """ upload a snapshot tgz file """
     from ..utils import get_app_config
     if request.files is None:
         abort(400, "No files uploaded")
@@ -129,7 +130,8 @@ class Snapshots(Rest):
                 "path":"upload",
                 "keyed_url": False,
                 "methods":["POST"],
-                "function": upload_snapshot
+                "function": upload_snapshot,
+                "swag_ret": ["success"],
             },
         ]
     }
@@ -253,6 +255,7 @@ class Snapshots(Rest):
 
     @api_route(path="download", methods=["GET"])
     def download_snapshot(self):
+        """ download a backup snapshot tgz file """
         if self.filename is not None:
             if os.path.isfile(self.filename) is False:
                 abort(400, "Snapshot file (%s) not found" % self.filename)

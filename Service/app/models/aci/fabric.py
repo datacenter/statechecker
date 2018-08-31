@@ -8,7 +8,7 @@ from ..utils import (get_app, get_app_config, get_user_data)
 # module level logging
 logger = logging.getLogger(__name__)
 
-@api_register(path="/fabric")
+@api_register(path="/aci/fabrics")
 class Fabric(Rest):
     """ ACI Fabric REST class """
 
