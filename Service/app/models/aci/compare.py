@@ -5,114 +5,35 @@ objects are created keyed with compare_id of corresponding Compare object.
 Once comparision is complete, application can query for corresponding 
 CompareResults.
 """
-
-from flask import abort, jsonify
-from werkzeug.exceptions import (NotFound, BadRequest)
+from ..rest import Rest
+from ..rest import api_callback
+from ..rest import api_register
+from ..rest import api_route
+from ..utils import get_app_config
+from ..utils import format_timestamp
 from . import utils as aci_utils
-from .snapshots import Snapshots
 from .definitions import Definitions
 from .managed_objects import ManagedObjects
-from .remap import (Remap, expand_range)
-from ..rest import (Rest, api_register)
-from ..utils import get_app_config, format_timestamp, pretty_print
-from ..utils import get_max_pool_size
+from .remap import Remap
+from .remap import expand_range
+from .snapshots import Snapshots
 
-import traceback, time, os, shutil, json, re, copy
+from flask import abort, jsonify
 from multiprocessing import Pool
+from natsort import natsorted as sorted
+from werkzeug.exceptions import (NotFound, BadRequest)
+
+import copy
+import json
 import logging
+import os
+import re
+import shutil
+import time
+import traceback
 
 # module level logging
 logger = logging.getLogger(__name__)
-
-# set sorted as natsort if available
-try: from natsort import natsorted as sorted
-except ImportError as e: pass
-# before_compare_delete
-def before_compare_create(data, **kwargs):
-    """ before creation validation for compare object """
-    s1 = Snapshots.load(_id=data["snapshot1"])
-    s2 = Snapshots.load(_id=data["snapshot2"])
-
-    # ensure snapshots exist
-    if not s1.exists(): abort(404, "snapshot1 %s not found"%data["snapshot1"])
-    if not s2.exists(): abort(404, "snapshot2 %s not found"%data["snapshot2"])
-
-    # set snapshot1_name and snapshot2_name
-    data["snapshot1_description"] = s1.description
-    data["snapshot2_description"] = s2.description
-
-    # ensure these snapshots are for the same fabric
-    if s1.fabric != s2.fabric:
-        emsg = "cannot perform comparision for snapshots between different "
-        emsg+= "fabrics \"%s\" and \"%s\"" % (s1.fabric, s2.fabric)
-        abort(400, emsg)
-
-    # ensure timestamp for snapshot1 < timestamp for snapshot2
-    # if so swap them and allow snapshot to continue...
-    if s1.start_time > s2.start_time:
-        data["snapshot1"] = s2._id
-        data["snapshot2"] = s1._id
-    
-    return data
-
-def before_compare_delete(filters, **kwargs):
-    """ delete corresponding CompareResults when deleting Compare object """
-    objs = Compare.read(_filters=filters, **kwargs)
-    if "objects" in objs:
-        for o in objs["objects"]: CompareResults.delete(compare_id=o["_id"]) 
-    return filters
-
-def after_compare_create(obj, **kwargs):
-    """ after compare create start comparision background task """
-    _id = kwargs.get("_id", None)
-    if _id is None:
-        logger.warn("invalid _id for newly created compare: %s" % kwargs)
-        return
-    ret = background_compare(_id)
-
-def background_compare(_id):
-    """ start or restart compare operation """
-    c = Compare.load(_id=_id)
-    if not c.exists():
-        abort(404, "compare (_id=%s) not found" % _id)
-    if c.status == "running" or c.status == "abort":
-        abort(400, "compare %s currently running, send abort before restart"%(
-             _id))
-    # set start time to 'now' before executing background worker
-    c.start_time = time.time()
-    c.save()
-    if not aci_utils.execute_worker("--compare %s" % _id):
-        abort(500, "failed to start background snapshot process")
-    # delete old compare results before restart
-    CompareResults.delete(compare_id=_id)
-    return jsonify({"success":True})
-
-def abort_compare(_id):
-    """ stop/abort running compare operation """
-    c = Compare.load(_id=_id)
-    if not c.exists():
-        abort(404, "compare (_id=%s) not found" % _id)  
-    is_running = (c.status == "running")
-    c.status = "abort"
-    if not c.save(): abort(500, "failed to save abort")
-    # wait until status has changed to something other than abort which 
-    # indicates that the abort was successful
-    max_wait_time = 120
-    if is_running:
-        ts = time.time()
-        max_ts = ts + max_wait_time
-        aborted = False
-        while time.time() < max_ts:
-            c = Compare.load(_id=_id)
-            if not c.exists() or c.status != "abort":
-                aborted = True
-                break
-            time.sleep(1)
-        if not aborted:
-            msg = "Failed to abort compare process after %ss. "%max_wait_time
-            msg+= " Try deleting the object..."
-            abort(500, msg) 
-    return jsonify({"success":True})
 
 @api_register(path="/aci/compare/results")
 class CompareResults(Rest):
@@ -182,24 +103,6 @@ class Compare(Rest):
     logger = logging.getLogger(__name__)
     META_ACCESS = {
         "expose_id": True,
-        "before_create": before_compare_create,
-        "after_create": after_compare_create,
-        "before_delete": before_compare_delete,
-        "bulk_delete": False,
-        "routes": [
-             {
-                "path": "abort",
-                "keyed_url": True,
-                "function": abort_compare,
-                "methods": ["POST"]
-            },       
-            {
-                "path": "restart",
-                "keyed_url": True,
-                "function": background_compare,
-                "methods": ["POST"]
-            },
-        ],
     }
 
     META = {
@@ -346,6 +249,89 @@ class Compare(Rest):
     }
 
 
+    @classmethod
+    @api_callback("before_create")
+    def before_compare_create(cls, data):
+        """ before compare create ensure snapshots exists and are from the same fabric """
+        s1 = Snapshots.load(_id=data["snapshot1"])
+        s2 = Snapshots.load(_id=data["snapshot2"])
+        if not s1.exists(): abort(404, "snapshot1 %s not found"%data["snapshot1"])
+        if not s2.exists(): abort(404, "snapshot2 %s not found"%data["snapshot2"])
+    
+        # set snapshot1_name and snapshot2_name
+        data["snapshot1_description"] = s1.description
+        data["snapshot2_description"] = s2.description
+
+        # ensure these snapshots are for the same fabric
+        if s1.fabric != s2.fabric:
+            emsg = "cannot perform comparision for snapshots between different "
+            emsg+= "fabrics \"%s\" and \"%s\"" % (s1.fabric, s2.fabric)
+            abort(400, emsg)
+
+        # ensure timestamp for snapshot1 < timestamp for snapshot2
+        # if not swap them and allow snapshot to continue...
+        if s1.start_time > s2.start_time:
+            data["snapshot1"] = s2._id
+            data["snapshot2"] = s1._id
+        return data
+
+    @classmethod
+    @api_callback("before_delete")
+    def before_compare_delete(cls, filters):
+        """ delete corresponding CompareResults when deleting Compare object """
+        objs = Compare.read(_filters=filters, **kwargs)
+        if "objects" in objs:
+            for o in objs["objects"]: CompareResults.delete(compare_id=o["_id"]) 
+        return filters
+
+    @classmethod
+    @api_callback("after_create")
+    def after_compare_create(cls, data):
+        """ after compare create start comparision background task """
+        c = Compare.load(_id=data["_id"])
+        if not c.exists():
+            abort(404, "compare (_id=%s) not found" % _id)
+        c.background_compare()
+
+
+    @api_route(path="restart", methods=["POST"])    
+    def start_compare(self):
+        """ start/restart compare operation """
+
+        if self.status == "running" or self.status == "abort":
+            abort(400, "compare %s currently running, send abort before restart"%(self._id))
+        # set start time to 'now' before executing background worker
+        self.start_time = time.time()
+        self.save()
+        # delete old compare results before starting/restarting background process
+        CompareResults.delete(compare_id=self._id)
+        if not aci_utils.execute_worker("--compare %s" % self._id):
+            abort(500, "failed to start background snapshot process")
+        return jsonify({"success":True})
+
+    @api_route(path="abort", methods=["POST"])
+    def abort_compare(self):
+        """ stop/abort running compare operation """
+        is_running = (self.status == "running")
+        self.status = "abort"
+        if not self.save(): abort(500, "failed to save abort")
+        # wait until status has changed to something other than abort which indicates that the abort 
+        # was successful
+        max_wait_time = 120
+        if is_running:
+            ts = time.time()
+            max_ts = ts + max_wait_time
+            aborted = False
+            while time.time() < max_ts:
+                self.reload()
+                if not self.exists() or self.status != "abort":
+                    return jsonify({"success": True})
+                time.sleep(1)
+            msg="Failed to abort compare process after %ss. Try deleting the object..."%max_wait_time
+            abort(500, msg) 
+        else:
+            return jsonify({"success":True})
+
 def execute_compare(compare_id):
     """ perform comparison between two snapshots """
     logger.debug("execute compare for: %s" % compare_id)
@@ -488,7 +474,7 @@ def execute_compare(compare_id):
         nodes =[ int(x) for x in sorted(list(set().union(s1.nodes, s2.nodes)))]
 
         # create pool to perform work
-        pool = Pool(processes=get_max_pool_size())
+        pool = Pool(processes=config.get("MAX_POOL_SIZE", 4))
 
         filtered_nodes = []
         for n in nodes:

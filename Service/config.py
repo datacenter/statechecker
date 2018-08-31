@@ -1,5 +1,6 @@
 import os, sys, logging, json
 from datetime import timedelta
+from multiprocessing import cpu_count
 
 # these variables are set from app.json if found. Use app.json as single
 # source of truth.
@@ -42,14 +43,12 @@ MONGO_WRITECONCERN = int(os.environ.get("MONGO_WRITECONCERN",1))
 DEBUG = bool(int(os.environ.get("DEBUG", 1)))
 
 # disable pretty print by default to help with large repsonses
-JSONIFY_PRETTYPRINT_REGULAR = bool(int(
-                            os.environ.get("JSONIFY_PRETTYPRINT_REGULAR",0)))
+JSONIFY_PRETTYPRINT_REGULAR = bool(int(os.environ.get("JSONIFY_PRETTYPRINT_REGULAR",0)))
 
 # authentication settings
-REMEMBER_COOKIE_DURATION = timedelta(
-    days=int(os.environ.get("REMEMBER_COOKIE_DURATION",1)))
+REMEMBER_COOKIE_DURATION = timedelta(days=int(os.environ.get("REMEMBER_COOKIE_DURATION",0)))
 BCRYPT_LOG_ROUNDS = 12
-LOGIN_ENABLED = bool(int(os.environ.get("LOGIN_ENABLED",1)))
+LOGIN_ENABLED = bool(int(os.environ.get("LOGIN_ENABLED",0)))
 DEFAULT_USERNAME = os.environ.get("DEFAULT_USERNAME", "admin")
 DEFAULT_PASSWORD = os.environ.get("DEFAULT_PASSWORD", "cisco")
 PROXY_URL = os.environ.get("PROXY_URL", "http://127.0.0.1:80/")
@@ -65,29 +64,25 @@ LOG_ROTATE = bool(int(os.environ.get("LOG_ROTATE", 0)))
 LOG_ROTATE_SIZE = os.environ.get("LOG_ROTATE_SIZE", 26214400)
 LOG_ROTATE_COUNT = os.environ.get("LOG_ROTATE_COUNT", 3)
 
-# simulate apic connection and callbacks
-SIMULATION_MODE = bool(int(os.environ.get("SIMULATION_MODE",0)))
+# start all configured monitors when container starts
+AUTO_START_MONITOR = bool(int(os.environ.get("AUTO_START_MONITOR",1)))
 
-# tmp directory for creating tmp files and data directory for persistent data
-TMP_DIR = os.environ.get("TMP_DIR", "/tmp")
-DATA_DIR = os.environ.get("DATA_DIR", "/home/app/data/snapshots")
+# app info
+APP_VERSION = os.environ.get("APP_VERSION", app_vars["APP_VERSION"])
+APP_ID = os.environ.get("APP_ID", app_vars["APP_ID"])
+APP_VENDOR_DOMAIN = os.environ.get("APP_VENDOR_DOMAIN", 
+                                        app_vars["APP_VENDOR_DOMAIN"])
 
-# max pool size for multiprocessing (decrease for aci_app_mode)
-from multiprocessing import cpu_count
-MAX_POOL_SIZE = int(os.environ.get("MAX_POOL_SIZE", cpu_count()))
-
-# application running as an app on aci apic (ensure started file matches 
+# application running as an app on aci apic (ensure started file matches
 # start.sh settings)
 ACI_APP_MODE = bool(int(os.environ.get("ACI_APP_MODE",0)))
 ACI_STARTED_FILE = os.environ.get("STARTED_FILE","/home/app/.started")
 ACI_STATUS_FILE = os.environ.get("STATUS_FILE","/home/app/.status")
 
-# enable cross origin resource sharing
-ENABLE_CORS = bool(int(os.environ.get("ENABLE_CORS",1)))
+# set maximum file size for uploads (default to 10G)
+MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 10*1024*1024*1024))
 
-# app info
-APP_VERSION = os.environ.get("APP_VERSION", app_vars["APP_VERSION"])
-APP_ID = os.environ.get("APP_ID", app_vars["APP_ID"])
-APP_VENDOR_DOMAIN = os.environ.get("APP_VENDOR_DOMAIN",
-                                        app_vars["APP_VENDOR_DOMAIN"])
-
+# tmp directory for working with tmp files (and uploaded files)
+TMP_DIR = os.environ.get("TMP_DIR", "/tmp/")
+DATA_DIR = os.environ.get("DATA_DIR", "/home/app/data/snapshots")
+MAX_POOL_SIZE = int(os.environ.get("MAX_POOL_SIZE", cpu_count()))

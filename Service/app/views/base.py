@@ -5,7 +5,7 @@ base = Blueprint("base", __name__)
 from flask import jsonify, redirect, abort, g, make_response, request, send_from_directory
 from werkzeug.exceptions import BadRequest
 from werkzeug.utils import secure_filename
-from ..models.rest import (Role, Rest)
+from ..models.rest import (Role,Rest)
 import json, re, requests, logging, traceback, os, uuid, shutil
 
 logger = logging.getLogger(__name__)
@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 @base.route("/")
 def base_redirect():
     # check status and only if 200 (ready) redirect to UIAssets
-    from ..models.aci.app_status import check_status
-    (ready, status) = check_status(api=False)
-    if not ready: return abort(400, status)
+    from ..models.app_status import AppStatus
+    (ready, status) = AppStatus.check_status()
+    if not ready: return abort(503, status)
     return redirect("/UIAssets/", code=302)
 
 ##############################################################################
@@ -82,7 +82,7 @@ def aci_app_proxy():
     url = "%s%s"%(current_app.config.get("PROXY_URL", "http://localhost"),url)
     header = {}
     if "/api/" in url: 
-        header = {"Content-Type":"application/json"}
+        header = {"content-type":"application/json"}
         is_json = True
     if method == "get":
         r = requests.get(url, verify=False, data=data, params=params,
@@ -101,16 +101,16 @@ def aci_app_proxy():
                     logger.debug("proxy file %s from %s", f, tmp_file)
 
                 # perform post preserving only cookies and override header content type
-                r = requests.post(url, verify=False, params=params, cookies=request.cookies, 
+                r = requests.post(url, verify=False, params=params, cookies=request.cookies,
                         files=files)
             except Exception as e:
                 logger.debug("Traceback:\n%s", traceback.format_exc())
                 abort(500, "failed to proxy uploaded file: %s" % e)
-            finally: 
+            finally:
                 if os.path.exists(tmp_dir): shutil.rmtree(tmp_dir)
         else:
             r = requests.post(url, verify=False, data=data, params=params,
-                cookies=request.cookies, headers=header)
+                cookies=request.cookies,headers=header)
     elif method == "patch":
         r = requests.patch(url, verify=False, data=data, params=params,
             cookies=request.cookies,headers=header)
@@ -132,7 +132,7 @@ def aci_app_proxy():
 
     # support proxy of downloaded file
     if "Content-Disposition" in r.headers:
-        reg = "^attachment; filename=\"(?P<fname>[^\"]+)\""
+        reg = "^attachment; filename=\"?(?P<fname>[^\"]+)\"?"
         r1 = re.search(reg, r.headers["Content-Disposition"], re.IGNORECASE)
         if r1 is not None:
             tmp_file = "%s/%s/%s" % (current_app.config["TMP_DIR"], uuid.uuid4(), r1.group("fname"))

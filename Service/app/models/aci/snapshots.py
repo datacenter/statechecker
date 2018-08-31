@@ -1,91 +1,35 @@
 
+from ..rest import Rest
+from ..rest import api_callback
+from ..rest import api_register
+from ..rest import api_route
+from ..utils import format_timestamp
+from ..utils import get_user_data
 from . import utils as aci_utils
 from .definitions import Definitions
 from .managed_objects import ManagedObjects
 from .remap import Remap
-from .fabrics import Fabrics
-from ..rest import (Rest, api_register)
-from ..utils import format_timestamp, get_user_data
+from .fabric import Fabric
 from werkzeug.exceptions import (NotFound, BadRequest)
-from flask import abort,jsonify,send_from_directory, request, current_app
+from flask import abort
+from flask import current_app
+from flask import jsonify
+from flask import request
+from flask import send_from_directory
+from natsort import natsorted as sorted
 
-import traceback, time, os, shutil, json, re, hashlib, uuid
+import hashlib
+import json
 import logging
-
-# set sorted as natsort if available
-try: from natsort import natsorted as sorted
-except ImportError as e: pass
+import os
+import re
+import shutil
+import time
+import traceback
+import uuid
 
 # module level logging
 logger = logging.getLogger(__name__)
-
-def background_snapshot(obj, **kwargs):
-    """ start or restart snapshot operation """
-    _id = kwargs.get("_id", None)
-    if _id is None:
-        logger.warn("invalid _id for newly created snapshot: %s" % kwargs)
-        return
-    s = Snapshots.load(_id=_id)
-    if not s.exists(): abort(500, "failed to create snapshot")
-    # don't execute runtime snapshotshot collection for non-runtime sources
-    if s.source != "runtime": return
-    # set start time to 'now' before executing background worker
-    s.start_time = time.time()
-    s.save()
-    if not aci_utils.execute_worker("--snapshot %s" % _id):
-        abort(500, "failed to start background snapshot process")
-
-def delete_cleanup(filters, **kwargs):
-    """ remove local snapshot files before snapshot delete """
-    objs = Snapshots.read(_filters=filters, **kwargs)
-    if "objects" in objs:
-        for o in objs["objects"]:
-            if len(o["filename"])>0 and os.path.exists(o["filename"]):
-                try: 
-                    logger.debug("removing snapshot(%s) file %s" % (
-                        o["_id"], o["filename"]))
-                    os.remove(o["filename"])
-                except Exception as e:
-                    logger.debug("failed delete snapshot file: %s" %(o))
-
-    # should return unaltered filters
-    return filters
-
-def before_snapshot_create(data, **kwargs):
-    """ before snapshot create, verify valid fabric and definition """
-    fabric = data["fabric"]
-    f = Fabrics.load(fabric=fabric)
-    if not f.exists():
-        abort(400, "fabric %s does not exist" % fabric)
-    # relax checks for uploaded file as already verifed during upload extraction
-    if data["source"] == "upload": return data
-    d = Definitions.load(definition=data["definition"])
-    if not d.exists():
-        abort(400, "definition '%s' does not exist"  % data["definition"])
-    # set a default description if one was not provided
-    if len(data["description"].strip()) == 0:
-        data["description"] = "%s.snapshot.%s" % (fabric, 
-            format_timestamp(time.time()))
-    return data
-
-def download_snapshot(_id):
-    # download a snapshot .tgz file 
-    snapshot = Snapshots.load(_id=_id)
-    if not snapshot.exists():
-        abort(400, "snapshot %s not found" % _id)
-    else:
-        if snapshot.filename is not None:
-            if os.path.isfile(snapshot.filename) is False:
-                abort(400, "File not found")
-            try: 
-                path = snapshot.filename.split('/')
-                filename = path[len(path) - 1]
-                parent_dir_path = "/".join(path[:-1])
-                return send_from_directory(parent_dir_path,filename, as_attachment = True)
-            except Exception as err:
-                logger.debug('Traceback :\n %s', traceback.format_exc())
-                abort(500,'Error downloading the file') 
-    abort(400, "File metadata not found")
 
 def upload_snapshot():
     from ..utils import get_app_config
@@ -135,7 +79,7 @@ def upload_snapshot():
                         if attr in fileJson:
                             setattr(snap, attr, fileJson[attr])
                     # ensure fabric and definition exists as that will trigger save to fail
-                    f = Fabrics.load(fabric=snap.fabric)
+                    f = Fabric.load(fabric=snap.fabric)
                     if not f.exists():
                         abort(400, "fabric %s does not exist" % snap.fabric)
                     d = Definitions.load(definition=snap.definition)
@@ -180,22 +124,14 @@ class Snapshots(Rest):
     META_ACCESS = {
         "expose_id": True,
         "update": False,
-        "bulk_delete": False,
-        "before_create": before_snapshot_create,
-        "after_create": background_snapshot,
-        "before_delete": delete_cleanup,
-        "routes":[{
-            "path":"download",
-            "keyed_url": True,
-            "methods":["GET"],
-            "function":download_snapshot
-        }, 
-        {
-            "path":"upload",
-            "keyed_url": False,
-            "methods":["POST"],
-            "function": upload_snapshot
-        }]
+        "routes":[
+            {
+                "path":"upload",
+                "keyed_url": False,
+                "methods":["POST"],
+                "function": upload_snapshot
+            },
+        ]
     }
     META = {
         "fabric":{
@@ -266,6 +202,69 @@ class Snapshots(Rest):
             "write": False,
         },
     }
+
+    @classmethod
+    @api_callback("before_create")
+    def before_snapshot_create(cls, data):
+        """ before snapshot create, verify valid fabric and definition """
+        fabric = data["fabric"]
+        f = Fabric.load(fabric=fabric)
+        if not f.exists():
+            abort(400, "fabric %s does not exist" % fabric)
+        # relax checks for uploaded file as already verifed during upload extraction
+        if data["source"] == "upload": return data
+        d = Definitions.load(definition=data["definition"])
+        if not d.exists():
+            abort(400, "definition '%s' does not exist"  % data["definition"])
+        # set a default description if one was not provided
+        if len(data["description"].strip()) == 0:
+            data["description"] = "%s.snapshot.%s" % (fabric, format_timestamp(time.time()))
+        return data
+
+    @classmethod
+    @api_callback("after_create")
+    def after_snapshot_create(cls, data):
+        """ automatically start snapshot background process"""
+        s = Snapshots.load(_id=data["_id"])
+        if not s.exists(): abort(500, "snapshot %s not found" % data["_id"])
+        # don't execute runtime snapshotshot collection for non-runtime sources
+        if s.source != "runtime": return
+        # set start time to 'now' before executing background worker
+        s.start_time = time.time()
+        s.save()
+        if not aci_utils.execute_worker("--snapshot %s" % s._id):
+            abort(500, "failed to start background snapshot process")
+
+    @classmethod
+    @api_callback("before_delete")
+    def delete_cleanup(cls, filters):
+        """ remove local snapshot files before snapshot delete """
+        objs = Snapshots.read(_filters=filters)
+        if "objects" in objs:
+            for o in objs["objects"]:
+                if len(o["filename"])>0 and os.path.exists(o["filename"]):
+                    try: 
+                        cls.logger.debug("removing snapshot(%s) file %s" % (o["_id"],o["filename"]))
+                        os.remove(o["filename"])
+                    except Exception as e:
+                        cls.logger.debug("failed delete snapshot file: %s" %(o))
+        # should return unaltered filters
+        return filters
+
+    @api_route(path="download", methods=["GET"])
+    def download_snapshot(self):
+        if self.filename is not None:
+            if os.path.isfile(self.filename) is False:
+                abort(400, "Snapshot file (%s) not found" % self.filename)
+            try: 
+                path = self.filename.split('/')
+                filename = path[len(path) - 1]
+                parent_dir_path = "/".join(path[:-1])
+                return send_from_directory(parent_dir_path, filename, as_attachment = True)
+            except Exception as err:
+                self.logger.debug('Traceback :\n %s', traceback.format_exc())
+                abort(500,'Error downloading the file') 
+        abort(400, "no file available for this snapshot")
 
 
 def execute_snapshot(snapshot_id):

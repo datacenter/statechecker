@@ -2,8 +2,8 @@
 import sys, os, subprocess, re, uuid, getpass, argparse, logging, traceback
 
 from app.models.utils import get_app
-from app.models.rest import (registered_classes, Role)
-from app.models.users import Users
+from app.models.rest import (registered_classes, Role, Universe)
+from app.models.user import User
 from app.models.settings import Settings
 from app.models.utils import (setup_logger, get_db)
 from werkzeug.exceptions import (NotFound, BadRequest)
@@ -14,7 +14,7 @@ from pymongo import (ASCENDING, DESCENDING)
 # specific to this application
 from app.models.aci import utils as aci_utils
 from app.models.aci.tools.acitoolkit.acisession import Session
-from app.models.aci.fabrics import Fabrics
+from app.models.aci.fabric import Fabric
 from app.models.aci.definitions import Definitions
 from app.models.aci.managed_objects import ManagedObjects
 from app.models.aci.static import STATIC_MANAGED_OBJECTS
@@ -87,7 +87,7 @@ def apic_app_init(args):
         return False
 
     # load fabric
-    f = Fabrics.load(fabric=fabric_domain)
+    f = Fabric.load(fabric=fabric_domain)
     if not f.exists():
         f.apic_hostname = hostname
         f.apic_username = app_username
@@ -145,9 +145,7 @@ def db_exists():
     logger.debug("checking if db exists")
     collections = get_db().collection_names()
     logger.debug("current collections: %s" % collections)
-    if len(collections)>0 and (
-        "aci.fabrics" in collections and "users" in collections and \
-        "settings" in collections):
+    if len(collections)>0 and ("user" in collections and "settings" in collections):
         return True
     return False
 
@@ -184,15 +182,21 @@ def db_setup(args):
         # drop existing collection
         logger.debug("dropping collection %s" % c._classname)
         db[c._classname].drop()
-        # create unique indexes for collection
+        # create unique indexes for collection if expose_id is disabled
+        # (else mongo _id is only unique key required)
         indexes = []
-        for a in c._attributes:
-            if c._attributes[a].get("key", False): 
-                indexes.append((a,DESCENDING))
+        if not c._access["expose_id"]:
+            for a in c._attributes:
+                if c._attributes[a].get("key", False): 
+                    indexes.append((a,DESCENDING))
         if len(indexes)>0:
             logger.debug("creating indexes for %s: %s",c._classname,indexes)
             db[c._classname].create_index(indexes, unique=True)
 
+    # if uni is enabled then required before any other object is created
+    uni = Universe.load()
+    uni.save()
+        
     # insert settings with user provided values 
     lpass = "%s"%uuid.uuid4()
     s = Settings(
@@ -207,11 +211,11 @@ def db_setup(args):
         s.save()
     
     # create admin user with provided password and local user
-    u = Users(username="local", password=lpass, role=Role.FULL_ADMIN)
+    u = User(username="local", password=lpass, role=Role.FULL_ADMIN)
     if not u.save(): 
         logger.error("failed to create local user")
         return False
-    u = Users(username=args.username, password=pwd, role=Role.FULL_ADMIN)
+    u = User(username=args.username, password=pwd, role=Role.FULL_ADMIN)
     if not u.save():
         logger.error("failed to create username: %s" % args.username)
         return False
@@ -231,7 +235,7 @@ def db_setup(args):
         logger.warn("failed to save default definition...")
 
     # create additional template definitions as defined in TEMPLATES
-    for tname in TEMPLATES:    
+    for tname in TEMPLATES:
         template = TEMPLATES[tname]
         d = Definitions(definition=tname, managed_objects=template["objects"], template=True)
         d.description = template["description"]
@@ -241,6 +245,7 @@ def db_setup(args):
     #successful setup
     return True
         
+
 def get_args():
     desc = """
     db setup for %s:%s 
