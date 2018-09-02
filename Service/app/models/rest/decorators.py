@@ -5,6 +5,7 @@ from flask import abort
 from functools import wraps
 from swagger.common import (swagger_create, swagger_read, swagger_update,
                             swagger_delete, swagger_generic_path)
+import copy
 import inspect
 import re
 
@@ -714,16 +715,20 @@ class CallbackInfo(object):
         # build new function that will send only required args to callback
         def decorator(**kwargs):
             args = [kwargs.get(a, None) for a in self.arg_list] 
+            copy_kwargs = copy.deepcopy(kwargs)
+            for a in self.arg_list:
+                if a in copy_kwargs: 
+                    copy_kwargs.pop(a, None)
 
             # instaniated object is best effort... It does not make since for callbacks
             if self.is_self:
-                if self.kwargs: return self.ofunc(cls(), *args, **kwargs)
+                if self.kwargs: return self.ofunc(cls(), *args, **copy_kwargs)
                 else: return self.ofunc(cls(), *args)
             elif self.is_cls:
-                if self.kwargs: return self.ofunc(cls, *args, **kwargs)
+                if self.kwargs: return self.ofunc(cls, *args, **copy_kwargs)
                 else: return self.ofunc(cls, *args)
             else:
-                if self.kwargs: return self.ofunc(*args, **kwargs)
+                if self.kwargs: return self.ofunc(*args, **copy_kwargs)
                 else: return self.ofunc(*args)
 
         # remap function to the decorator
