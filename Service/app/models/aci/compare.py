@@ -279,7 +279,7 @@ class Compare(Rest):
     @api_callback("before_delete")
     def before_compare_delete(cls, filters):
         """ delete corresponding CompareResults when deleting Compare object """
-        objs = Compare.read(_filters=filters, **kwargs)
+        objs = Compare.read(_filters=filters)
         if "objects" in objs:
             for o in objs["objects"]: CompareResults.delete(compare_id=o["_id"]) 
         return filters
@@ -291,7 +291,7 @@ class Compare(Rest):
         c = Compare.load(_id=data["_id"])
         if not c.exists():
             abort(404, "compare (_id=%s) not found" % _id)
-        c.background_compare()
+        c.start_compare()
 
 
     @api_route(path="restart", methods=["POST"], swag_ret=["success"])    
