@@ -152,26 +152,20 @@ class Fabric(Rest):
         processes = get_fabric_processes()
         if self.fabric in processes and len(processes[self.fabric])>0:
             ret["error"] = "fabric monitor for '%s' is already running" % self.fabric
-        # verify credentials
         elif not start_fabric(self.fabric, reason, rest=False):
             ret["error"] = "failed to start fabric monitor"
         else:
             ret["success"] = True
         return jsonify(ret)
 
-    @api_route(path="verify", methods=["POST"], swag_ret=["success","apic_error","ssh_error"])
+    @api_route(path="verify", methods=["POST"], swag_ret=["success","error"])
     def verify_credentials(self):
         """ verify credentials to access APIC API and switch via SSH """
 
-        ret = {"success": False, "apic_error": "", "ssh_error": ""}
+        ret = {"success": False, "error": ""}
         (success, error) = self.verify_apic_credentials()
         if not success: 
-            ret["apic_error"] = error
-            ret["ssh_error"] = "not tested"
-            return jsonify(ret)
-        (success, error) = self.verify_ssh_credentials()
-        if not success:
-            ret["ssh_error"] = error
+            ret["error"] = error
             return jsonify(ret)
         ret["success"] = True
         return jsonify(ret)
