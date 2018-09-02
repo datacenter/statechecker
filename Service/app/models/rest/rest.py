@@ -375,11 +375,15 @@ class Rest(object):
             ret = self.read(**keys)
             if ret["count"]>0 and len(ret["objects"])>0:
                 obj = ret["objects"][0]
-                if self._classname in obj: 
-                    for attr in obj[self._classname]:
-                        if hasattr(self, attr):
-                            setattr(self, attr, obj[self._classname][attr])
-                            self._original_attributes[attr] = copy.deepcopy(getattr(self,attr))
+                #if self._classname in obj: 
+                #    for attr in obj[self._classname]:
+                #        if hasattr(self, attr):
+                #            setattr(self, attr, obj[self._classname][attr])
+                #            self._original_attributes[attr] = copy.deepcopy(getattr(self,attr))
+                for attr in obj:
+                    if hasattr(self, attr):
+                        setattr(self, attr, obj[attr])
+                        self._original_attributes[attr] = copy.deepcopy(getattr(self,attr))
                 self._exists = True
             else:
                 self._exists = False
@@ -576,7 +580,8 @@ class Rest(object):
             else: ret = cls.read(_params={"page-size":1}, **read_kwargs)
             if "objects" in ret and isinstance(ret["objects"], list):
                 for o in ret["objects"]:
-                    if cls._classname in o: db_objs.append(o[cls._classname])
+                    #if cls._classname in o: db_objs.append(o[cls._classname])
+                    db_objs.append(o)
         except NotFound as e:
             cls.logger.debug("%s load not found: %s", cls._classname,e)
         except Exception as e:
@@ -1809,7 +1814,7 @@ class Rest(object):
         if cls._dependency is not None and len(cls._dependency.children)>0:
             matched_objs = cls.read(_filters=filters)
             for obj in matched_objs["objects"]:
-                obj = obj[cls._classname]
+                #obj = obj[cls._classname]
                 child_filters = {}
                 for attr in obj:
                     if attr in cls._keys: child_filters[attr] = obj[attr]

@@ -10,7 +10,8 @@ import pytest
 logger = logging.getLogger(__name__)
 
 rest_url = "/api/test/rest"
-rest_url_key = "/api/uni/key-{}" 
+#rest_url_key = "/api/uni/key-{}" 
+rest_url_key = "/api/test/rest/{}"
 rest_classname = "test.rest"
 good_request = 200
 bad_request = 400
@@ -556,7 +557,8 @@ def test_rest_api_create_nested_dict(app, rest_cleanup):
 
     # ensure 'dict' attribute is present with sub-attributes according to
     # defintion and defaults
-    sobj = obj[rest_classname]["dict"]
+    #sobj = obj[rest_classname]["dict"]
+    sobj = obj["dict"]
     assert isinstance(sobj, dict)
     assert "s1" in sobj and sobj["s1"] == ""
     assert "i1" in sobj and sobj["i1"] == 0
@@ -575,7 +577,8 @@ def test_rest_api_create_nested_dict(app, rest_cleanup):
     assert r.status_code == good_request
     js = json.loads(r.data)
     logger.debug(pretty_print(js))
-    sobj = js["objects"][0][rest_classname]["dict"]
+    #sobj = js["objects"][0][rest_classname]["dict"]
+    sobj = js["objects"][0]["dict"]
     assert "l2" in sobj and isinstance(sobj["l2"], list)
     assert len(sobj["l2"]) == 1
     assert isinstance(sobj["l2"][0], dict) and \
@@ -619,7 +622,8 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     js = json.loads(r.data)
     assert js["count"] == 1
     assert len(js["objects"]) == js["count"]
-    obj = js["objects"][0][rest_classname]
+    #obj = js["objects"][0][rest_classname]
+    obj = js["objects"][0]
 
     # assert each attribute is present with correct default value
     for k in ["key", "str", "float", "bool", "int", "list", "dict"]:
@@ -647,7 +651,8 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     assert r.status_code == good_request
     obj = json.loads(r.data)
     logger.debug(pretty_print(obj))
-    obj = obj["objects"][0][rest_classname]
+    #obj = obj["objects"][0][rest_classname]
+    obj = obj["objects"][0]
     for k in ["key", "str", "float", "bool", "int", "list", "dict"]:
         assert k in obj
     assert obj["str"] == "ABCD"  
@@ -708,7 +713,9 @@ def test_rest_api_bulk_update(app, rest_cleanup):
     obj = json.loads(r.data)
     assert obj["count"] == 5
     found = {}
-    for o in obj["objects"]: found[o[rest_classname]["key"]] = o[rest_classname]["int"]
+    for o in obj["objects"]: 
+        #found[o[rest_classname]["key"]] = o[rest_classname]["int"]
+        found[o["key"]] = o["int"]
     assert found["key0"] == 0
     assert found["key1"] == 1
     assert found["key2"] == 100

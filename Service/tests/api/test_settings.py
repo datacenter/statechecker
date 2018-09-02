@@ -40,7 +40,8 @@ def test_api_read_settings(app):
     response = app.client.get("/api/settings")
     assert response.status_code == 200
     js = json.loads(response.data)
-    js = js["objects"][0]["settings"]
+    #js = js["objects"][0]["settings"]
+    js = js["objects"][0]
     assert "app_name" in js
 
 def test_api_update_settings(app):

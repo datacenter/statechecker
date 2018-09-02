@@ -6,10 +6,12 @@ from app.models.rest import Role, Universe
 from app.models.user import User, Session
 from app.models.settings import Settings
 
-keyed_url = "/api/uni/username-{}"
-login_url = "/api/user/login"
-logout_url = "/api/user/logout"
-pwreset_url = "/api/user/pwreset"
+#keyed_url = "/api/uni/username-{}"
+class_url = "/api/users"
+keyed_url = "/api/users/{}"
+login_url = "/api/users/login"
+logout_url = "/api/users/logout"
+pwreset_url = "/api/users/pwreset"
 keyed_pwreset_url = "%s/pwreset" % keyed_url
 
 # module level logging
@@ -61,6 +63,7 @@ def userprep(request, app):
 
     def teardown():
         User.delete(_filters={"$and":[{"username":{"$ne":"admin"}}, {"username":{"$ne":"local"}}]})
+        Session.delete(_filters={})
     request.addfinalizer(teardown)
     return
 
@@ -93,7 +96,7 @@ def test_api_logout_user_with_post(app, userprep):
     old_cookie = get_cookies(c)["session"]
 
     # user read should be fine
-    response = c.get("/api/user")
+    response = c.get(class_url)
     assert response.status_code == 200
 
     # logout user via post method
@@ -105,7 +108,7 @@ def test_api_logout_user_with_post(app, userprep):
     c.set_cookie(old_cookie.domain, old_cookie.name, old_cookie.value)
 
     # user should not be unauthenticated
-    response = c.get("/api/user")
+    response = c.get(class_url)
     assert response.status_code == 401 
 
 def test_api_session_timeout(app, userprep):
@@ -122,7 +125,7 @@ def test_api_session_timeout(app, userprep):
 
     time.sleep(0.2)
 
-    response = c.get("/api/user")
+    response = c.get(class_url)
     assert response.status_code == 401 
 
 def test_api_session_csfr_token(app, userprep):
@@ -136,53 +139,59 @@ def test_api_session_csfr_token(app, userprep):
     }), content_type="application/json")
     assert response.status_code == 200
     js = json.loads(response.data)
+    logger.debug("response: %s", pretty_print(js))
     assert "token" in js
 
-    response = c.get("/api/user")
+    logger.debug("checking with no token")
+    response = c.get(class_url)
     assert response.status_code == 401 
 
+    logger.debug("checking with token %s in url" % js["token"])
     # ensure token present in url is accepted
-    response = c.get("/api/user?app_token=%s" % js["token"])
+    response = c.get("%s?app_token=%s" % (class_url, js["token"]))
     assert response.status_code == 200
 
+    logger.debug("checking with token %s in data" % js["token"])
     # ensure token present in data is accepted
-    response = c.get("/api/user", data=json.dumps({
+    response = c.get(class_url, data=json.dumps({
         "app_token": js["token"]
     }), content_type="application/json")
     assert response.status_code == 200
 
+    logger.debug("checking with token %s in header" % js["token"])
     # ensure token present in header is accepted
-    response = c.get("/api/user", headers={
+    response = c.get(class_url, headers={
         "app_token": js["token"],
     })
     assert response.status_code == 200
 
+    logger.debug("checking with invalid token")
     # ensure an invalid token is not accepted
-    response = c.get("/api/user?app_token=bad_token")
+    response = c.get("%s?app_token=bad_token" % class_url)
     assert response.status_code == 401
 
 
 def test_api_create_user_incomplete_data(app, userprep):
     # create a user with no data
-    response = app.client.post("/api/user", data=json.dumps({}), 
+    response = app.client.post(class_url, data=json.dumps({}), 
         content_type='application/json')
     assert response.status_code == 400  # invalid data
 
     # create a user with username missing
-    response = app.client.post("/api/user", data=json.dumps({ 
+    response = app.client.post(class_url, data=json.dumps({ 
         "password": "pass12345"    
     }), content_type='application/json')
     assert response.status_code == 400  # invalid data
 
     # create a user with password missing - accept it
-    response = app.client.post("/api/user", data=json.dumps({ 
+    response = app.client.post(class_url, data=json.dumps({ 
         "username": "bad_user"
     }), content_type='application/json')
     assert response.status_code == 200
 
 def test_api_create_user_invalid_data(app, userprep):
     # create a user with invalid role and expect 400 - invalid data
-    response = app.client.post("/api/user", data=json.dumps({
+    response = app.client.post(class_url, data=json.dumps({
         "username": "bad_user",
         "password": "P1234cdef",
         "role": 233321939929193
@@ -191,10 +200,10 @@ def test_api_create_user_invalid_data(app, userprep):
 
 def test_api_create_user_block_duplicate(app, userprep):
     # block attempts at creating duplicate username
-    response = app.client.get("/api/uni/username-admin")
+    response = app.client.get(keyed_url.format("admin"))
     assert response.status_code == 200
 
-    response = app.client.post("/api/user", data=json.dumps({
+    response = app.client.post(class_url, data=json.dumps({
         "username": "admin",
         "password": "P1234cdef",
         "role": Role.FULL_ADMIN
@@ -203,7 +212,7 @@ def test_api_create_user_block_duplicate(app, userprep):
 
 def test_api_create_user_block_root(app, userprep):
     # block attempts to create username 'root'
-    response = app.client.post("/api/user", data=json.dumps({
+    response = app.client.post(class_url, data=json.dumps({
         "username": "root",
         "password": "P1234cdef",
         "role": Role.FULL_ADMIN
@@ -212,7 +221,7 @@ def test_api_create_user_block_root(app, userprep):
 
 def test_api_create_user_success(app, userprep):
     # create user and verify user is created
-    response = app.client.post("/api/user", data=json.dumps({
+    response = app.client.post(class_url, data=json.dumps({
         "username": "good_user",
         "password": "P1234cdef",
         "role": Role.USER,
@@ -225,7 +234,8 @@ def test_api_create_user_success(app, userprep):
     response = app.client.get(keyed_url.format("good_user"))
     assert response.status_code == 200
     js = json.loads(response.data)
-    js = js["objects"][0]["user"]
+    #js = js["objects"][0]["user"]
+    js = js["objects"][0]
     assert js["username"] == "good_user"
 
 def test_api_update_user_success(app, userprep):
@@ -241,7 +251,8 @@ def test_api_update_user_success(app, userprep):
     # read user - verify role is updated
     response = app.client.get(keyed_url.format("test_user"))
     js = json.loads(response.data)
-    js = js["objects"][0]["user"]
+    #js = js["objects"][0]["user"]
+    js = js["objects"][0]
     assert js["role"] == Role.BLACKLIST
 
 def test_api_delete_user_success(app, userprep):
@@ -270,7 +281,7 @@ def test_api_read_user_password_not_returned(app, userprep):
 
 def test_api_read_user_all(app, userprep):
     # read all users and verify non-empty list is received
-    response = app.client.get("/api/user")
+    response = app.client.get(class_url)
     js = json.loads(response.data)
     assert "objects" in js
     assert type(js["objects"]) is list and len(js["objects"])>0
@@ -290,12 +301,13 @@ def test_api_read_user_non_admin(app, userprep):
     }), content_type="application/json")
     assert response.status_code == 200
         
-    response = c.get("/api/user")
+    response = c.get(class_url)
     assert response.status_code == 200
     js = json.loads(response.data)
     logger.debug(pretty_print(js))
     assert js["count"] == 1
-    assert js["objects"][0]["user"]["username"] == "test_user"
+    #assert js["objects"][0]["user"]["username"] == "test_user"
+    assert js["objects"][0]["username"] == "test_user"
 
     response = c.get(keyed_url.format("admin"))
     assert response.status_code == 403

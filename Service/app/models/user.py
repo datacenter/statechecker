@@ -243,7 +243,8 @@ class User(Rest):
         count = data["count"]
         objects = []
         for o in data["objects"]:
-            if "username" in o["user"] and o["user"]["username"] in User.RESERVED:
+            #if "username" in o["user"] and o["user"]["username"] in User.RESERVED:
+            if "username" in o and o["username"] in User.RESERVED:
                 count-= 1
             else: objects.append(o)
         if count < 0: count = 0
