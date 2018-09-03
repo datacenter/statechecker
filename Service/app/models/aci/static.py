@@ -55,6 +55,10 @@ STATIC_MANAGED_OBJECTS = [
                 "name": "srcIf",
                 "remap": ['all'],
             },
+            {
+                "name": "totalPfxPeers",
+                "labels": ["statistic"],
+            },
         ],
     },
     {
@@ -494,6 +498,22 @@ STATIC_MANAGED_OBJECTS = [
                 "name": "lastLinkStChg",
                 "labels": ["timestamp"],
             },
+            {
+                "name": "resetCtr",
+                "labels": ["statistic"],
+            },
+            {
+                "name": "siList",
+                "labels": ["dynamic"],
+            },
+            {
+                "name": "currErrIndex",
+                "labels": ["dynamic"],
+            },
+            {
+                "name": "lastErrors",
+                "labels": ["dynamic"],
+            },
         ],
     },
     {
@@ -580,6 +600,12 @@ STATIC_MANAGED_OBJECTS = [
         "classname": "isisAdjEp",
         "description": "ISIS adjacency neighbor endpoint is a managed object that captures ISIS adjacency specific information such as peer system identifier and peer circuit identifier",
         "remap": ['encrtd'],
+        "attributes": [
+            {
+                "name": "peerCktId",
+                "labels": ["dynamic"],
+            },
+        ],
     },
     {
         "classname": "isisDTEp",
@@ -635,6 +661,12 @@ STATIC_MANAGED_OBJECTS = [
         "classname": "isisInst",
         "description": "ISIS instance",
         "severity": "info",
+        "attributes": [
+            {
+                "name": "processQueue",
+                "labels": ["dynamic"],
+            },
+        ],
     },
     {
         "classname": "isisNexthop",
@@ -734,6 +766,7 @@ STATIC_MANAGED_OBJECTS = [
         "classname": "l3EncRtdIf",
         "description": "Layer 3 encapsulated routed interface. The routed interface corresponds to a sub-interface in Cisco routing terminology. A sub-interface is a logical L3 interface created on an underlying physical L3 port (the parent interface). Each sub-interface is associated with an 802.1Q VLAN tag. The traffic that comes on the parent interface with that tag is considered for that sub-interface. The existence of a routed interface under a VRF or infra VRF also implies that the interface belongs to that VRF. An L3 interface can only belong to one VRF at a time",
         "remap": ['encrtd'],
+        "exclude": ['id'],
     },
     {
         "classname": "l3LbRtdIf",
@@ -997,7 +1030,7 @@ STATIC_MANAGED_OBJECTS = [
     {
         "classname": "rmonEtherStats",
         "description": "Ethernet statistic counters",
-        "include": ['cRCAlignErrors', 'dropEvents', 'fragments', 'jabbers', 'undersizePkts', 'clearTs'],
+        "include": ['cRCAlignErrors','dropEvents','fragments','jabbers','undersizePkts','clearTs'],
         "labels": ['statistic'],
         "remap": ['vlan', 'agg', 'encrtd'],
         "attributes": [
