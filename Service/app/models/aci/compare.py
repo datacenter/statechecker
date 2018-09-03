@@ -614,31 +614,37 @@ def generic_compare(args):
     else:
         logger.warn("unknown compare type %s" % compare_type)
 
-def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
-    """ receive compare object and managed_object (single classname) directives 
-        along with file pointers to corresponding objects. If the file
-        does not exist or cannot be read, treat in same manner as if there
-        were no objects present (i.e., going to have a lot of 'created' or
-        'deleted' objects in the result)
+def get_subset(obj, attributes, key=""):
+    """ return new dict with with specific attributes copied from original object """
+    ret = {}
+    for a in attributes: 
+        if a in obj: 
+            ret[a] = obj[a]
+    if "_key" in obj: ret["_key"] = obj["_key"]
+    if key in obj: ret[key] = obj[key]
+    return ret
 
+def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
+    """ receive compare object and managed_object (single classname) directives along with file 
+        pointers to corresponding objects. If the file does not exist or cannot be read, treat in 
+        same manner as if there were no objects present (i.e., going to have a lot of 'created' or
+        'deleted' objects in the result)
     """
     # node-id is present in remap object (should be the same node...)
-    logger.debug("compare %s classname: %s, node: %s" % (compare._id,
-        mo["classname"], remap1.node_id))
+    logger.debug("compare %s classname %s, node: %s", compare._id, mo["classname"], remap1.node_id)
 
     # check for abort (which might not be seen during multiprocessing progress)
     _s = Compare.load(_id=compare._id)
     if not _s.exists() or _s.status == "abort": 
-        logger.debug("%s aborted" % compare._id)
+        logger.debug("%s aborted", compare._id)
         return
 
     # check if MO itself has been filtered by compare settings
     if not ManagedObjects.severity_match(compare.severity, mo["severity"]):
-        logger.debug("%s filtered by severity %s" % (mo["classname"], 
-            compare.severity))
+        logger.debug("%s filtered by severity %s", mo["classname"], compare.severity)
         return
     if not compare.dynamic and "dynamic" in mo["labels"]:
-        logger.debug("%s filtered by not dynamic option" % (mo["classname"]))
+        logger.debug("%s filtered by dynamic-disabled option", mo["classname"])
         return
 
     # get list of objects
@@ -656,19 +662,18 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
                 key = remapper.remap_attribute(o[mo["key"]], mo["remap"])
                 if key not in s: s[key] = o 
                 else:
-                    logger.warn("(%s) duplicate key in snapshot: %s" % (
-                        mo["classname"], key))
+                    logger.warn("(%s) duplicate key in snapshot: %s", mo["classname"], key)
             else:
-                logger.warn("(%s) key %s not found in %s" % (mo["classname"],
-                    mo["key"], o))
+                logger.warn("(%s) key %s not found in %s", mo["classname"], mo["key"], o)
         return s
+
     s1 = get_indexed_objects(s1_objects, remap1)
     s2 = get_indexed_objects(s2_objects, remap2)
 
-    result = CompareResults.load(compare_id=compare._id, node_id=remap1.node_id,
-                            classname=mo["classname"])
-    result.total["s1"]+= len(s1)
-    result.total["s2"]+= len(s2)
+    # unique CompareResult per operation (should never be cumlative and does not require db read)
+    result = CompareResults(compare_id=compare._id, node_id=remap1.node_id,classname=mo["classname"])
+    result.total["s1"] = len(s1)
+    result.total["s2"] = len(s2)
 
     # list of objects are all of the same class - build out the attributes that
     # we care about based on mo and compare settings 
@@ -688,8 +693,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             if a == mo["key"]: continue
             attr = mo_attributes.get(a, default_attr)
             # filter based on severity
-            if not ManagedObjects.severity_match(compare.severity, 
-                attr["severity"]): continue
+            if not ManagedObjects.severity_match(compare.severity, attr["severity"]): continue
             # fitler based on dynamic
             if not compare.dynamic and "dynamic" in attr["labels"]: continue
             # determine if attribute is a timestamp
@@ -704,17 +708,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             # this is an interesting attribute to compare
             attributes[a] = attr
 
-    logger.debug("%s interesting attributes: %s"%(mo["classname"], 
-        attributes.keys()))
-
-    # return new dict with with specific attributes copied from original object
-    def get_subset(obj, attributes, key=""):
-        ret = {}
-        for a in attributes: 
-            if a in obj: ret[a] = obj[a]
-        if "_key" in obj: ret["_key"] = obj["_key"]
-        if key in obj: ret[key] = obj[key]
-        return ret
+    logger.debug("%s interesting attributes: %s", mo["classname"],attributes.keys())
 
     # check for modified and deleted
     for k in s1:
@@ -762,7 +756,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             # this should never happen since it implies different attributes
             # for objects of the same class
             if a not in s2[k]:
-                logger.warn("%s attribute not found in s2"%(mo["classname"],a))
+                logger.warn("%s attribute not found in s2", mo["classname"],a)
                 continue
 
             # handle list and list-extended cases
@@ -816,15 +810,13 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
 
             # process attribute as a single value
             else: 
-                
                 # perform remaps for each value
                 v1 = remap1.remap_attribute(s1[k].get(a,""), attr["remap"])
                 v2 = remap2.remap_attribute(s2[k].get(a,""), attr["remap"])
 
                 # should rarely happen that new attribute is added to object
                 if a not in s1[k]:
-                    logger.debug("%s attribute %s not found in s1" % (
-                        mo["classname"], a))
+                    logger.debug("%s attribute %s not found in s1", mo["classname"], a)
                     match = False
                 elif v1!= v2:
                     match = False
@@ -837,7 +829,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
                 })
             # highlight diff on mismatch
             else:
-                logger.debug("%s attribute mismatch %s != %s" % (a, v1, v2))
+                logger.debug("%s attribute mismatch %s != %s", a, v1, v2)
                 diff["modified"].append({
                     "attribute": a,
                     "value1": s1[k].get(a, ""),
@@ -862,10 +854,8 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             result.total["created"]+=1
             result.created.append(get_subset(s2[k], attributes,key=mo["key"]))
 
-    logger.debug("comparison complete(%s) %s: %s" % (result.compare_id,
-                    result.classname, result.total))
+    logger.debug("comparison complete(%s) %s: %s", result.compare_id,result.classname, result.total)
     result.save()
-     
 
 def endpoint_compare(compare, folder1, folder2, remap1, remap2):
     """ perform endpoint comparision between snapshots. Note only local
@@ -874,13 +864,12 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
         for consistent comparision of the 'interesting' objects
     """
 
-    logger.debug("compare %s endpoints, node: %s" % (compare._id, 
-        remap1.node_id))
+    logger.debug("compare %s endpoints, node: %s", compare._id, remap1.node_id)
 
     # check for abort (which might not be seen during multiprocessing progress)
     _s = Compare.load(_id=compare._id)
     if not _s.exists() or _s.status == "abort": 
-        logger.debug("%s aborted" % compare._id)
+        logger.debug("%s aborted", compare._id)
         return
     
     # for filtering, need to read in mo for 'endpoints' and get severity
@@ -889,7 +878,7 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
 
     # check if MO itself has been filtered by compare settings first
     if not ManagedObjects.severity_match(compare.severity, mo["severity"]):
-        logger.debug("endpoints filtered by severity %s" % (compare.severity)) 
+        logger.debug("endpoints filtered by severity %s", compare.severity)
         return
 
     # expect for 'endpoints.json' file within each folder
@@ -907,9 +896,7 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
     def get_local_objects(objects):
         ret = []
         for o in objects:
-            if "flags" not in o or \
-                (re.search("local(,|$)",o["flags"]) and \
-                "svi" not in o["flags"]):
+            if "flags" not in o or (re.search("local(,|$)",o["flags"]) and "svi" not in o["flags"]):
                 ret.append({"endpoints":{"attributes":o}})
         return ret
 
@@ -935,11 +922,12 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
         if r1 is not None:
             mac = r1.group("mac")
             tDn = o["tDn"]
-            if tDn in s1_epmIpEp: s1_epmIpEp[tDn]["mac"] = mac
+            if tDn in s1_epmIpEp: 
+                s1_epmIpEp[tDn]["mac"] = mac
             else:
-                logger.debug("tDn(%s) not found for %s" % (tDn, o["dn"]))
+                logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
-            logger.debug("failed to match reg(%s) regex for %s"%(reg,o["dn"]))
+            logger.debug("failed to match rsmacEpToIpEpAtt regex for %s", o["dn"])
     for o in s2_objects["epmRsMacEpToIpEpAtt"]:
         r2 = re.search(reg, o["dn"])
         if r2 is not None:
@@ -947,9 +935,9 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
             tDn = o["tDn"]
             if tDn in s2_epmIpEp: s2_epmIpEp[tDn]["mac"] = mac
             else:
-                logger.debug("tDn(%s) not found for %s" % (tDn, o["dn"]))
+                logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
-            logger.debug("failed to match reg(%s) regex for %s"%(reg,o["dn"]))
+            logger.debug("failed to match reg(%s) regex for %s", reg,o["dn"])
         
 
     # check epmMacEp, epmIpEp
@@ -963,21 +951,9 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
             with open(f2, "w") as f: json.dump(s2_write, f)
             per_node_class_compare(compare, mo, f1, f2, remap1, remap2)
         except Exception as e: 
-            logger.error("failed to perform endpoints comparions on %s: %s" % (
-                c, e))
+            logger.error("failed to perform endpoints comparions on %s: %s", c, e)
     
 def acl_compare(compare, folder1, folder2, remap1, remap2):
     """ perform acl comparision between snapshots """
     # TODO 
-    pass
-
-        
-            
-    
-
-                
-
-        
-         
- 
-    
+    pass 

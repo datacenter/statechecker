@@ -81,7 +81,7 @@ class Remap(object):
         if len(mo_remaps)==0: return value
         dmsg = "remap %s to " % value
         allset = "all" in mo_remaps
-        #logger.debug("remap(%s) %s" % (mo_remaps, value))
+        #logger.debug("remap(%s) %s" , mo_remaps, value)
         for r in self.REMAP_ORDERED:
             if allset or r in mo_remaps:
                 t = self.remaps[r]
@@ -89,10 +89,10 @@ class Remap(object):
                 if r1 is not None:
                     match = re.sub("[\[\]\,]","",r1.group("v"))
                     if match in t[1]:
-                        logger.debug("matching(%s) %s"%(match,t[1][match]))
+                        #logger.debug("matching(%s) %s",match,t[1][match])
                         value = t[0].sub(t[1][match], value)
                 
-        logger.debug("%s %s" % (dmsg, value))
+        #logger.debug("%s %s" ,dmsg, value)
         return value
 
     @staticmethod
