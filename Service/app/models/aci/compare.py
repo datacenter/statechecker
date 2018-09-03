@@ -10,6 +10,7 @@ from ..rest import api_callback
 from ..rest import api_register
 from ..rest import api_route
 from ..utils import get_app_config
+from ..utils import get_db
 from ..utils import format_timestamp
 from . import utils as aci_utils
 from .definitions import Definitions
@@ -20,6 +21,7 @@ from .snapshots import Snapshots
 
 from flask import abort, jsonify
 from multiprocessing import Pool
+from multiprocessing import current_process
 from natsort import natsorted as sorted
 from werkzeug.exceptions import (NotFound, BadRequest)
 
@@ -588,6 +590,10 @@ def generic_compare(args):
         based on value at arg[0].
         Note, list of args are provided as workaround to Pool.map restriction
     """
+    if current_process().name != "MainProcess":
+        logger.debug("creating new db connection object for child process")
+        get_db(uniq=True, overwrite_global=True)
+
     args = list(args)
     compare_type = args.pop(0)
     if compare_type == "custom":
