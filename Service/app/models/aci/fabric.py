@@ -121,7 +121,8 @@ class Fabric(Rest):
         if "fabric" not in filters:
             cls.logger.warn("skipping before delete operation on bulk delete")
             return filters
-        stop_monitor(filters["fabric"])
+        f = Fabric.load(fabric=filters["fabric"])
+        f.stop_fabric_monitor()
         return filters
 
     @api_route(path="status", methods=["GET"], swag_ret=["status"], role=Role.USER)
