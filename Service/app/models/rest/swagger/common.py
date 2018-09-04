@@ -14,11 +14,9 @@ crud_responses = {
         "description":"successfully created object",
         "content": {
             "application/json":{
-                "schema": {
-                    "$ref": "#/components/schemas/generic_write"
-                    }
-                },
+                "schema": {}
             },
+        },
     },
     "400": {
         "description": "bad request",
