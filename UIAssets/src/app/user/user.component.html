@@ -45,7 +45,7 @@
               [rowHeight]="'auto'"
               [limit]="10"
               [rows]="rows"
-              [sorts]="[{prop: 'username', dir: 'asc'}]"
+              [sorts]="usernameSort"
               [cssClasses]="{
                 sortAscending: 'icon-chevron-down',
                 sortDescending: 'icon-chevron-up',
@@ -54,6 +54,7 @@
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
               }"
+              (sort)="onSort($event)"
             >
               <ngx-datatable-column prop="username" name="Username" [sortable]="true" [flexGrow]="0.3">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">

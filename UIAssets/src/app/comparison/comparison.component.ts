@@ -25,10 +25,12 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   definitions: Definition[] ;
   updateQueue: any = [] ;
   predefinedNodes: any = ['global'] ;
+  comparisonSort:any ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService, 
     private modalService: BsModalService) {
     this.loadingMessage = 'Loading comparisons';
+    this.comparisonSort = this.backendService.prefs.comparison_sort ;
   }
 
   ngOnInit(): void {
@@ -36,6 +38,10 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+  }
+  
+  onSort(event) {
+    this.backendService.prefs.comparison_sort = event.sorts ;
   }
 
   getComparisons() {

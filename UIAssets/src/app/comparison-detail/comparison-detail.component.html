@@ -208,10 +208,7 @@
                   [columnMode]="'flex'"
                   [footerHeight]="50"
                   [rowHeight]="'auto'"
-                  [sorts]="[
-                    {prop: 'classname', dir: 'asc'},
-                    {prop: 'node_id', dir: 'asc'}
-                    ]"
+                  [sorts]="comparisonDetailSort"
                   [limit]="10"
                   [rows]="rows"
                   [cssClasses]="{
@@ -221,7 +218,8 @@
                 pagerRightArrow: 'icon-step-next',
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
-              }">
+              }"
+              (sort)="onSort($event)">
                   <ngx-datatable-column
                     *ngIf="!nodeMode"
                     prop="classname"

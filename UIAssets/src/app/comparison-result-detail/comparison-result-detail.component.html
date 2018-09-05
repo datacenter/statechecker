@@ -43,7 +43,7 @@
               [headerHeight]="25"
               [footerHeight]="50"
               [rowHeight]="'auto'"
-              [sorts]="[{prop: 'start_time', dir: 'asc'}]"
+              [sorts]="comparisonResultDetailSort"
               [limit]="10"
               [loadingIndicator]="loading"
               [rows]="rows"
@@ -55,6 +55,7 @@
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
               }"
+              (sort)="onSort($event)"
             >
               <ngx-datatable-column *ngIf="type=='modified'" prop="_key" name="Key" [sortable]="true" [flexGrow]="1">
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -133,7 +134,7 @@
           [rowHeight]="'auto'"
           [limit]="10"
           [rows]="selectedComparisonResultProperties"
-          [sorts]="[{prop: 'attribute', dir: 'asc'}]"
+          [sorts]="comparisonResultDetailemSort"
           [cssClasses]="{
             sortAscending: 'icon-chevron-down',
             sortDescending: 'icon-chevron-up',
@@ -142,6 +143,7 @@
             pagerPrevious: 'icon-step-backward',
             pagerNext: 'icon-step-forward'
           }"
+          (sort)="onemSort($event)"
         >
           <ngx-datatable-column prop="attribute" [sortable]="true" [flexGrow]="0.2">
             <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">

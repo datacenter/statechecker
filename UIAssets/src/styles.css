@@ -1,5 +1,7 @@
-@import '~cisco-ui/dist/css/cui-standard.css';
-@import "~@ng-select/ng-select/themes/default.theme.css";
+/*@import '~cisco-ui/dist/css/cui-standard.css';*/
+@import '../src/cui/css/cui-standard.min.css' ;
+
+@import '~@ng-select/ng-select/themes/default.theme.css';
 
 .datatable-body-row {
   overflow: hidden;

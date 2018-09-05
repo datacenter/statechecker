@@ -45,7 +45,7 @@
               [rowHeight]="'auto'"
               [limit]="10"
               [rows]="rows"
-              [sorts]="[{prop: 'fabric', dir: 'asc'}]"
+              [sorts]="fabricSorts"
               [cssClasses]="{
                 sortAscending: 'icon-chevron-down',
                 sortDescending: 'icon-chevron-up',
@@ -53,7 +53,8 @@
                 pagerRightArrow: 'icon-step-next',
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
-              }">
+              }"
+              (sort)="onSort($event)">
               <ngx-datatable-column prop="fabric" [sortable]="true" [flexGrow]="0.1">
               </ngx-datatable-column>
               <ngx-datatable-column prop="apic_hostname" name="Hostname" [sortable]="true" [flexGrow]="0.2">

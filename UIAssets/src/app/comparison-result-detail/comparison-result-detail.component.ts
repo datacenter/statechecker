@@ -29,11 +29,15 @@ export class ComparisonResultDetailComponent implements OnInit {
   public selectedComparisonResultProperties: any[];
   private filter: string;
   private details: any;
+  comparisonResultDetailSort:any ;
+  comparisonResultDetailemSort:any
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison result details';
-    this.semanticDiff = false;
-    this.includeEqual = false;
+    this.semanticDiff = !this.backendService.prefs.comparisonResult_modified_lineDiffMode;
+    this.includeEqual = this.backendService.prefs.comparisonResult_modified_emptyResults;
+    this.comparisonResultDetailSort = this.backendService.prefs.comparisonResultDetailSort ;
+    this.comparisonResultDetailemSort = this.backendService.prefs.comparisonResultDetailemSort ;
   }
 
   ngOnInit(): void {
@@ -53,6 +57,14 @@ export class ComparisonResultDetailComponent implements OnInit {
         this.loading = false;
       });
     });
+  }
+
+  onSort(event) {
+    this.comparisonResultDetailSort = event.sorts ;
+  }
+
+  onemSort(event) {
+    this.comparisonResultDetailemSort = event.sorts ;
   }
 
   getComparisonResultDetails() {
@@ -85,10 +97,12 @@ export class ComparisonResultDetailComponent implements OnInit {
 
   public onModeChanged(checked: boolean) {
     this.semanticDiff = checked;
+    this.backendService.prefs.comparisonResult_modified_lineDiffMode = !checked ;
   }
 
   public onIncludeEqual(checked: boolean) {
     this.includeEqual = checked;
+    this.backendService.prefs.comparisonResult_modified_emptyResults = checked ;
     this.updateSelectedComparisonResultProperties();
   }
 

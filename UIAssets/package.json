@@ -30,7 +30,6 @@
     "@swimlane/ngx-datatable": "^11.3.2",
     "angular2-moment": "^1.8.0",
     "angular2-notifications": "^1.0.1",
-    "cisco-ui": "git+https://github.com/CiscoDevNet/CiscoUIKit.git",
     "core-js": "^2.5.5",
     "inquirer": "^5.2.0",
     "ng-diff-match-patch": "^2.0.6",

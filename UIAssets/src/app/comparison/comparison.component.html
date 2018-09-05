@@ -44,7 +44,7 @@
               [headerHeight]="25"
               [footerHeight]="50"
               [rowHeight]="'auto'"
-              [sorts]="[{prop: 'start_time', dir: 'desc'}]"
+              [sorts]="comparisonSort"
               [limit]="10"
               [loadingIndicator]="loading"
               [rows]="rows"
@@ -56,6 +56,7 @@
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
               }"
+              (sort)="onSort($event)"
             >
               <ngx-datatable-column prop="start_time" name="Timestamp" [sortable]="true" [flexGrow]="0.2">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>

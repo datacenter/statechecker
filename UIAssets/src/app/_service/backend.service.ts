@@ -10,6 +10,7 @@ import {ComparisonResultList} from '../_model/comparison-result';
 import {Observable} from 'rxjs/Observable';
 import {environment} from '../../environments/environment';
 import {ManagedObjectList} from '../_model/managed-object';
+import { preferences } from '../_model/preferences';
 
 
 @Injectable()
@@ -17,7 +18,9 @@ export class BackendService {
   private baseUrl = '';
   public app_status = 'starting app components' ;
   fileUploadMode = false ;
+  public prefs : preferences ;
   constructor(private http: HttpClient) {
+    this.prefs = new preferences() ;
     if (!environment.app_mode) {
       this.baseUrl = environment.api_entry;
     }
@@ -191,10 +194,10 @@ export class BackendService {
     if (key === 'class') {
       if (!includeEmpty) {
         params = params
-          .set('filter', 'and(and(eq("compare_id","' + comparison._id + '"),regex("classname","(?i)^' + value + '")),or(gt("total.created",0),gt("total.deleted",0),gt("total.modified",0)))');
+          .set('filter', 'and(and(eq("compare_id","' + comparison._id + '"),eq("classname","' + value + '")),or(gt("total.created",0),gt("total.deleted",0),gt("total.modified",0)))');
       } else {
         params = params
-          .set('filter', 'and(eq("compare_id","' + comparison._id + '"),regex("classname","(?i)^' + value + '"))');
+          .set('filter', 'and(eq("compare_id","' + comparison._id + '"),eq("classname","' + value + '"))');
       }
     } else if (key === 'node') {
       if (!includeEmpty) {
@@ -216,7 +219,7 @@ export class BackendService {
     params = params.set('include', type);
     if (key === 'class') {
       params = params
-        .set('filter', 'and(eq("compare_id","' + comparison._id + '"),regex("classname","(?i)^' + value + '"),eq("node_id",' + subvalue + '))')
+        .set('filter', 'and(eq("compare_id","' + comparison._id + '"),eq("classname","' + value + '"),eq("node_id",' + subvalue + '))')
       ;
     } else if (key === 'node') {
       params = params

@@ -20,15 +20,21 @@ export class FabricComponent implements OnInit {
   fabrics: Fabric[];
   confirmPassword: string ;
   fromAddTemplate = false ;
+  fabricSorts:any ;
   @ViewChild('editTemplate') editModal: TemplateRef<any> ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService) {
     this.loadingMessage = 'Loading fabrics';
+    this.fabricSorts = this.backendService.prefs.fabric_sort ;
   }
 
   ngOnInit(): void {
     this.getFabrics(false);
+  }
+
+  onSort(event){
+    this.backendService.prefs.fabric_sort = event.sorts ;
   }
 
   getFabrics(toBeVerified) {

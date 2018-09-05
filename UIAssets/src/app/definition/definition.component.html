@@ -45,7 +45,7 @@
               [footerHeight]="50"
               [rowHeight]="'auto'"
               [limit]="10"
-              [sorts]="[{prop: 'classname', dir: 'asc'}]"
+              [sorts]="definitionSort"
               [rows]="rows"
               [cssClasses]="{
                 sortAscending: 'icon-chevron-down',
@@ -54,7 +54,8 @@
                 pagerRightArrow: 'icon-step-next',
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
-              }">
+              }"
+              (sort)="onSort($event)">
               <ngx-datatable-column prop="definition" [sortable]="true" [flexGrow]="0.4" [cellClass]="getDefinitionClass"></ngx-datatable-column>
               <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.4"></ngx-datatable-column>
               <ngx-datatable-column name="# Objects" [sortable]="true" [flexGrow]="0.2">
