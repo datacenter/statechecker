@@ -247,7 +247,7 @@ def swagger_delete(cls, path, bulk=False):
 def build_swagger_attribute(attr):
     # for single attribute return schema
     parent = {
-        "description": attr.get("description", "")
+        "description": attr.get("description", "").strip()
     }
     p = {}
     if attr["type"] is list: 
