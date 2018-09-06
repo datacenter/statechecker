@@ -107,6 +107,9 @@ class User(Rest):
         u = User.load(username=username)
         if u.exists():
             from flask_bcrypt import check_password_hash
+            # do not allow login for blacklist users
+            if u.role == Role.BLACKLIST:
+                abort(403, MSG_403)
             try:
                 if check_password_hash(u.password, password):
                     u.last_login = time.time()
@@ -207,6 +210,10 @@ class User(Rest):
                 abort(400, "Username \"%s\" is reserved and cannot be updated"%filters["username"])
             elif not admin and g.user.username != filters["username"]:
                 abort(403, MSG_403)
+            # block role elevation
+            if filters["username"] == g.user.username:
+                if "role" in data and data["role"]!=g.user.role:
+                    abort(403, "cannot modify local role")
         else:
             if not admin:
                 # for non-admin users, filter must include their username
