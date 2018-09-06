@@ -912,24 +912,30 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
         if c not in s1_objects: s1_objects[c] = []
         if c not in s2_objects: s2_objects[c] = []
 
-    # walk through epmIpEp objects and add empty 'mac' attribute
-    # then walk through epmRsMacEpToIpEpAtt and add mac to corresponding epmIpEp
-    reg = "/db-ep/mac-(?P<mac>[0-9A-Fa-f:]+)/rsmacEpToIpEpAtt-"
+    # walk through epmIpEp objects and add empty mac, bd, and encap
+    # then walk through epmRsMacEpToIpEpAtt and add to corresponding epmIpEp
+    reg = "/bd-\[vxlan-(?P<bd>[0-9]+)\]/vx?lan-\[(?P<encap>vx?lan-[0-9]+)\]/"
+    reg+= "db-ep/mac-(?P<mac>[0-9A-Fa-f:]+)/rsmacEpToIpEpAtt-"
     s1_epmIpEp = {}
     s2_epmIpEp = {}
     for o in s1_objects["epmIpEp"]: 
         o["mac"] = "-"
+        o["bd"] = "-"
+        o["encap"] = "-"
         s1_epmIpEp[o["dn"]] = o
     for o in s2_objects["epmIpEp"]: 
         o["mac"] = "-"
+        o["bd"] = "-"
+        o["encap"] = "-"
         s2_epmIpEp[o["dn"]] = o
     for o in s1_objects["epmRsMacEpToIpEpAtt"]:
         r1 = re.search(reg, o["dn"])
         if r1 is not None:
-            mac = r1.group("mac")
             tDn = o["tDn"]
             if tDn in s1_epmIpEp: 
-                s1_epmIpEp[tDn]["mac"] = mac
+                s1_epmIpEp[tDn]["mac"] = r1.group("mac")
+                s1_epmIpEp[tDn]["bd"] = "vxlan-%s" % r1.group("bd")
+                s1_epmIpEp[tDn]["encap"] = r1.group("encap")
             else:
                 logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
@@ -937,27 +943,32 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
     for o in s2_objects["epmRsMacEpToIpEpAtt"]:
         r2 = re.search(reg, o["dn"])
         if r2 is not None:
-            mac = r2.group("mac")
             tDn = o["tDn"]
-            if tDn in s2_epmIpEp: s2_epmIpEp[tDn]["mac"] = mac
+            if tDn in s2_epmIpEp: 
+                s2_epmIpEp[tDn]["mac"] = r2.group("mac")
+                s2_epmIpEp[tDn]["bd"] = "vxlan-%s" % r2.group("bd")
+                s2_epmIpEp[tDn]["encap"] = r2.group("encap")
             else:
                 logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
             logger.debug("failed to match reg(%s) regex for %s", reg,o["dn"])
         
-
+    # here we overwrite endpoints.json file with only interesting (local) endpoints.  We need to 
+    # merge epmIpEp and epmMacEp objects into single file
+    all_s1_objects = []
+    all_s2_objects = []
     # check epmMacEp, epmIpEp
     for c in ["epmMacEp", "epmIpEp"]:
         # build subset of interesting objects with classname 'endpoints' and
         # write to file for per_node_class_compare to read
-        s1_write = get_local_objects(s1_objects.get(c, []))
-        s2_write = get_local_objects(s2_objects.get(c, []))
-        try:
-            with open(f1, "w") as f: json.dump(s1_write, f)
-            with open(f2, "w") as f: json.dump(s2_write, f)
-            per_node_class_compare(compare, mo, f1, f2, remap1, remap2)
-        except Exception as e: 
-            logger.error("failed to perform endpoints comparions on %s: %s", c, e)
+        all_s1_objects+= get_local_objects(s1_objects.get(c, []))
+        all_s2_objects+= get_local_objects(s2_objects.get(c, []))
+    try:
+        with open(f1, "w") as f: json.dump(all_s1_objects, f)
+        with open(f2, "w") as f: json.dump(all_s2_objects, f)
+        per_node_class_compare(compare, mo, f1, f2, remap1, remap2)
+    except Exception as e: 
+        logger.error("failed to perform endpoints comparions on %s: %s", c, e)
     
 def acl_compare(compare, folder1, folder2, remap1, remap2):
     """ perform acl comparision between snapshots """

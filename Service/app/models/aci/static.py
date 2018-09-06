@@ -183,7 +183,7 @@ STATIC_MANAGED_OBJECTS = [
         "description": "pseudo class representing local endpoints per-node. This MO collects and analyzes epmIpEp, epmMacEp, and epmRsMacEpToIpEpAtt objects",
         "pseudo": True,
         "analyzer": "endpoints",
-        "include": ["addr","createTs","flags","ifId","modTs","pcTag","mac"],
+        "include": ["addr","createTs","flags","ifId","modTs","pcTag","mac","bd","encap"],
         "attributes": [
             {
                 "name": "ifId",
