@@ -26,6 +26,7 @@ export class SnapshotComponent implements OnInit {
   snapshots: Snapshot[];
   definitions: Definition[];
   app_mode: boolean ;
+  snapshotSorts:any ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService) {
@@ -33,10 +34,15 @@ export class SnapshotComponent implements OnInit {
     this.appLoadMessage = 'Loading Snapshots' ;
     this.loadingMessage = this.appLoadMessage ;
     this.app_mode = environment.app_mode ;
+    this.snapshotSorts = this.backendService.prefs.snapshot_sort ;
   }
 
   ngOnInit(): void {
     this.getSnapshots();
+  }
+
+  onSort(event) {
+    this.backendService.prefs.snapshot_sort = event.sorts ;
   }
 
   getSnapshots() {

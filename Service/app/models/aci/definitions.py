@@ -4,6 +4,8 @@ from flask import abort
 from ..rest import (Rest, api_register)
 from .managed_objects import ManagedObjects
 
+
+
 def check_all_mo_exist(mos):
     """ ensure all objects in provided list has existing managedObject
         abort with 400 error if the object does not exist
@@ -29,7 +31,7 @@ def before_definition_update(filters, data, **kwargs):
 
 def before_definition_delete(filters, **kwargs):
     if "definition" in filters:
-        obj = Definitions.load(defintion=filters["definition"])
+        obj = Definitions.load(definition=filters["definition"])
         if obj.exists() and obj.template is True :
             abort( 400, "Cannot delete a predefined template")
     return filters

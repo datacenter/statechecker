@@ -18,14 +18,20 @@ export class DefinitionComponent implements OnInit {
   definition: Definition;
   definitions: Definition[];
   managedObjects: any[];
+  definitionSort:any ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService) {
     this.loadingMessage = 'Loading definitions';
+    this.definitionSort = this.backendService.prefs.definition_sort ;
   }
 
   ngOnInit(): void {
     this.getDefinitions();
+  }
+
+  onSort(event) {
+    this.backendService.prefs.definition_sort = event.sorts ;
   }
 
   getDefinitions() {

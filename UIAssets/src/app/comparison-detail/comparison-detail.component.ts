@@ -21,16 +21,22 @@ export class ComparisonDetailComponent implements OnInit {
   public rows;
   private filter: string;
   public isExpanded = false ;
+  comparisonDetailSort:any ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison';
-    this.nodeMode = false;
-    this.includeEmpty = false;
+    this.comparisonDetailSort = this.backendService.prefs.comparisonDetail_sort ;
   }
 
   ngOnInit(): void {
+    this.includeEmpty = this.backendService.prefs.comparisonDetail_emptyResults ;
+    this.nodeMode = !this.backendService.prefs.comparisonDetail_classView ;
     this.getComparison();
+  }
+
+  onSort(event) {
+    this.backendService.prefs.comparisonDetail_sort = event.sorts ;
   }
 
   getComparison() {
@@ -86,11 +92,13 @@ export class ComparisonDetailComponent implements OnInit {
 
   onModeChanged(checked: boolean) {
     this.nodeMode = checked;
+    this.backendService.prefs.comparisonDetail_classView = !checked ;
     this.filterRows();
   }
 
   onIncludeChanged(checked: boolean) {
     this.includeEmpty = checked;
+    this.backendService.prefs.comparisonDetail_emptyResults = checked ;
     this.filterRows();
   }
 
