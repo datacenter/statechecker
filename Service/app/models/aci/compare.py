@@ -652,6 +652,9 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
     if not compare.dynamic and "dynamic" in mo["labels"]:
         logger.debug("%s filtered by dynamic-disabled option", mo["classname"])
         return
+    if not compare.statistic and "statistic" in mo["labels"]:
+        logger.debug("%s filtered by statistic-disabled option", mo["classname"])
+        return
 
     # get list of objects
     s1_objects = Remap.get_object_attributes(file1, mo["classname"])
