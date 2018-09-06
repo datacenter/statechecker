@@ -139,8 +139,8 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   updateFilter(event) {
     const val = event.target.value.toLowerCase();
     this.rows = this.comparisons.filter(function (d) {
-      return (d.snapshot1_obj.description.toLowerCase().indexOf(val) !== -1
-      || d.snapshot2_obj.description.toLowerCase().indexOf(val) !== -1) || !val;
+      return (d['snapshot1_description'].toLowerCase().indexOf(val) !== -1
+      || d['snapshot2_description'].toLowerCase().indexOf(val) !== -1) || !val;
     });
   }
 
