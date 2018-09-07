@@ -95,7 +95,14 @@
                 *ngIf="key=='class'" prop="node_id" name="Node" [sortable]="true" [flexGrow]="0.2">
               </ngx-datatable-column>
               <ngx-datatable-column
-                *ngIf="key=='node'" prop="classname" name="Class" [sortable]="true" [flexGrow]="0.2">
+                *ngIf="key=='node'" name="Class" [sortable]="true" [flexGrow]="0.2">
+
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                    <a href="#/managed-object/{{row['classname']}}" target="_blank">
+                        {{row['classname']}}
+                    </a>
+                </ng-template>
+
               </ngx-datatable-column>
               <ngx-datatable-column name="Equal" [sortable]="true" [flexGrow]="0.1">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">
