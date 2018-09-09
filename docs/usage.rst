@@ -47,12 +47,15 @@ two snapshots collected from the same fabric.
 To get started, click the |icon_fabric| icon. Click the |icon_add| icon to add a new fabric. 
 Configure the following for connecting to the fabric:
 
-- **Name** unique identifier for this fabric
-- **Hostname** DNS hostname or IP address of a single APIC in the cluster. Ideally this would be 
-   APIC-1 but can be any APIC in the cluster. The other APIC controlers within the cluster are 
+- **Name** 
+  unique identifier for this fabric
+- **Hostname** 
+  DNS hostname or IP address of a single APIC in the cluster. Ideally this would be 
+  APIC-1 but can be any APIC in the cluster. The other APIC controlers within the cluster are 
   discovered dynamically and their out-of-band IPv4 addresses are cached and used in the absence of 
   the configure hostname
-- **Username** for API access to the fabric.  Note, the user must have ``admin`` read
+- **Username** 
+  for API access to the fabric.  Note, the user must have ``admin`` read
   access to the MOs in the fabric for proper operation of StateChecker app.
 - **Password** for configured username
 
@@ -90,14 +93,14 @@ A
 
 .. |icon_users| image:: icon_users.png
    :align: middle
-   :width: 50
+   :width: 30
 
 .. |icon_add| image:: icon_add.png
    :align: middle
-   :width: 50
+   :width: 30
 
 .. |icon_verify| image:: icon_verify.png
    :align: middle
-   :width: 50
+   :width: 30
 
 
