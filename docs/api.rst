@@ -98,8 +98,9 @@ For example:
     	 --header "APIC-Challenge: 2f70d689cb5fd9aa3ff63046..." \
     	 -kX POST "https://<apic-ip>/appcenter/Cisco/StateChangeChecker/proxy.json" \
     	 -d '{"url": "/api/aci/snapshots", "method":"GET"}'
-  
- More information on using the Cisco API is available on `Cisco APIC REST API Configuration Guide
+ 
+
+More information on using the Cisco API is available on `Cisco APIC REST API Configuration Guide
 <https://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/2-x/rest_cfg/2_1_x/b_Cisco_APIC_REST_API_Configuration_Guide/b_Cisco_APIC_REST_API_Configuration_Guide_chapter_01.html/>`_
 
 .. |swagger_docs_example_1| image:: swagger_docs_example_1.png
