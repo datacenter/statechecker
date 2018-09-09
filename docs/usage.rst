@@ -160,8 +160,25 @@ occurred.
 Managing Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
-A
+A definition is a collection of one or more managed objects (MOs). Operators can add and modify 
+definitions by clicking the definition icon |icon_edit| at the top right of the page. There are 
+four predefined definition templates that cannot be modified:
 
+- **Full**
+  default definition that includes all MOs defined within the app
+- **Access**
+  This definition collects access information including basic interface status, switch inventory 
+  information, along with L1/L2 state.
+- **Routing**
+  This definition collects basic information about L2/L3 local endpoint and route reachability state. 
+  This includes protocol status, adjacency information, and routing information base (RIB) state.
+- **VMM**
+  This definition collects virtual machine manager (VMM) information focusing on hypervisor 
+  connectivity, inventory, and topology state.
+
+Operators can click the add icon |icon_add| to create a new definition.  A definition includes a 
+name, description, and list of MOs (classes). This helpful for operators who have a specific set of
+objects that need to be compared outside of the predefined templates.
 
 .. |icon_fabric| image:: icon_fabric.png
    :align: middle
@@ -180,6 +197,10 @@ A
    :width: 30
 
 .. |icon_add| image:: icon_add.png
+   :align: middle
+   :width: 30
+
+.. |icon_edit| image:: icon_edit.png
    :align: middle
    :width: 30
 
