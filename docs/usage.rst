@@ -100,16 +100,14 @@ are several options for a comparision:
   The second snapshot to be compared.  Note, if snapshot2 is before snapshot1 based on the
   collection time within the snapshot, the app will swap snapshot1 and snapshot2 pointers
 - **Definition**
-  The definition to use for the comparision.  The definition is a list of one or more MOs. There is
-  also a definition referenced within the snapshot that controls what objects are collected.  Here,
-  the definition controls what objects are compared. Generally, a user will select the ``Full`` 
-  definition to collect all objects and then perform comparision on a subset of the objects of 
-  interest with a different definition.  
+  The definition to use for the comparision. The definition is a list of one or more MOs. Here,
+  the definition is used as a filter to control which objects are compared.
+  See `Managing Definitions`_ for more details.
 - **Nodes**
   Operators can filter the comparison to a selection of one or more nodes. This is useful when a
   maintenance window has been performed and there are several known changes that have occurred but
   operators expect specific state to be the same on a subset of leafs.  For example, the addition
-  of new service leafs should not have affected Access objects on the border leafs.
+  of new service leafs should not have affected ``Access`` MOs on the border leafs.
   By default this option is empty which implies that the comparision should be performed on all
   nodes within the snapshots.
 - **Compare Options**
@@ -119,7 +117,7 @@ are several options for a comparision:
     Some MOs along with MOs attributes are marked as **dynamic**.  Dynamic objects and attributes 
     are those which are expected to change between snapshots.  Examples includes hardware indexes
     and file descriptor. 
-    The dynamic option is disabled by default.
+    The dynamic option is **disabled** by default.
 
   + **Remap**
     ACI abstracts logical resources from concrete values. For example, a user creates a 
@@ -131,29 +129,31 @@ are several options for a comparision:
     and loopback interfaces.  Also, all MOs that reference this objects will also be remapped. For
     example, a route next hop may contain a vlan id that needs to be remapped before snapshot
     comparison.
-    The remap option is enabled by default
+    The remap option is **enabled** by default
 
   + **Statistic**
     Some object and attributes are statistics (counters) that are expected to increment at a regular
     interval. Operators can choose to include or exclude statistics during comparison via this 
     option.
-    The statistic option is disabled by default
+    The dynamic option is **disabled** by default.
 
   + **Timestamp**
     Timestamp MOs and attributes generally reference the time in which the value was created or 
     modified. Operators can choose to include or exclude timestamps during comparison via this
     option.
-    The timestamp option is disabled by default
+    The dynamic option is **disabled** by default.
 
   + **Serialize**
     (development only)
     Snapshot comparisions can involve 10's to 100's of thousands of objects. For efficiency this is
     performed in parallel by multiple processes.  For debugging, users can force comparison to 
     operate serially. 
+    The dynamic option is **disabled** by default.
 
-
-
-
+Once a comparison is completed, click the zoom icon |icon_search| to see the details. The comparison
+page includes the overall totals of equal, created, modified, and deleted objects. Operators can
+further drill down into specific nodes and specific classes to understand what changes have
+occurred.  
 
 Managing Definitions
 ^^^^^^^^^^^^^^^^^^^^
@@ -194,6 +194,10 @@ A
    :width: 30
 
 .. |icon_upload| image:: icon_upload.png
+   :align: middle
+   :width: 30
+
+.. |icon_search| image:: icon_search.png
    :align: middle
    :width: 30
 
