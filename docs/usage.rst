@@ -31,9 +31,9 @@ roles:
   edit them
 - ``BLACKLIST`` role is not allowed to access the application
 
-Click the |icon_users| at the top right of the application to manage users.  Users can be added, 
-deleted, and updated as needed. Also, the user tab allows passwords to be changed. It is highly 
-recommended to change the default password.
+Click the users icon |icon_users| at the top right of the application to manage users.  Users can 
+be added, deleted, and updated as needed. Also, the user tab allows passwords to be changed. It is 
+highly recommended to change the default password.
 
 Connecting to the Fabric
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,8 +44,8 @@ A fabric refers to a single APIC cluster and corresponding switches.  StateCheck
 configured to perform snapshots across multiple fabrics.  Note, snapshot comparision must be between
 two snapshots collected from the same fabric.
 
-To get started, click the |icon_fabric| icon. Click the |icon_add| icon to add a new fabric. 
-Configure the following for connecting to the fabric:
+To get started, click the fabric icon |icon_fabric|. Click the add icon |icon_add| to add a new 
+fabric. Configure the following for connecting to the fabric:
 
 - **Name** 
   unique identifier for this fabric
@@ -60,13 +60,32 @@ Configure the following for connecting to the fabric:
 - **Password** for configured username
 
 The app will test the configured credentials at the time the fabric is created or edited. Users can
-additionally test access for a configured fabric by clicking the |icon_verify| icon.
+additionally test access for a configured fabric by clicking the verify icon |icon_verify|.
+
+Any changes to the configured fabrics should automatically be updated within the GUI. Users can also
+click the refresh icon |icon_refresh| to manually refresh the state of all configured fabrics.
 
 
 Creating Snapshots
 ^^^^^^^^^^^^^^^^^^
 
-A
+A snapshot is the collection of managed objects (MOs) from the fabric. The specific MOs collected 
+are dependent on the definition chosen. By default, the ``Full`` definition is selected which 
+collects all MOs within the app. See `Managing Definitions`_ for more details on definitions.
+
+To collect a snapshot, click the snapshot icon |icon_snapshot|.  Next, click the add icon |icon_add| 
+and provide a **description**, **definition**, and a **fabric**. Note, when running in ``app mode`` 
+the fabric option is not available.
+
+For backup purposes, a snapshot can be downloaded. Once a snapshot has completed, click the 
+download icon |icon_download| which will create a **.tgz** file with all snapshot data. This can 
+later be imported back into the app via the upload icon |icon_upload|.  There are a few restrictions
+to be aware of when using the upload operation:
+
+- The fabric name for the uploaded snapshot must exist within the app
+- The definition name for the uploaded snapshot must exist within the app
+- When running in ``app_mode``, there is a **20MB** limitation on file uploads. The snapshot must be
+  less than **20MB** to import.
 
 Creating Comparisions
 ^^^^^^^^^^^^^^^^^^^^^
@@ -103,4 +122,15 @@ A
    :align: middle
    :width: 30
 
+.. |icon_refresh| image:: icon_refresh.png
+   :align: middle
+   :width: 30
+
+.. |icon_download| image:: icon_download.png
+   :align: middle
+   :width: 30
+
+.. |icon_upload| image:: icon_upload.png
+   :align: middle
+   :width: 30
 
