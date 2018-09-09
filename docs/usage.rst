@@ -224,7 +224,6 @@ objects that need to be compared outside of the predefined templates.
    :align: middle
    :width: 30
 
-
 .. |compare_example_1| image:: compare_example_1.png
    :align: middle
    :width: 700

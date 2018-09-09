@@ -13,6 +13,7 @@ Welcome to StateChecker's documentation!
    introduction
    install
    usage
+   api
    development
 
 
