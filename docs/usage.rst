@@ -155,6 +155,8 @@ page includes the overall totals of equal, created, modified, and deleted object
 further drill down into specific nodes and specific classes to understand what changes have
 occurred.  
 
+|compare_example_1|
+
 Managing Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -200,4 +202,9 @@ A
 .. |icon_search| image:: icon_search.png
    :align: middle
    :width: 30
+
+
+.. |compare_example_1| image:: compare_example_1.png
+   :align: middle
+   :width: 700
 
