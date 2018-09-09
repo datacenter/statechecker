@@ -1,13 +1,13 @@
 Usage
 =====
 
-StateChecker allows the operator to collect snapshots of the fabric and perform comparisions to 
+StateChecker allows the operator to collect snapshots of the fabric and perform comparisons to 
 understand how the fabric has changed. To get started, perform the following steps:
 
 - `Configuring Users`_
 - `Connecting to the Fabric`_
 - `Creating Snapshots`_
-- `Creating Comparisions`_
+- `Creating Comparisons`_
 - `Managing Definitions`_
 
 .. note:: There a few differences when running StateChecker in ``app mode`` vs. ``standalone``. 
@@ -27,7 +27,7 @@ Operators can configure multiple users for accessing StateChecker app. A user ca
 roles:
 
 - ``FULL_ADMIN`` role is capable of performing on all read and write operations within the app
-- ``USER`` role is a read only role that can view snapshots and comparisions but cannot create or 
+- ``USER`` role is a read only role that can view snapshots and comparisons but cannot create or 
   edit them
 - ``BLACKLIST`` role is not allowed to access the application
 
@@ -41,7 +41,7 @@ Connecting to the Fabric
 .. note:: Configuring the fabric is only available in ``standalone`` mode
 
 A fabric refers to a single APIC cluster and corresponding switches.  StateChecker app can be 
-configured to perform snapshots across multiple fabrics.  Note, snapshot comparision must be between
+configured to perform snapshots across multiple fabrics.  Note, snapshot comparison must be between
 two snapshots collected from the same fabric.
 
 To get started, click the fabric icon |icon_fabric|. Click the add icon |icon_add| to add a new 
@@ -87,12 +87,12 @@ to be aware of when using the upload operation:
 - When running in ``app_mode``, there is a **20MB** limitation on file uploads. The snapshot must be
   less than **20MB** to import.
 
-Creating Comparisions
+Creating Comparisons
 ^^^^^^^^^^^^^^^^^^^^^
 
 Operators can compare snapshots to determine what has changed within the fabric.  To perform a 
-comparision, click the comparison icon |icon_comparison| and then add comparision |icon_add|. There
-are several options for a comparision:
+comparison, click the comparison icon |icon_comparison| and then add comparison |icon_add|. There
+are several options for a comparison:
 
 - **Snapshot 1**
   The first snapshot to be compared
@@ -100,7 +100,7 @@ are several options for a comparision:
   The second snapshot to be compared.  Note, if snapshot2 is before snapshot1 based on the
   collection time within the snapshot, the app will swap snapshot1 and snapshot2 pointers
 - **Definition**
-  The definition to use for the comparision. The definition is a list of one or more MOs. Here,
+  The definition to use for the comparison. The definition is a list of one or more MOs. Here,
   the definition is used as a filter to control which objects are compared.
   See `Managing Definitions`_ for more details.
 - **Nodes**
@@ -108,7 +108,7 @@ are several options for a comparision:
   maintenance window has been performed and there are several known changes that have occurred but
   operators expect specific state to be the same on a subset of leafs.  For example, the addition
   of new service leafs should not have affected ``Access`` MOs on the border leafs.
-  By default this option is empty which implies that the comparision should be performed on all
+  By default this option is empty which implies that the comparison should be performed on all
   nodes within the snapshots.
 - **Compare Options**
   There are a few knobs to control how the comparison is performed.
@@ -123,7 +123,7 @@ are several options for a comparision:
     ACI abstracts logical resources from concrete values. For example, a user creates a 
     BD and EPG and deploys it to a leaf. This logical model translates to a concrete vlan with a 
     vlan identifier that is arbitrarily allocated. Removing and readding the EPG or reloading the
-    switch may result in a different vlan id for a particular EPG.  To perform comparision between
+    switch may result in a different vlan id for a particular EPG.  To perform comparison between
     snapshots, the StateChecker application will map the vlan identifier to a consistent logical
     value.  Other objects that are remapped include include port-channels, sub-interfaces, tunnels,
     and loopback interfaces.  Also, all MOs that reference this objects will also be remapped. For
@@ -145,7 +145,7 @@ are several options for a comparision:
 
   + **Serialize**
     (development only)
-    Snapshot comparisions can involve 10's to 100's of thousands of objects. For efficiency this is
+    Snapshot comparisons can involve 10's to 100's of thousands of objects. For efficiency this is
     performed in parallel by multiple processes.  For debugging, users can force comparison to 
     operate serially. 
     The dynamic option is **disabled** by default.
@@ -169,7 +169,7 @@ A
    :align: middle
    :width: 150
 
-.. |icon_compare| image:: icon_comparision.png
+.. |icon_compare| image:: icon_comparison.png
    :align: middle
    :width: 150
 
