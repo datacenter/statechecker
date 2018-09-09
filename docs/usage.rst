@@ -169,7 +169,7 @@ A
    :align: middle
    :width: 150
 
-.. |icon_compare| image:: icon_comparison.png
+.. |icon_comparison| image:: icon_comparison.png
    :align: middle
    :width: 150
 
