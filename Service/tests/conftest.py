@@ -52,8 +52,8 @@ logger = test_logging(logging.getLogger("app"))
 test_logging(logging.getLogger("tests"))
 
 from app.models.utils import get_db
-from app.models.rest import (registered_classes, Role)
-from app.models.users import Users
+from app.models.rest import (registered_classes, Role, Universe)
+from app.models.user import User
 
 # instance relative config - config.py implies instance/config.py
 from tests.api.test_rest import Rest_TestClass
@@ -72,13 +72,11 @@ def app(request):
     # testdata to pre-load into db, indexed by db collection name containing json file with testdata
     # or directory to scan and insert into collection
     testdata = {
-        "settings": "%s/settings.json" % tdir,
-        "users": "%s/users.json" % tdir,
     }
 
     from app import create_app
-    db = get_db()
     app = create_app("config.py")
+    db = get_db()
     app.db = db
     app.client = app.test_client()
 
@@ -93,19 +91,24 @@ def app(request):
 
         # create unique indexes for collection
         indexes = []
-        for a in c._attributes:
-            if c._attributes[a].get("key", False): 
-                indexes.append((a,DESCENDING))
+        if not c._access["expose_id"]:
+            for a in c._attributes:
+                if c._attributes[a].get("key", False): 
+                    indexes.append((a,DESCENDING))
         if len(indexes)>0:
             logger.debug("creating indexes for %s: %s",c._classname,indexes)
             db[c._classname].create_index(indexes, unique=True)
+
+    # if uni is enabled then required before any other object is created
+    uni = Universe.load()
+    uni.save()
     logger.debug("db initialized")
 
 
     # create local and admin users required to be present for all tests
     logger.debug("creating default local users")
-    u1 = Users(username="local", password="password", role=Role.FULL_ADMIN)
-    u2 = Users(username="admin", password="password", role=Role.FULL_ADMIN)
+    u1 = User(username="local", password="password", role=Role.FULL_ADMIN)
+    u2 = User(username="admin", password="password", role=Role.FULL_ADMIN)
     assert (u1.save() and u2.save())
 
     # teardown called after all tests in session have completed

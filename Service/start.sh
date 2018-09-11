@@ -66,7 +66,7 @@ function exit_script(){
     log "exiting in $timeout seconds"
     sleep $timeout
     log "exit"
-    exit 1
+    #exit 1
 }
 
 # required dictories for logging and database datastore
@@ -271,8 +271,8 @@ function main(){
 
     # setup required directories with proper write access and custom app config
     setup_directories
-    start_all_services
     create_app_config_file
+    start_all_services
     init_db
 
     # perform frontend build if required
@@ -282,6 +282,7 @@ function main(){
     if [ "$APP_MODE" == "0" ] ; then
         log "checking for frontend UI build"
         local cmd="$APP_DIR/src/build/build_frontend.sh -r -s $src -d $dst -t $tmp -m standalone"
+        cmd="$cmd >> $LOG_FILE 2>> $LOG_FILE"
         # bail out if frontend src files don't exist or already built
         if [ ! -d $src ] ; then
             set_status "frontend source ($src) does not exist"
@@ -290,7 +291,8 @@ function main(){
         if [ -z "$(ls -A $dst)" ] ; then
             log "building: $cmd"
             set_status "building frontend UI, please wait"
-            if [ ! `eval $cmd` ] ; then
+            eval $cmd
+            if [ -z "$(ls -A $dst)" ] ; then
                 set_status "frontend build failed"
                 exit_script
             else

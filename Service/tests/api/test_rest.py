@@ -10,6 +10,9 @@ import pytest
 logger = logging.getLogger(__name__)
 
 rest_url = "/api/test/rest"
+#rest_url_key = "/api/uni/key-{}" 
+rest_url_key = "/api/test/rest/{}"
+rest_classname = "test.rest"
 good_request = 200
 bad_request = 400
 not_found = 404
@@ -55,7 +58,44 @@ class Rest_TestClass(Rest):
                 "type": list,
                 "subtype": dict,
             },
+            "hash": {
+                "type": str,
+                "hash": True,
+                "default": "abcd",
+                "description": "general attribute that can be 'hashed'"
+            },
+            "encrypt": {
+                "type": str,
+                "encrypt": True,
+                "description": "general attribute that can be encrypted and decrypted"
+            }
     }
+
+
+# Test class regisetered with API
+@api_register(path="test/secure")
+class Rest_Secure(Rest):
+    META_ACCESS = {
+        "bulk_read": True,
+        "bulk_update": True,
+        "bulk_delete": True,
+    }
+    META = {
+            "key": {"key": True, "type":str},
+            "hash": {
+                "type": str,
+                "hash": True,
+                "read": False,
+                "default": "abcd",
+                "description": "general attribute that can be 'hashed'"
+            },
+            "encrypt": {
+                "type": str,
+                "encrypt": True,
+                "description": "general attribute that can be encrypted and decrypted"
+            }
+    }
+
 
 def pretty_print(js):
     """ try to convert json to pretty-print format """
@@ -92,6 +132,7 @@ def rest_cleanup(request, app):
     def teardown():
         db = app.db
         db.test.rest.drop()
+        db.test.secure.drop()
         db.dynamic.test.drop()
     request.addfinalizer(teardown)
     return
@@ -508,7 +549,7 @@ def test_rest_api_create_nested_dict(app, rest_cleanup):
     assert r.status_code == good_request
 
     # read created object should be successful
-    r = app.client.get("%s/key1" % rest_url)
+    r = app.client.get(rest_url_key.format("key1"))
     assert r.status_code == good_request
     js = json.loads(r.data)
     logger.debug(pretty_print(js))
@@ -516,6 +557,7 @@ def test_rest_api_create_nested_dict(app, rest_cleanup):
 
     # ensure 'dict' attribute is present with sub-attributes according to
     # defintion and defaults
+    #sobj = obj[rest_classname]["dict"]
     sobj = obj["dict"]
     assert isinstance(sobj, dict)
     assert "s1" in sobj and sobj["s1"] == ""
@@ -531,10 +573,11 @@ def test_rest_api_create_nested_dict(app, rest_cleanup):
         "dict": {"l2":[{}]}
     }), content_type='application/json')
     assert r.status_code == good_request
-    r = app.client.get("%s/key2" % rest_url)
+    r = app.client.get(rest_url_key.format("key2"))
     assert r.status_code == good_request
     js = json.loads(r.data)
     logger.debug(pretty_print(js))
+    #sobj = js["objects"][0][rest_classname]["dict"]
     sobj = js["objects"][0]["dict"]
     assert "l2" in sobj and isinstance(sobj["l2"], list)
     assert len(sobj["l2"]) == 1
@@ -574,11 +617,12 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     assert r.status_code == good_request
 
     # read to created object should be successful
-    r = app.client.get("%s/key1" % rest_url)
+    r = app.client.get(rest_url_key.format("key1"))
     assert r.status_code == good_request
     js = json.loads(r.data)
     assert js["count"] == 1
     assert len(js["objects"]) == js["count"]
+    #obj = js["objects"][0][rest_classname]
     obj = js["objects"][0]
 
     # assert each attribute is present with correct default value
@@ -595,7 +639,7 @@ def test_rest_api_crud_basic(app, rest_cleanup):
 
     # perform update to subset of attributes and ensure they are updated and
     # other attributes remain the same
-    r = app.client.patch("%s/key1"  % rest_url, data=json.dumps({
+    r = app.client.patch(rest_url_key.format("key1"), data=json.dumps({
         "str": "ABCD",
         "int": 3,
     }), content_type='application/json')
@@ -603,10 +647,11 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     obj = json.loads(r.data)
     assert obj["count"] == 1
 
-    r = app.client.get("%s/key1" % rest_url)
+    r = app.client.get(rest_url_key.format("key1"))
     assert r.status_code == good_request
     obj = json.loads(r.data)
     logger.debug(pretty_print(obj))
+    #obj = obj["objects"][0][rest_classname]
     obj = obj["objects"][0]
     for k in ["key", "str", "float", "bool", "int", "list", "dict"]:
         assert k in obj
@@ -617,7 +662,7 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     assert isinstance(obj["list"] , list) and len(obj["list"]) == 0
 
     # perform patch for list3 which should accept list of any dict
-    r = app.client.patch("%s/key1"  % rest_url, data=json.dumps({
+    r = app.client.patch(rest_url_key.format("key1"), data=json.dumps({
         "list3": [
             {"a1":"value1"},
             {"a2": 2},
@@ -626,13 +671,13 @@ def test_rest_api_crud_basic(app, rest_cleanup):
     assert r.status_code == good_request
     
     # perform delete
-    r = app.client.delete("%s/key1"  % rest_url)
+    r = app.client.delete(rest_url_key.format("key1"))
     assert r.status_code == good_request
     obj = json.loads(r.data)
     logger.debug(pretty_print(obj))
     assert obj["count"] == 1
 
-    r = app.client.get("%s/key1" % rest_url)
+    r = app.client.get(rest_url_key.format("key1"))
     assert r.status_code == not_found
     obj = json.loads(r.data)
     logger.debug(pretty_print(obj))
@@ -668,7 +713,9 @@ def test_rest_api_bulk_update(app, rest_cleanup):
     obj = json.loads(r.data)
     assert obj["count"] == 5
     found = {}
-    for o in obj["objects"]: found[o["key"]] = o["int"]
+    for o in obj["objects"]: 
+        #found[o[rest_classname]["key"]] = o[rest_classname]["int"]
+        found[o["key"]] = o["int"]
     assert found["key0"] == 0
     assert found["key1"] == 1
     assert found["key2"] == 100
@@ -759,14 +806,16 @@ def test_rest_callback_create(app, rest_cleanup):
     }, return_instance = False)
 
     d = {"before": False, "after": False}
-    def f1(obj, **kwargs):
+    def f1(**kwargs):
         # force a2 to 100 
         logger.debug("executing before create")
+        obj = kwargs["data"]
         d["before"] = True
         obj["a2"] = 100
         return obj
-    def f2(obj, **kwargs):
+    def f2(**kwargs):
         logger.debug("executing after create")
+        obj = kwargs["data"]
         d["after"] = True
         assert obj["a2"] == 100
 
@@ -785,15 +834,17 @@ def test_rest_callback_read(app, rest_cleanup):
     }, return_instance = False)
 
     d = {"before": False, "after": False}
-    def f1(filters, **kwargs):
+    def f1(**kwargs):
         # force filter to include a3=3
         logger.debug("executing before read")
+        filters = kwargs["filters"]
         d["before"] = True
         filters["a3"] = 3
         return filters
-    def f2(obj, **kwargs):
+    def f2(**kwargs):
         # force a3 to 5 in result
         logger.debug("executing after read")
+        obj = kwargs["data"]
         d["after"] = True
         obj["objects"][0]["a3"] =5
         return obj
@@ -826,15 +877,19 @@ def test_rest_callback_update(app, rest_cleanup):
     }, return_instance = False)
 
     d = {"before": False, "after": False}
-    def f1(filters, data, **kwargs):
+    def f1(**kwargs):
         # force data to set a3 to 100
         logger.debug("executing before update")
+        filters = kwargs["filters"]
+        data = kwargs["data"]
         d["before"] = True
         data["a3"] = 100
         return (filters, data)
-    def f2(filters, data, **kwargs):
+    def f2(**kwargs):
         # the data should have a3 updated to 100
         logger.debug("executing after update")
+        filters = kwargs["filters"]
+        data = kwargs["data"]
         d["after"] = True
         assert data["a3"] == 100
 
@@ -867,15 +922,17 @@ def test_rest_callback_delete(app, rest_cleanup):
 
     d = {"before": False, "after": False}
 
-    def f1(filters, **kwargs):
+    def f1(**kwargs):
         # force filter to include a3=3
         logger.debug("executing before delete")
+        filters = kwargs["filters"]
         d["before"] = True
         filters["a3"] = 3
         return filters
-    def f2(filters, **kwargs):
+    def f2(**kwargs):
         # ensure a3 has been set to 3
         logger.debug("executing after delete")
+        filters = kwargs["filters"]
         d["after"] = True
         assert filters["a3"] == 3
 
@@ -894,6 +951,53 @@ def test_rest_callback_delete(app, rest_cleanup):
     assert r["count"] == 1
     assert d["before"] and d["after"]
 
+def test_rest_hash_attribute(app, rest_cleanup):
+    # check that hash attribute is correctly applied and can be matched with check_password_hash
+    # also verify updates to hash are applied correctly through model
+
+    from flask_bcrypt import check_password_hash
+
+    # create an object with hash 'hash1' and save
+    t = Rest_Secure.load(key="key1")
+    t.hash = "hash1"
+    assert t.save()
+
+    # read back the object
+    t = Rest_Secure.load(key="key1")
+    assert t.exists()
+    logger.debug("original hash: %s", t.hash)
+    assert check_password_hash(t.hash, "hash1")
+
+    # update the hash to 'hash2' and recheck
+    t.hash = "hash2"
+    assert t.save()
+    t = Rest_Secure.load(key="key1")
+    assert t.exists()
+    logger.debug("updated hash: %s", t.hash)
+    assert check_password_hash(t.hash, "hash2")
+
+def test_rest_encrypt_attribute(app, rest_cleanup):
+    # check that we're able to encrypt/decrypt values in the database for encrypt attributes
+
+    t = Rest_Secure.load(key="key1")
+    t.encrypt = "encrypt"
+    assert t.save()
+
+    # perform db read and ensure value is encrypted
+    ret = app.db.test.secure.find({"key":"key1"})
+    obj = None
+    for o in ret:
+        obj = o
+        break
+    assert obj is not None
+    logger.debug("raw db read result: %s", obj)
+    assert obj["encrypt"] != "encrypt"
+
+    t = Rest_Secure.load(key="key1")
+    logger.debug("db result for object: %s", t)
+    assert t.exists()
+    assert t.encrypt == "encrypt"
+    
 def test_rest_update_no_change(app, rest_cleanup):
     # this test uses .save() method to create a new instance of an object and then calls the save()
     # again when no changes have occurred.  This should return a success and no update should occur
@@ -901,7 +1005,9 @@ def test_rest_update_no_change(app, rest_cleanup):
 
     t = Rest_Secure.load(key="key1")
     assert t.save()
-    assert t.save()
+    assert t.save()    
+
+
 
 
 

@@ -7,7 +7,7 @@ import logging, logging.handlers, json, re, time, dateutil.parser, datetime
 import subprocess, os, signal, sys, traceback, requests
 from pymongo import UpdateOne, InsertOne
 from pymongo.errors import BulkWriteError
-from ..utils import pretty_print, SIMULATION_MODE, SIMULATOR, get_app
+from ..utils import pretty_print, get_app
 
 # module level logging
 logger = logging.getLogger(__name__)
@@ -26,21 +26,13 @@ def get_lpass():
     """ get local user password for REST calls against local API 
         return string decrypted password on success else return None
     """
-    from ..models import utils as mutils
-    app = get_app()
-    mongo = app.mongo
-    try:
-        with app.app_context():
-            ekey = app.config["EKEY"]
-            eiv = app.config["EIV"]
-            db = app.mongo.db
-            s = db.settings.find_one({})
-            if s is None or "lpass" not in s:
-                logger.error("settings not found")
-                return None
-            return mutils.aes_decrypt(s["lpass"], ekey=ekey, eiv=eiv)
-    except Exception as e:
-        logger.error("exception occurred\n%s" % traceback.format_exc())
+    
+    from ..settings import Settings
+    s = Settings.load(__read_all=True)
+    if s.exists() and hasattr(s, "lpass"):
+        return s.lpass
+    
+    logger.error("unable to determine lpass from settings")
     return None
 
 def build_query_filters(**kwargs):
@@ -96,42 +88,42 @@ def get(session, url, **kwargs):
     # walk through pages until return count is less than page_size 
     while 1:
         turl = "%s%spage-size=%s&page=%s" % (url, url_delim, page_size, page)
-        logger.debug("host:%s, timeout:%s, get:%s" % (session.ipaddr, 
-            timeout,turl))
+        logger.debug("host:%s, timeout:%s, get:%s", session.ipaddr, 
+            timeout,turl)
         tstart = time.time()
         try:
             resp = session.get(turl, timeout=timeout)
         except Exception as e:
-            logger.warn("exception occurred in get request: %s" % (
-                traceback.format_exc()))
+            logger.warn("exception occurred in get request: %s",
+                traceback.format_exc())
             return None
-        logger.debug("response time: %f" % (time.time() - tstart))
+        logger.debug("response time: %f", (time.time() - tstart))
         if resp is None or not resp.ok:
-            logger.warn("failed to get data: %s" % url)
+            logger.warn("failed to get data: %s", url)
             return None
         try:
             js = resp.json()
             if "imdata" not in js or "totalCount" not in js:
-                logger.warn("failed to parse js reply: %s" % pretty_print(js))
+                logger.warn("failed to parse js reply: %s", pretty_print(js))
                 return None
             results+=js["imdata"]
-            logger.debug("results count: %s/%s"%(len(results),js["totalCount"]))
+            logger.debug("results count: %s/%s",len(results),js["totalCount"])
             if len(js["imdata"])<page_size or \
                 len(results)>=int(js["totalCount"]):
                 logger.debug("all pages received")
                 return results
             elif (limit is not None and len(js["imdata"]) >= limit):
-                logger.debug("limit(%s) hit or exceeded" % limit)
+                logger.debug("limit(%s) hit or exceeded", limit)
                 return results[0:limit]
             page+= 1
         except ValueError as e:
-            logger.warn("failed to decode resp: %s" % resp.text)
+            logger.warn("failed to decode resp: %s", resp.text)
             return None
     return None
 
 def get_dn(session, dn, **kwargs):
     # get a single dn.  Note, with advanced queries this may be list as well
-    # therefore, if len(results)>1, then original list is returned
+    # for now, always return single value
     opts = build_query_filters(**kwargs)
     url = "/api/mo/%s.json%s" % (dn,opts)
     results = get(session, url, **kwargs)
@@ -152,31 +144,81 @@ def get_parent_dn(dn):
     t.pop()
     return "/".join(t)
 
+def get_attributes(session=None, dn=None, attribute=None, data=None):
+    """ get single attribute from a DN.
+        This is a relatively common operation to extract just a single value or
+        just parse the result and get the attribute list.
+    
+        if data is provided, then this function assumes a list of objects or
+        raw result from APIC query - for both cases, it assumes all objects are
+        of the same set and only returns list of attribute objects.  Note,
+        if 'attribute' is set then will only return single result of first
+        object with attribute.
+        
+        else, session and dn are required and this function will perform APIC
+        query and then return attribute dict.  If 'attribute' is also set, then
+        just raw value of the corresponding attribute for that dn is returned
+
+        return None on error or if dn is not found
+    """
+    if data is None:
+        logger.debug("get attributes '%s' for dn '%s'", attribute, dn)
+        data = get_dn(session, dn)
+        if data is None or type(data) is not dict or len(data)==0:
+            logger.debug("return object for %s is None or invalid", dn)
+            return
+
+    # handle case raw 'imdata' dict was received
+    if type(data) is dict:
+        if "imdata" in data: data = data["imdata"]
+
+    # always treat remaining result as list of objects
+    ret = []
+    if type(data) is not list: data = [data]
+    for obj in data:
+        if type(obj) is not dict or len(obj)==0:
+            logger.debug("unexpected format for obj: %s" % obj)
+            continue
+        cname = obj.keys()[0]
+        if "attributes" not in obj[cname]:
+            logger.debug("%s does not contain attributes: %s", cname, obj)
+            continue
+        if attribute is not None:
+            # only ever return first value matched when attribute is set
+            if attribute in obj[cname]["attributes"]:
+                return obj[cname]["attributes"][attribute]
+        else:
+            ret.append(obj[cname]["attributes"])
+
+    # if dn was set, then caller assumes get_dn execute and only one result
+    # is present, so don't return list.
+    if dn is not None and len(ret)==1: return ret[0]
+    return ret
+
 def get_apic_session(fabric, subscription_enabled=False):
     """ get_apic_session 
         based on current aci.settings for provided fabric name, connect to
         apic and return valid session object. If fail to connect to apic 
         in setting, try to connect to any other discovered apic within 
-        controllers
+        controllers.
+
+        fabric can be a Fabric object or string for fabric name
 
         Returns None on failure
     """
-    from .fabrics import Fabrics
+    from .fabric import Fabric
     from .tools.acitoolkit.acisession import Session
      
-    logger.debug("get_apic_session for fabric: %s" % fabric)
-    if SIMULATION_MODE:
-        logger.debug("executing in simulation mode")
-        return SIMULATOR
-
-    app = get_app()
-    with app.app_context():
-        aci = Fabrics.load(fabric=fabric)
-        if not aci.exists(): 
-            logger.warn("fabric %s not found" % fabric)
-            return
+    logger.debug("get_apic_session for fabric: %s", fabric)
+    if isinstance(fabric, Fabric): aci = fabric
+    else: aci = Fabric.load(fabric=fabric)
+        
+    if not aci.exists(): 
+        logger.warn("fabric %s not found", fabric)
+        return
 
     # build list of apics for session attempt
+    app = get_app()
     hostnames = [aci.apic_hostname]
     if not app.config["ACI_APP_MODE"]:
         for h in aci.controllers:
@@ -188,19 +230,18 @@ def get_apic_session(fabric, subscription_enabled=False):
         logger.debug("session mode set to apic_cert_mode")
         apic_cert_mode = True
         if not os.path.exists(aci.apic_cert):
-            logger.warn("quiting app_cert mode, apic_cert file not found: %s"%(
-                aci.apic_cert))
+            logger.warn("quiting app_cert mode, apic_cert file not found: %s",
+                aci.apic_cert)
             apic_cert_mode = False
 
     # try to create a session with each hostname
-    logger.debug("attempting to connect to following apics: %s" % hostnames)
+    logger.debug("attempting to connect to following apics: %s", hostnames)
     for h in hostnames:
         # ensure apic_hostname is in url form.  If not, assuming https
         if not re.search("^http", h.lower()): h = "https://%s" % h
 
         # create session object
-        logger.debug("attempting to create session on %s@%s" % (
-            aci.apic_username, h))
+        logger.debug("creating session on %s@%s",aci.apic_username,h)
         if apic_cert_mode:
             session = Session(h, aci.apic_username, appcenter_user=True, 
                 cert_name=aci.apic_username, key=aci.apic_cert,
@@ -208,16 +249,96 @@ def get_apic_session(fabric, subscription_enabled=False):
         else:
             session = Session(h, aci.apic_username, aci.apic_password,
                 subscription_enabled=subscription_enabled)
-        resp = session.login(timeout=SESSION_LOGIN_TIMEOUT)
-        if resp is not None and resp.ok: 
-            logger.debug("successfully connected on %s" % h)
-            return session
-        else:
-            logger.debug("failed to connect on %s" % h)
-            session.close()
+        try:
+            resp = session.login(timeout=SESSION_LOGIN_TIMEOUT)
+            if resp is not None and resp.ok: 
+                logger.debug("successfully connected on %s", h)
+                return session
+            else:
+                logger.debug("failed to connect on %s", h)
+                session.close()
+        except Exception as e:
+            logger.warn("session creation exception: %s",e)
+            logger.debug(traceback.format_exc())
 
     logger.warn("failed to connect to any known apic")
     return None   
+
+def get_ssh_connection(fabric, pod_id, node_id, session=None):
+    """ create active/logged in ssh connection object for provided fabric name 
+        and node-id.  At this time, all ssh connections are via APIC tep of
+        selected controller. 
+        None returned on error
+
+        fabric can be a Fabric object or string for fabric name
+    """
+
+    from .tools.connection import Connection
+    from .fabric import Fabric
+
+    if isinstance(fabric, Fabric): f = fabric
+    else: f = Fabric.load(fabric=fabric)
+    if not f.exists():
+        logger.warn("unknown fabric: %s", fabric)
+        return
+    
+    # verify credentials are configured
+    if len(f.ssh_username)==0 or len(f.ssh_password)==0:
+        logger.warn("ssh credentials not configured")
+        return
+
+    if session is None:
+        # if user did not provide session object then create one
+        session = get_apic_session(f)
+        if session is None: 
+            logger.warn("failed to get apic session")
+            return
+
+    # need to determine apic id and corresponding TEP for ssh bind command
+    apic_info = get_attributes(session, "info")
+    if apic_info is None or "id" not in apic_info or "podId" not in apic_info:
+        logger.warn("unable to get topInfo for apic")
+        return
+    (apic_id, apic_podId) = (apic_info["id"], apic_info["podId"])
+    dn = "topology/pod-%s/node-%s/sys" % (apic_podId, apic_id)
+    apic_tep = get_attributes(session, dn, "address")
+    if apic_tep is None or apic_tep == "0.0.0.0":
+        logger.warn("unable to determine APIC TEP for %s" % dn)
+        return
+
+    # first get valid ssh connection to spine through apic. Need node TEP
+    dn = "topology/pod-%s/node-%s/sys" % (pod_id, node_id)
+    tep = get_attributes(session, dn, "address")
+    if tep is None or tep == "0.0.0.0":
+        logger.warn("unable to determine valid local TEP for %s" % dn)
+        return
+
+    # remove http/https and custom ports from hostname
+    ssh_hostname = re.sub("^http(s)://","", f.apic_hostname)
+    ssh_hostname = re.sub("/.*$", "", ssh_hostname)
+    ssh_hostname = re.sub(":[0-9]+$", "", ssh_hostname)
+    logger.debug("hostname set from %s to %s", f.apic_hostname, ssh_hostname)
+    logger.debug("creating ssh session to %s", ssh_hostname)
+    c = Connection(ssh_hostname)
+    c.username = f.ssh_username
+    c.password = f.ssh_password
+    if not c.login():
+        logger.warn("failed to login to apic: %s",ssh_hostname)
+        return
+    logger.debug("ssh session to apic %s complete: %s",ssh_hostname,c.output)
+
+    # request could have been ssh session to apic, check if node_id is for
+    # remote switch or local apic
+    if apic_id != node_id:
+        opts = "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        cmd = "ssh %s -b %s %s" % (opts, apic_tep, tep)
+        logger.debug("creating remote ssh session from %s: %s",apic_tep,cmd)
+        if not c.remote_login(cmd):
+            logger.warn("failed to login to node %s(%s)", node_id, tep)
+            return
+        logger.debug("ssh session to node %s complete: %s",tep,c.output)
+    logger.debug("successfully connected to %s node-%s", f.fabric, node_id)
+    return c 
 
 ###############################################################################
 #
@@ -235,7 +356,7 @@ def execute_worker(arg_str, background=True):
     app = get_app()
     stdout = "%s/worker.stdout.log" % app.config.get("LOG_DIR", "/home/app/log")
     stderr = "%s/worker.stderr.log" % app.config.get("LOG_DIR", "/home/app/log")
-
+    
 
     # get absolute path for top of app
     p = os.path.realpath(__file__)
@@ -258,35 +379,66 @@ def execute_worker(arg_str, background=True):
     # assume success
     return True
 
+def terminate_pid(p):
+    """ send SIGKILL to process based on integer pid.
+        return booelan success
+    """
+    if type(p) is not int:
+        logger.warn("terminate_pid requires int, received %s: %s", type(p),p)
+        return False
+    try:
+        logger.debug("terminate pid %s", p)
+        os.kill(p, signal.SIGKILL)
+    except OSError as e:
+        logger.warn("error executing kill: %s", e)
+        return False
+    return True
+
+def terminate_process(p):
+    """ send SIGTERM and if needed SIGKILL to process.  
+        Note, this receives a Process object, not an integer pid.
+        return boolean success
+    """
+    if p.is_alive():
+        p.terminate()
+        time.sleep(0.01)
+        if p.is_alive():
+            try:
+                logger.debug("sending SIGKILL to pid(%s)" % p.pid)
+                os.kill(p.pid, signal.SIGKILL)
+            except OSError as e:
+                logger.warn("error occurred while sending kill: %s" % e)
+                return False
+    return True
 
 def run_command(cmd):
     """ use subprocess.check_output to execute command on shell
         return None on error
     """
-    logger.debug("run cmd: \"%s\"" % cmd)
+    logger.debug("run cmd: \"%s\"", cmd)
     try:
         out = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
         return out
     except subprocess.CalledProcessError as e:
-        logger.warn("error executing command: %s" % e)
-        logger.warn("stderr:\n%s" % e.output)
+        logger.warn("error executing command: %s", e)
+        logger.warn("stderr:\n%s", e.output)
         return None
 
 def get_file_md5(path):
     """ use md5sum utility to calculate md5 for file at provided path
         return None on error
     """
-    logger.debug("calculate md5 for %s" % path)
+    logger.debug("calculate md5 for %s", path)
     if not os.path.exists(path):
-        logger.debug("%s not found" % path)
+        logger.debug("%s not found", path)
         return None
     out = run_command("md5sum %s | egrep -o \"^[0-9a-fA-F]+\"" % path)
     if out is None: return None
     # expect 32-bit hex (128-bit number)
     out = out.strip()
     if re.search("^[0-9a-f]{32}$", out, re.IGNORECASE) is not None:
-        logger.debug("md5sum: %s" % out)
+        logger.debug("md5sum: %s", out)
         return out
-    logger.warn("unexpected md5sum result: %s, returning None" % out)
+    logger.warn("unexpected md5sum result: %s, returning None", out)
     return None
     

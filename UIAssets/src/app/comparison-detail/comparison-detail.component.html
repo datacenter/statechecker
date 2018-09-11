@@ -227,7 +227,9 @@
                     [sortable]="true"
                     [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                      {{row['classname']}}
+                        <a href="#/managed-object/{{row['classname']}}" target="_blank">
+                            {{row['classname']}}
+                        </a>
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column

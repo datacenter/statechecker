@@ -10,11 +10,10 @@ logger = logging.getLogger(__name__)
 
 # common message
 MSG_403 = "Sorry old chap, this is a restricted area..."
-SIMULATION_MODE = False
-SIMULATOR = None
 
 # track app so we don't need to create it multiple times
-_g_app = None       
+_g_app = None  
+_g_app_config = None
 _g_db = None
 def get_app():
     global _g_app
@@ -26,14 +25,18 @@ def get_app():
 
 def get_app_config():
     # return config dict from app
-    app = get_app()
-    if hasattr(app, "config"): return app.config
-    return {}
+    global _g_app_config
+    if _g_app_config is None:
+        # dynamically import app config at first call
+        from .. import create_app_config
+        _g_app_config = create_app_config("config.py")
+    return _g_app_config
 
-def get_db():
-    # return instance of mongo db
+def get_db(uniq=False, overwrite_global=False):
+    # return instance of mongo db, set uniq to True to always return a uniq db connection
+    # set uniq to True and overwrite_global to True to force new global db as well
     global _g_db
-    if _g_db is None:
+    if _g_db is None or uniq:
         config = get_app_config()
         db = config.get("MONGO_DBNAME", "devdb")
         if config.get("MONGO_WRITECONCERN", 0) == 0: w = 0
@@ -52,20 +55,10 @@ def get_db():
             uri+= "socketTimeoutMS=%s&" % config["MONGO_SOCKET_TIMEOUT_MS"]
         uri = re.sub("[\?&]+$","",uri)
         logger.debug("starting mongo connection: %s", uri)
-        client = MongoClient(uri, w=w) 
-        _g_db = client[db]
+        client = MongoClient(uri, w=w)
+        if _g_db is None or overwrite_global: _g_db = client[db]
+        return client[db]
     return _g_db
-
-def get_max_pool_size():
-    # multiprocessing max pool size
-    config = get_app_config()
-    try:
-        ps = int(config.get("MAX_POOL_SIZE", 32))
-        if ps > 0 : return ps
-    except ValueError as e:
-        logger.error("invalid MAX_POOL_SIZE value %s" % e)
-    return 1
-
 
 ###############################################################################
 #
@@ -73,38 +66,41 @@ def get_max_pool_size():
 #
 ###############################################################################
 
-def setup_logger(logger, fname="utils.log", quiet=False, stdout=False):
+def setup_logger(logger, fname="utils.log", quiet=False, stdout=False,
+                thread=False ):
     """ setup logger with appropriate logging level and rotate options """
 
     # quiet all other loggers...
-    if quiet or SIMULATION_MODE:
+    if quiet:
         old_logger = logging.getLogger()
         old_logger.setLevel(logging.CRITICAL)
         for h in list(old_logger.handlers): old_logger.removeHandler(h)
         old_logger.addHandler(logging.NullHandler())
 
-    # don't change logger in simulation mode
-    if SIMULATION_MODE: return logger
-        
-    app = get_app()
-    logger.setLevel(app.config["LOG_LEVEL"])
+    app_config = get_app_config()
+    logger.setLevel(app_config["LOG_LEVEL"])
     try:
         if stdout:
             logger_handler = logging.StreamHandler(sys.stdout)
-        elif app.config["LOG_ROTATE"]:
+        elif app_config["LOG_ROTATE"]:
             logger_handler = logging.handlers.RotatingFileHandler(
-                "%s/%s"%(app.config["LOG_DIR"],fname),
-                maxBytes=app.config["LOG_ROTATE_SIZE"], 
-                backupCount=app.config["LOG_ROTATE_COUNT"])
+                "%s/%s"%(app_config["LOG_DIR"],fname),
+                maxBytes=app_config["LOG_ROTATE_SIZE"], 
+                backupCount=app_config["LOG_ROTATE_COUNT"])
         else:
             logger_handler = logging.FileHandler(
-                "%s/%s"%(app.config["LOG_DIR"],fname))
+                "%s/%s"%(app_config["LOG_DIR"],fname))
     except IOError as e:
         sys.stderr.write("failed to open logger handler: %s, resort stdout\n"%e)
         logger_handler = logging.StreamHandler(sys.stdout)
-    
-    fmt ="%(process)d||%(asctime)s.%(msecs).03d||%(levelname)s||%(filename)s"
-    fmt+=":(%(lineno)d)||%(message)s"
+   
+    if thread:
+        fmt="%(process)d||%(threadName)s||%(asctime)s.%(msecs).03d||"
+        fmt+="%(levelname)s||%(filename)s:(%(lineno)d)||%(message)s"
+    else: 
+        fmt ="%(process)d||%(asctime)s.%(msecs).03d||%(levelname)s||"
+        fmt+="%(filename)s:(%(lineno)d)||%(message)s"
+        
     logger_handler.setFormatter(logging.Formatter(
         fmt=fmt,
         datefmt="%Z %Y-%m-%d %H:%M:%S")
@@ -139,12 +135,26 @@ def get_user_params():
         return ret
     except Exception as e: return {}
 
+def get_user_headers():
+    """ return dict of user headers in http request """
+    try:
+        if not request.headers: return {}
+        return request.headers
+    except Exception as e: return {}
+
+def get_user_cookies():
+    """ return dict of user cookies indexed by cookie name """
+    try:
+        if not request.cookies: return {}
+        return request.cookies
+    except Exception as e: return {}
+
 def hash_password(p):
     """ Return the bcrypt hash of the password 
         return None on failure
     """
     try:
-        config=get_app_config()
+        config = get_app_config()
         return generate_password_hash(p,config["BCRYPT_LOG_ROUNDS"])
     except Exception as e:
         logger.warn("failed to generate hash: %s" % e)
@@ -155,8 +165,8 @@ def aes_encrypt(data, **kwargs):
     import struct, binascii
     ekey = kwargs.get("ekey", None)
     eiv = kwargs.get("eiv", None)
+    config = get_app_config()
     try:
-        config=get_app_config()
         if ekey is None: ekey = config["EKEY"]
         if eiv is None: eiv = config["EIV"]
         ekey = ("%s" % ekey).decode("hex")
@@ -182,8 +192,8 @@ def aes_decrypt(edata, **kwargs):
     import struct, binascii
     ekey = kwargs.get("ekey", None)
     eiv = kwargs.get("eiv", None)
+    config = get_app_config()
     try:
-        config=get_app_config()
         if ekey is None: ekey = config["EKEY"]
         if eiv is None: eiv = config["EIV"]
         ekey = ("%s" % ekey).decode("hex")
@@ -264,9 +274,8 @@ def list_routes(app, api=False):
             options[arg] = "[{0}]".format(arg)
 
         methods = ','.join(rule.methods)
-        url = url_for(rule.endpoint, **options)
-        line = urllib.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, url))
-        output.append(line)
+        l = "{:50s} {:30s} {}".format(rule.endpoint, methods, rule)
+        if l not in output: output.append(l)
     
     routes = sorted(output)
 

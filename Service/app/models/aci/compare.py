@@ -5,114 +5,37 @@ objects are created keyed with compare_id of corresponding Compare object.
 Once comparision is complete, application can query for corresponding 
 CompareResults.
 """
-
-from flask import abort, jsonify
-from werkzeug.exceptions import (NotFound, BadRequest)
+from ..rest import Rest
+from ..rest import api_callback
+from ..rest import api_register
+from ..rest import api_route
+from ..utils import get_app_config
+from ..utils import get_db
+from ..utils import format_timestamp
 from . import utils as aci_utils
-from .snapshots import Snapshots
 from .definitions import Definitions
 from .managed_objects import ManagedObjects
-from .remap import (Remap, expand_range)
-from ..rest import (Rest, api_register)
-from ..utils import get_app_config, format_timestamp, pretty_print
-from ..utils import get_max_pool_size
+from .remap import Remap
+from .remap import expand_range
+from .snapshots import Snapshots
 
-import traceback, time, os, shutil, json, re, copy
+from flask import abort, jsonify
 from multiprocessing import Pool
+from multiprocessing import current_process
+from natsort import natsorted as sorted
+from werkzeug.exceptions import (NotFound, BadRequest)
+
+import copy
+import json
 import logging
+import os
+import re
+import shutil
+import time
+import traceback
 
 # module level logging
 logger = logging.getLogger(__name__)
-
-# set sorted as natsort if available
-try: from natsort import natsorted as sorted
-except ImportError as e: pass
-# before_compare_delete
-def before_compare_create(data, **kwargs):
-    """ before creation validation for compare object """
-    s1 = Snapshots.load(_id=data["snapshot1"])
-    s2 = Snapshots.load(_id=data["snapshot2"])
-
-    # ensure snapshots exist
-    if not s1.exists(): abort(404, "snapshot1 %s not found"%data["snapshot1"])
-    if not s2.exists(): abort(404, "snapshot2 %s not found"%data["snapshot2"])
-
-    # set snapshot1_name and snapshot2_name
-    data["snapshot1_description"] = s1.description
-    data["snapshot2_description"] = s2.description
-
-    # ensure these snapshots are for the same fabric
-    if s1.fabric != s2.fabric:
-        emsg = "cannot perform comparision for snapshots between different "
-        emsg+= "fabrics \"%s\" and \"%s\"" % (s1.fabric, s2.fabric)
-        abort(400, emsg)
-
-    # ensure timestamp for snapshot1 < timestamp for snapshot2
-    # if so swap them and allow snapshot to continue...
-    if s1.start_time > s2.start_time:
-        data["snapshot1"] = s2._id
-        data["snapshot2"] = s1._id
-    
-    return data
-
-def before_compare_delete(filters, **kwargs):
-    """ delete corresponding CompareResults when deleting Compare object """
-    objs = Compare.read(_filters=filters, **kwargs)
-    if "objects" in objs:
-        for o in objs["objects"]: CompareResults.delete(compare_id=o["_id"]) 
-    return filters
-
-def after_compare_create(obj, **kwargs):
-    """ after compare create start comparision background task """
-    _id = kwargs.get("_id", None)
-    if _id is None:
-        logger.warn("invalid _id for newly created compare: %s" % kwargs)
-        return
-    ret = background_compare(_id)
-
-def background_compare(_id):
-    """ start or restart compare operation """
-    c = Compare.load(_id=_id)
-    if not c.exists():
-        abort(404, "compare (_id=%s) not found" % _id)
-    if c.status == "running" or c.status == "abort":
-        abort(400, "compare %s currently running, send abort before restart"%(
-             _id))
-    # set start time to 'now' before executing background worker
-    c.start_time = time.time()
-    c.save()
-    if not aci_utils.execute_worker("--compare %s" % _id):
-        abort(500, "failed to start background snapshot process")
-    # delete old compare results before restart
-    CompareResults.delete(compare_id=_id)
-    return jsonify({"success":True})
-
-def abort_compare(_id):
-    """ stop/abort running compare operation """
-    c = Compare.load(_id=_id)
-    if not c.exists():
-        abort(404, "compare (_id=%s) not found" % _id)  
-    is_running = (c.status == "running")
-    c.status = "abort"
-    if not c.save(): abort(500, "failed to save abort")
-    # wait until status has changed to something other than abort which 
-    # indicates that the abort was successful
-    max_wait_time = 120
-    if is_running:
-        ts = time.time()
-        max_ts = ts + max_wait_time
-        aborted = False
-        while time.time() < max_ts:
-            c = Compare.load(_id=_id)
-            if not c.exists() or c.status != "abort":
-                aborted = True
-                break
-            time.sleep(1)
-        if not aborted:
-            msg = "Failed to abort compare process after %ss. "%max_wait_time
-            msg+= " Try deleting the object..."
-            abort(500, msg) 
-    return jsonify({"success":True})
 
 @api_register(path="/aci/compare/results")
 class CompareResults(Rest):
@@ -182,24 +105,6 @@ class Compare(Rest):
     logger = logging.getLogger(__name__)
     META_ACCESS = {
         "expose_id": True,
-        "before_create": before_compare_create,
-        "after_create": after_compare_create,
-        "before_delete": before_compare_delete,
-        "bulk_delete": False,
-        "routes": [
-             {
-                "path": "abort",
-                "keyed_url": True,
-                "function": abort_compare,
-                "methods": ["POST"]
-            },       
-            {
-                "path": "restart",
-                "keyed_url": True,
-                "function": background_compare,
-                "methods": ["POST"]
-            },
-        ],
     }
 
     META = {
@@ -346,6 +251,89 @@ class Compare(Rest):
     }
 
 
+    @classmethod
+    @api_callback("before_create")
+    def before_compare_create(cls, data):
+        """ before compare create ensure snapshots exists and are from the same fabric """
+        s1 = Snapshots.load(_id=data["snapshot1"])
+        s2 = Snapshots.load(_id=data["snapshot2"])
+        if not s1.exists(): abort(404, "snapshot1 %s not found"%data["snapshot1"])
+        if not s2.exists(): abort(404, "snapshot2 %s not found"%data["snapshot2"])
+    
+        # set snapshot1_name and snapshot2_name
+        data["snapshot1_description"] = s1.description
+        data["snapshot2_description"] = s2.description
+
+        # ensure these snapshots are for the same fabric
+        if s1.fabric != s2.fabric:
+            emsg = "cannot perform comparision for snapshots between different "
+            emsg+= "fabrics \"%s\" and \"%s\"" % (s1.fabric, s2.fabric)
+            abort(400, emsg)
+
+        # ensure timestamp for snapshot1 < timestamp for snapshot2
+        # if not swap them and allow snapshot to continue...
+        if s1.start_time > s2.start_time:
+            data["snapshot1"] = s2._id
+            data["snapshot2"] = s1._id
+        return data
+
+    @classmethod
+    @api_callback("before_delete")
+    def before_compare_delete(cls, filters):
+        """ delete corresponding CompareResults when deleting Compare object """
+        objs = Compare.read(_filters=filters)
+        if "objects" in objs:
+            for o in objs["objects"]: CompareResults.delete(compare_id=o["_id"]) 
+        return filters
+
+    @classmethod
+    @api_callback("after_create")
+    def after_compare_create(cls, data):
+        """ after compare create start comparision background task """
+        c = Compare.load(_id=data["_id"])
+        if not c.exists():
+            abort(404, "compare (_id=%s) not found" % _id)
+        c.start_compare()
+
+
+    @api_route(path="restart", methods=["POST"], swag_ret=["success"])    
+    def start_compare(self):
+        """ start/restart compare operation """
+
+        if self.status == "running" or self.status == "abort":
+            abort(400, "compare %s currently running, send abort before restart"%(self._id))
+        # set start time to 'now' before executing background worker
+        self.start_time = time.time()
+        self.save()
+        # delete old compare results before starting/restarting background process
+        CompareResults.delete(compare_id=self._id)
+        if not aci_utils.execute_worker("--compare %s" % self._id):
+            abort(500, "failed to start background snapshot process")
+        return jsonify({"success":True})
+
+    @api_route(path="abort", methods=["POST"], swag_ret=["success"])
+    def abort_compare(self):
+        """ stop/abort running compare operation """
+        is_running = (self.status == "running")
+        self.status = "abort"
+        if not self.save(): abort(500, "failed to save abort")
+        # wait until status has changed to something other than abort which indicates that the abort 
+        # was successful
+        max_wait_time = 120
+        if is_running:
+            ts = time.time()
+            max_ts = ts + max_wait_time
+            aborted = False
+            while time.time() < max_ts:
+                self.reload()
+                if not self.exists() or self.status != "abort":
+                    return jsonify({"success": True})
+                time.sleep(1)
+            msg="Failed to abort compare process after %ss. Try deleting the object..."%max_wait_time
+            abort(500, msg) 
+        else:
+            return jsonify({"success":True})
+
 def execute_compare(compare_id):
     """ perform comparison between two snapshots """
     logger.debug("execute compare for: %s" % compare_id)
@@ -488,7 +476,7 @@ def execute_compare(compare_id):
         nodes =[ int(x) for x in sorted(list(set().union(s1.nodes, s2.nodes)))]
 
         # create pool to perform work
-        pool = Pool(processes=get_max_pool_size())
+        pool = Pool(processes=config.get("MAX_POOL_SIZE", 4))
 
         filtered_nodes = []
         for n in nodes:
@@ -602,6 +590,10 @@ def generic_compare(args):
         based on value at arg[0].
         Note, list of args are provided as workaround to Pool.map restriction
     """
+    if current_process().name != "MainProcess":
+        logger.debug("creating new db connection object for child process")
+        get_db(uniq=True, overwrite_global=True)
+
     args = list(args)
     compare_type = args.pop(0)
     if compare_type == "custom":
@@ -628,31 +620,40 @@ def generic_compare(args):
     else:
         logger.warn("unknown compare type %s" % compare_type)
 
-def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
-    """ receive compare object and managed_object (single classname) directives 
-        along with file pointers to corresponding objects. If the file
-        does not exist or cannot be read, treat in same manner as if there
-        were no objects present (i.e., going to have a lot of 'created' or
-        'deleted' objects in the result)
+def get_subset(obj, attributes, key=""):
+    """ return new dict with with specific attributes copied from original object """
+    ret = {}
+    for a in attributes: 
+        if a in obj: 
+            ret[a] = obj[a]
+    if "_key" in obj: ret["_key"] = obj["_key"]
+    if key in obj: ret[key] = obj[key]
+    return ret
 
+def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
+    """ receive compare object and managed_object (single classname) directives along with file 
+        pointers to corresponding objects. If the file does not exist or cannot be read, treat in 
+        same manner as if there were no objects present (i.e., going to have a lot of 'created' or
+        'deleted' objects in the result)
     """
     # node-id is present in remap object (should be the same node...)
-    logger.debug("compare %s classname: %s, node: %s" % (compare._id,
-        mo["classname"], remap1.node_id))
+    logger.debug("compare %s classname %s, node: %s", compare._id, mo["classname"], remap1.node_id)
 
     # check for abort (which might not be seen during multiprocessing progress)
     _s = Compare.load(_id=compare._id)
     if not _s.exists() or _s.status == "abort": 
-        logger.debug("%s aborted" % compare._id)
+        logger.debug("%s aborted", compare._id)
         return
 
     # check if MO itself has been filtered by compare settings
     if not ManagedObjects.severity_match(compare.severity, mo["severity"]):
-        logger.debug("%s filtered by severity %s" % (mo["classname"], 
-            compare.severity))
+        logger.debug("%s filtered by severity %s", mo["classname"], compare.severity)
         return
     if not compare.dynamic and "dynamic" in mo["labels"]:
-        logger.debug("%s filtered by not dynamic option" % (mo["classname"]))
+        logger.debug("%s filtered by dynamic-disabled option", mo["classname"])
+        return
+    if not compare.statistic and "statistic" in mo["labels"]:
+        logger.debug("%s filtered by statistic-disabled option", mo["classname"])
         return
 
     # get list of objects
@@ -670,19 +671,18 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
                 key = remapper.remap_attribute(o[mo["key"]], mo["remap"])
                 if key not in s: s[key] = o 
                 else:
-                    logger.warn("(%s) duplicate key in snapshot: %s" % (
-                        mo["classname"], key))
+                    logger.warn("(%s) duplicate key in snapshot: %s", mo["classname"], key)
             else:
-                logger.warn("(%s) key %s not found in %s" % (mo["classname"],
-                    mo["key"], o))
+                logger.warn("(%s) key %s not found in %s", mo["classname"], mo["key"], o)
         return s
+
     s1 = get_indexed_objects(s1_objects, remap1)
     s2 = get_indexed_objects(s2_objects, remap2)
 
-    result = CompareResults.load(compare_id=compare._id, node_id=remap1.node_id,
-                            classname=mo["classname"])
-    result.total["s1"]+= len(s1)
-    result.total["s2"]+= len(s2)
+    # unique CompareResult per operation (should never be cumlative and does not require db read)
+    result = CompareResults(compare_id=compare._id, node_id=remap1.node_id,classname=mo["classname"])
+    result.total["s1"] = len(s1)
+    result.total["s2"] = len(s2)
 
     # list of objects are all of the same class - build out the attributes that
     # we care about based on mo and compare settings 
@@ -702,8 +702,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             if a == mo["key"]: continue
             attr = mo_attributes.get(a, default_attr)
             # filter based on severity
-            if not ManagedObjects.severity_match(compare.severity, 
-                attr["severity"]): continue
+            if not ManagedObjects.severity_match(compare.severity, attr["severity"]): continue
             # fitler based on dynamic
             if not compare.dynamic and "dynamic" in attr["labels"]: continue
             # determine if attribute is a timestamp
@@ -718,17 +717,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             # this is an interesting attribute to compare
             attributes[a] = attr
 
-    logger.debug("%s interesting attributes: %s"%(mo["classname"], 
-        attributes.keys()))
-
-    # return new dict with with specific attributes copied from original object
-    def get_subset(obj, attributes, key=""):
-        ret = {}
-        for a in attributes: 
-            if a in obj: ret[a] = obj[a]
-        if "_key" in obj: ret["_key"] = obj["_key"]
-        if key in obj: ret[key] = obj[key]
-        return ret
+    logger.debug("%s interesting attributes: %s", mo["classname"],attributes.keys())
 
     # check for modified and deleted
     for k in s1:
@@ -776,7 +765,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             # this should never happen since it implies different attributes
             # for objects of the same class
             if a not in s2[k]:
-                logger.warn("%s attribute not found in s2"%(mo["classname"],a))
+                logger.warn("%s attribute not found in s2", mo["classname"],a)
                 continue
 
             # handle list and list-extended cases
@@ -830,15 +819,13 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
 
             # process attribute as a single value
             else: 
-                
                 # perform remaps for each value
                 v1 = remap1.remap_attribute(s1[k].get(a,""), attr["remap"])
                 v2 = remap2.remap_attribute(s2[k].get(a,""), attr["remap"])
 
                 # should rarely happen that new attribute is added to object
                 if a not in s1[k]:
-                    logger.debug("%s attribute %s not found in s1" % (
-                        mo["classname"], a))
+                    logger.debug("%s attribute %s not found in s1", mo["classname"], a)
                     match = False
                 elif v1!= v2:
                     match = False
@@ -851,7 +838,7 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
                 })
             # highlight diff on mismatch
             else:
-                logger.debug("%s attribute mismatch %s != %s" % (a, v1, v2))
+                logger.debug("%s attribute mismatch %s != %s", a, v1, v2)
                 diff["modified"].append({
                     "attribute": a,
                     "value1": s1[k].get(a, ""),
@@ -876,10 +863,8 @@ def per_node_class_compare(compare,mo,file1,file2,remap1,remap2):
             result.total["created"]+=1
             result.created.append(get_subset(s2[k], attributes,key=mo["key"]))
 
-    logger.debug("comparison complete(%s) %s: %s" % (result.compare_id,
-                    result.classname, result.total))
+    logger.debug("comparison complete(%s) %s: %s", result.compare_id,result.classname, result.total)
     result.save()
-     
 
 def endpoint_compare(compare, folder1, folder2, remap1, remap2):
     """ perform endpoint comparision between snapshots. Note only local
@@ -888,13 +873,12 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
         for consistent comparision of the 'interesting' objects
     """
 
-    logger.debug("compare %s endpoints, node: %s" % (compare._id, 
-        remap1.node_id))
+    logger.debug("compare %s endpoints, node: %s", compare._id, remap1.node_id)
 
     # check for abort (which might not be seen during multiprocessing progress)
     _s = Compare.load(_id=compare._id)
     if not _s.exists() or _s.status == "abort": 
-        logger.debug("%s aborted" % compare._id)
+        logger.debug("%s aborted", compare._id)
         return
     
     # for filtering, need to read in mo for 'endpoints' and get severity
@@ -903,7 +887,7 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
 
     # check if MO itself has been filtered by compare settings first
     if not ManagedObjects.severity_match(compare.severity, mo["severity"]):
-        logger.debug("endpoints filtered by severity %s" % (compare.severity)) 
+        logger.debug("endpoints filtered by severity %s", compare.severity)
         return
 
     # expect for 'endpoints.json' file within each folder
@@ -921,9 +905,7 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
     def get_local_objects(objects):
         ret = []
         for o in objects:
-            if "flags" not in o or \
-                (re.search("local(,|$)",o["flags"]) and \
-                "svi" not in o["flags"]):
+            if "flags" not in o or (re.search("local(,|$)",o["flags"]) and "svi" not in o["flags"]):
                 ret.append({"endpoints":{"attributes":o}})
         return ret
 
@@ -933,65 +915,65 @@ def endpoint_compare(compare, folder1, folder2, remap1, remap2):
         if c not in s1_objects: s1_objects[c] = []
         if c not in s2_objects: s2_objects[c] = []
 
-    # walk through epmIpEp objects and add empty 'mac' attribute
-    # then walk through epmRsMacEpToIpEpAtt and add mac to corresponding epmIpEp
-    reg = "/db-ep/mac-(?P<mac>[0-9A-Fa-f:]+)/rsmacEpToIpEpAtt-"
+    # walk through epmIpEp objects and add empty mac, bd, and encap
+    # then walk through epmRsMacEpToIpEpAtt and add to corresponding epmIpEp
+    reg = "/bd-\[vxlan-(?P<bd>[0-9]+)\]/vx?lan-\[(?P<encap>vx?lan-[0-9]+)\]/"
+    reg+= "db-ep/mac-(?P<mac>[0-9A-Fa-f:]+)/rsmacEpToIpEpAtt-"
     s1_epmIpEp = {}
     s2_epmIpEp = {}
     for o in s1_objects["epmIpEp"]: 
         o["mac"] = "-"
+        o["bd"] = "-"
+        o["encap"] = "-"
         s1_epmIpEp[o["dn"]] = o
     for o in s2_objects["epmIpEp"]: 
         o["mac"] = "-"
+        o["bd"] = "-"
+        o["encap"] = "-"
         s2_epmIpEp[o["dn"]] = o
     for o in s1_objects["epmRsMacEpToIpEpAtt"]:
         r1 = re.search(reg, o["dn"])
         if r1 is not None:
-            mac = r1.group("mac")
             tDn = o["tDn"]
-            if tDn in s1_epmIpEp: s1_epmIpEp[tDn]["mac"] = mac
+            if tDn in s1_epmIpEp: 
+                s1_epmIpEp[tDn]["mac"] = r1.group("mac")
+                s1_epmIpEp[tDn]["bd"] = "vxlan-%s" % r1.group("bd")
+                s1_epmIpEp[tDn]["encap"] = r1.group("encap")
             else:
-                logger.debug("tDn(%s) not found for %s" % (tDn, o["dn"]))
+                logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
-            logger.debug("failed to match reg(%s) regex for %s"%(reg,o["dn"]))
+            logger.debug("failed to match rsmacEpToIpEpAtt regex for %s", o["dn"])
     for o in s2_objects["epmRsMacEpToIpEpAtt"]:
         r2 = re.search(reg, o["dn"])
         if r2 is not None:
-            mac = r2.group("mac")
             tDn = o["tDn"]
-            if tDn in s2_epmIpEp: s2_epmIpEp[tDn]["mac"] = mac
+            if tDn in s2_epmIpEp: 
+                s2_epmIpEp[tDn]["mac"] = r2.group("mac")
+                s2_epmIpEp[tDn]["bd"] = "vxlan-%s" % r2.group("bd")
+                s2_epmIpEp[tDn]["encap"] = r2.group("encap")
             else:
-                logger.debug("tDn(%s) not found for %s" % (tDn, o["dn"]))
+                logger.debug("tDn(%s) not found for %s", tDn, o["dn"])
         else:
-            logger.debug("failed to match reg(%s) regex for %s"%(reg,o["dn"]))
+            logger.debug("failed to match reg(%s) regex for %s", reg,o["dn"])
         
-
+    # here we overwrite endpoints.json file with only interesting (local) endpoints.  We need to 
+    # merge epmIpEp and epmMacEp objects into single file
+    all_s1_objects = []
+    all_s2_objects = []
     # check epmMacEp, epmIpEp
     for c in ["epmMacEp", "epmIpEp"]:
         # build subset of interesting objects with classname 'endpoints' and
         # write to file for per_node_class_compare to read
-        s1_write = get_local_objects(s1_objects.get(c, []))
-        s2_write = get_local_objects(s2_objects.get(c, []))
-        try:
-            with open(f1, "w") as f: json.dump(s1_write, f)
-            with open(f2, "w") as f: json.dump(s2_write, f)
-            per_node_class_compare(compare, mo, f1, f2, remap1, remap2)
-        except Exception as e: 
-            logger.error("failed to perform endpoints comparions on %s: %s" % (
-                c, e))
+        all_s1_objects+= get_local_objects(s1_objects.get(c, []))
+        all_s2_objects+= get_local_objects(s2_objects.get(c, []))
+    try:
+        with open(f1, "w") as f: json.dump(all_s1_objects, f)
+        with open(f2, "w") as f: json.dump(all_s2_objects, f)
+        per_node_class_compare(compare, mo, f1, f2, remap1, remap2)
+    except Exception as e: 
+        logger.error("failed to perform endpoints comparions on %s: %s", c, e)
     
 def acl_compare(compare, folder1, folder2, remap1, remap2):
     """ perform acl comparision between snapshots """
     # TODO 
-    pass
-
-        
-            
-    
-
-                
-
-        
-         
- 
-    
+    pass 

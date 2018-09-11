@@ -158,17 +158,20 @@ function display_help() {
     echo ""
     echo "Help documentation for $self"
     echo "    -i [image] docker image to bundled into app (.tgz format)"
-    echo "    -v [file] path to intro video (.mp4 format)"
-    echo "    -p [file] private key uses for signing app"
-    echo "    -x send local environment proxy settings to container during build"
+    echo "    -h display this help message"
+    echo "    -k [file] private key uses for signing app"
+    echo "    -P [https] https port when running in standalone mode"
+    echo "    -p [http] http port when running in standalone mode"
     echo "    -r relax build checks (ensure tools are present but skip version check)"
     echo "    -s build and deploy container for standalone mode"
+    echo "    -v [file] path to intro video (.mp4 format)"
+    echo "    -x send local environment proxy settings to container during build"
     echo ""
     exit 0
 }
 
 
-optspec=":i:v:p:hxrs"
+optspec=":i:v:k:p:P:hxrs"
 while getopts "$optspec" optchar; do
   case $optchar in
     i)
@@ -189,11 +192,31 @@ while getopts "$optspec" optchar; do
             exit 1
         fi
         ;;
-    p)
+    k)
         private_key=$OPTARG
         if [ ! -f $private_key ] ; then
             echo "" >&2
             echo "private key '$private_key' not found, aborting build" >&2
+            echo "" >&2
+            exit 1
+        fi
+        ;;
+    p)
+        if [[ $OPTARG =~ ^-?[0-9]+$ ]] ; then
+            standalone_http_port=$OPTARG
+        else
+            echo "" >&2
+            echo "invalid http port $OPTARG, aborting build" >&2
+            echo "" >&2
+            exit 1
+        fi
+        ;;
+    P)
+        if [[ $OPTARG =~ ^-?[0-9]+$ ]] ; then
+            standalone_https_port=$OPTARG
+        else
+            echo "" >&2
+            echo "invalid http port $OPTARG, aborting build" >&2
             echo "" >&2
             exit 1
         fi
