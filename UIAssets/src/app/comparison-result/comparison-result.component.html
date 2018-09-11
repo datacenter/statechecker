@@ -98,7 +98,7 @@
                 *ngIf="key=='node'" name="Class" [sortable]="true" [flexGrow]="0.2">
 
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                    <a href="#/managed-object/{{row['classname']}}" target="_blank">
+                    <a (click)="goToClassDetails(row['classname'])">
                         {{row['classname']}}
                     </a>
                 </ng-template>

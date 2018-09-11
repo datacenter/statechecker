@@ -15,6 +15,7 @@ export class preferences {
     comparisonResultDetailemSort:any ;
     definition_sort:any ;
     username_sort:any ;
+    currentLocation:any;
     public constructor() {
         this.fabric_sort = [{prop:'fabric',dir:'asc'}] ;
         this.snapshot_sort = [{prop:'start_time', dir:'desc'}] ;
@@ -28,5 +29,6 @@ export class preferences {
         this.comparisonResultDetailemSort = [{prop:'attribute',dir:'asc'}] ;
         this.definition_sort = [{prop: 'classname', dir: 'asc'}] ;
         this.username_sort = [{prop: 'username', dir: 'asc'}] ;
+        this.currentLocation=['/'] ;
     }
 }

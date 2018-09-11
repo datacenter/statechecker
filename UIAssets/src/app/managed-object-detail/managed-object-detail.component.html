@@ -1,6 +1,9 @@
 <loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
 <div *ngIf="!loading">
   <h4>
+      <a class="btn btn--icon btn--primary" (click)="goToPrevRoute()">
+        <span class="icon-back"></span>
+      </a>
     Managed object details
     <button class="btn btn--icon btn--small btn--primary" (click)='getManagedObject()'>
       <span class="icon-refresh"></span>
