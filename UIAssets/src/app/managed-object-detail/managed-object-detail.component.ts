@@ -16,9 +16,10 @@ export class ManagedObjectDetailComponent implements OnInit {
   loading: boolean;
   loadingMessage: string;
   managedObject: ManagedObject;
-
+  prevRoute:any ;
   constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading Managed Object';
+    this.prevRoute = this.backendService.prefs.currentLocation ;
   }
 
   ngOnInit(): void {
@@ -39,6 +40,11 @@ export class ManagedObjectDetailComponent implements OnInit {
         });
       }
     });
+  }
+
+  goToPrevRoute() {
+    console.log(this.prevRoute) ;
+    this.router.navigate([this.prevRoute]) ;
   }
 
 }

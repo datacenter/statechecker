@@ -119,4 +119,9 @@ export class ComparisonDetailComponent implements OnInit {
     return nodesCSV.substring(0,nodesCSV.length - 1) ;
   }
 
+  goToClassDetails(classname) {
+    this.backendService.prefs.currentLocation = this.router.url ;
+    this.router.navigate(['/managed-object',classname]) ;
+  }
+
 }

@@ -23,6 +23,8 @@ export class UserComponent implements OnInit {
   modalMessage = 'Add' ;
   confirmPassword: string ;
   usernameSort:any ;
+  userRole:number ;
+  userName:string ;
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
     private modalService: BsModalService) {
     this.loadingMessage = 'Loading users';
@@ -32,6 +34,8 @@ export class UserComponent implements OnInit {
       {'id': 2, name: 'Blacklist'},
     ];
     this.usernameSort = this.backendService.prefs.username_sort ;
+    this.userName = localStorage.getItem('userName') ;
+    this.userRole = parseInt(localStorage.getItem('userRole')) ;
   }
 
   ngOnInit(): void {

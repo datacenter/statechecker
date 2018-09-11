@@ -30,6 +30,14 @@ export class LoginComponent implements OnInit {
     this.backendService.login(this.username, this.password).subscribe((results) => {
       this.loading = false;
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userName',this.username) ;
+      this.backendService.getUserDetails(this.username).subscribe((response) => {
+        const userDetails = response['objects'][0] ;
+        console.log(this.cookieService.get('session')) ;
+          localStorage.setItem('userRole',userDetails['role']) ;
+      } , (error) => {
+        this.notificationService.error('Failed to obtain user details') ;
+      }) ;
       this.router.navigate(['/']);
     }, (err) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
