@@ -30,6 +30,7 @@ export class LoginComponent implements OnInit {
     this.backendService.login(this.username, this.password).subscribe((results) => {
       this.loading = false;
       localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userName',this.username) ;
       this.router.navigate(['/']);
     }, (err) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
