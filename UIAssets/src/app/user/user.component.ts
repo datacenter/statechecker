@@ -35,6 +35,7 @@ export class UserComponent implements OnInit {
     ];
     this.usernameSort = this.backendService.prefs.username_sort ;
     this.userName = localStorage.getItem('userName') ;
+    this.userRole = parseInt(localStorage.getItem('userRole')) ;
   }
 
   ngOnInit(): void {
@@ -51,13 +52,6 @@ export class UserComponent implements OnInit {
       const objects = results.objects;
       this.users = objects;
       this.rows = objects;
-      if(this.userRole === undefined ) {
-        for( let user of this.users) {
-          if(user.username === this.userName) {
-            this.userRole = user.role ;
-          }
-        }
-      }
       this.loading = false;
     }, (err) => {
       this.notificationService.error('Error', 'Could not get user list');

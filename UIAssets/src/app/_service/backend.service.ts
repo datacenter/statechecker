@@ -255,4 +255,9 @@ export class BackendService {
     return this.http.post(url, filedata, {reportProgress: true}) ;
   }
 
+  getUserDetails(username:string) {
+    const url = this.baseUrl + 'users/' + username ;
+    return this.http.get(url) ;
+  }
+
 }
