@@ -40,8 +40,8 @@ export class LoginComponent implements OnInit {
       }) ;
       this.router.navigate(['/']);
     }, (err) => {
+      this.loading = false;
       if (err instanceof HttpErrorResponse && err.status === 401) {
-        this.loading = false;
         localStorage.removeItem('isLoggedIn');
         this.notificationService.error('Error', 'Authentication failed');
       } else {
