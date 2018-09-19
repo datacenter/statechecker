@@ -148,9 +148,9 @@ class Compare(Rest):
         },
         "serialize": {
             "type": bool,
-            "default": True,
-            "description": """ disable multiprocessing and perfom comparision
-                one object and one class at a time
+            "default": False,
+            "description": """ 
+                disable multiprocessing and perfom comparisionone object and one class at a time
             """
         },
         "nodes": {
@@ -210,10 +210,9 @@ class Compare(Rest):
             "write":False,
         },
         "total":{
-            "description":"""
-            total created/modified/delete count for entire comparision
-            """,
-            "type":dict,
+            "type": dict,
+            "write": False,
+            "description": "total created/modified/delete count for entire comparision",
             "meta":{
                 "created":{"type":int},
                 "modified":{"type":int},
