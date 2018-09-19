@@ -133,6 +133,7 @@ export class UserComponent implements OnInit {
 
   public editMode(template: TemplateRef<any> , user: User) {
     this.user = user ;
+    this.confirmPassword = undefined ;
     this.modalRef = this.modalService.show(template, {
       animated: true,
       keyboard: true,

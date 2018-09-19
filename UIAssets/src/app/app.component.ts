@@ -6,6 +6,7 @@ import {BackendService} from './_service/backend.service' ;
 import {Title} from '@angular/platform-browser' ;
 import {CookieService} from 'ngx-cookie-service' ;
 import {HttpClient, HttpParams} from '@angular/common/http';
+import {NotificationsService} from 'angular2-notifications';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(public router: Router, private activatedRoute: ActivatedRoute, private backendService: BackendService, 
     private renderer: Renderer2, private titleService: Title, private cookieService: CookieService,
-  private http: HttpClient) {
+  private http: HttpClient, private notificationService: NotificationsService) {
     this.stopListening = renderer.listen('window', 'message', this.handleMessage.bind(this));
     this.konami = false;
     this.isConnected = Observable.merge(
@@ -41,6 +42,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.app_mode = environment.app_mode ;
     if(!this.app_mode){
       this.app_status = 'Starting App Components' ;
+      this.backendService.getSnapshots().subscribe( ()=>{
+        
+      } , (error)=>{
+        if(error['status'] === 401) {
+          this.notificationService.error('Invalid session! Please login !') ;
+          this.router.navigate(['login']) ;
+        }
+      }) 
     } else {
       this.app_status = 'Waiting for tokens' ;
     }
