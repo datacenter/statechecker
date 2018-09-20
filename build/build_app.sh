@@ -42,8 +42,12 @@ function build_standalone_container() {
     cmd="$cmd -v $BASE_DIR/Service:/home/app/src/Service:ro "
     cmd="$cmd -v $BASE_DIR/UIAssets:/home/app/src/UIAssets.src:ro "
     cmd="$cmd -v $BASE_DIR/build:/home/app/src/build:ro "
-    cmd="$cmd -p $standalone_http_port:80 "
-    cmd="$cmd -p $standalone_https_port:443 "
+    if [ "$standalone_http_port" -gt "0" ] ; then
+        cmd="$cmd -p $standalone_http_port:80 "
+    fi
+    if [ "$standalone_https_port" -gt "0" ] ; then
+        cmd="$cmd -p $standalone_https_port:443 "
+    fi
     cmd="$cmd $docker_name "
     log "starting container: $cmd"
     eval $cmd
@@ -160,8 +164,8 @@ function display_help() {
     echo "    -i [image] docker image to bundled into app (.tgz format)"
     echo "    -h display this help message"
     echo "    -k [file] private key uses for signing app"
-    echo "    -P [https] https port when running in standalone mode"
-    echo "    -p [http] http port when running in standalone mode"
+    echo "    -P [https] https port when running in standalone mode (use 0 to disable)"
+    echo "    -p [http] http port when running in standalone mode (use 0 to disable)"
     echo "    -r relax build checks (ensure tools are present but skip version check)"
     echo "    -s build and deploy container for standalone mode"
     echo "    -v [file] path to intro video (.mp4 format)"
