@@ -1,4 +1,4 @@
-import {Component, OnInit, TemplateRef, OnDestroy} from "@angular/core";
+import {Component, OnDestroy, OnInit, TemplateRef} from "@angular/core";
 import {NotificationsService} from "angular2-notifications";
 import {BsModalRef, BsModalService} from "ngx-bootstrap";
 import {Comparison, ComparisonList} from "../_model/comparison";
@@ -22,15 +22,15 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   comparisons: Comparison[];
   severities: String[] = ['info', 'notice', 'warn', 'critical', 'error', 'debug'];
   managedObjects: any[];
-  definitions: Definition[] ;
-  updateQueue: any = [] ;
-  predefinedNodes: any = ['global'] ;
-  comparisonSort:any ;
+  definitions: Definition[];
+  updateQueue: any = [];
+  predefinedNodes: any = ['global'];
+  comparisonSort: any;
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, 
-    private modalService: BsModalService) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService,
+              private modalService: BsModalService) {
     this.loadingMessage = 'Loading comparisons';
-    this.comparisonSort = this.backendService.prefs.comparison_sort ;
+    this.comparisonSort = this.backendService.prefs.comparison_sort;
   }
 
   ngOnInit(): void {
@@ -39,9 +39,9 @@ export class ComparisonComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
   }
-  
+
   onSort(event) {
-    this.backendService.prefs.comparison_sort = event.sorts ;
+    this.backendService.prefs.comparison_sort = event.sorts;
   }
 
   getComparisons() {
@@ -51,9 +51,8 @@ export class ComparisonComponent implements OnInit, OnDestroy {
       this.comparisons = comparisons;
       this.rows = comparisons;
       this.loading = false;
-      this.searchIncompleteComparisons() ;
+      this.searchIncompleteComparisons();
       this.backendService.getSnapshots().subscribe((results: SnapshotList) => {
-        let snapshots: Snapshot[] = results.objects;
       }, (err) => {
         this.notificationService.error('Error', 'Could not get snapshot list');
         this.loading = false;
@@ -64,14 +63,13 @@ export class ComparisonComponent implements OnInit, OnDestroy {
     });
   }
 
-  searchIncompleteComparisons():void {
-    for(let row of this.rows) {
-      if((row['status'] === 'init' || row['progress'] < 1)&& row['q'] !== true) {
-        this.updateProgress(row['_id']) ;
-        row['q'] = true ;
+  searchIncompleteComparisons(): void {
+    for (let row of this.rows) {
+      if ((row['status'] === 'init' || row['progress'] < 1) && row['q'] !== true) {
+        this.updateProgress(row['_id']);
+        row['q'] = true;
       }
     }
-
   }
 
   deleteComparison() {
@@ -87,7 +85,7 @@ export class ComparisonComponent implements OnInit, OnDestroy {
 
   public onSubmit() {
     this.loading = true;
-    this.comparison.nodes = this.filterNodes(this.comparison.nodes) ;
+    this.comparison.nodes = this.filterNodes(this.comparison.nodes);
     this.backendService.createComparison(this.comparison).subscribe((results) => {
       this.modalRef.hide();
       this.getComparisons();
@@ -98,49 +96,48 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   }
 
   public filterNodes(nodes): any[] {
-    if (nodes === undefined) {
-      return [];
-    }
-    let newarr: any[] = [] ;
-    for (let i = 0 ; i < nodes.length ; i++) {
-     if (typeof(nodes[i]) === 'string') {
-       if(nodes[i] === 'global') {
-         newarr.push(0) ;
-         continue ;
-       }
-       if (nodes[i].includes(',')) {
-         nodes[i] = nodes[i].replace(/\s/g, '') ;
-         const csv = nodes[i].split(',') ;
-         for ( let j = 0 ; j < csv.length ; j++) {
-          if (csv[j].includes('-')) {
-            newarr = newarr.concat(this.getArrayForRange(csv[j])) ;
+    let newarr: any[] = [];
+    if (nodes !== undefined) {
+      for (let i = 0; i < nodes.length; i++) {
+        if (typeof(nodes[i]) === 'string') {
+          if (nodes[i] !== 'global') {
+            if (nodes[i].includes(',')) {
+              nodes[i] = nodes[i].replace(/\s/g, '');
+              const csv = nodes[i].split(',');
+              for (let j = 0; j < csv.length; j++) {
+                if (csv[j].includes('-')) {
+                  newarr = newarr.concat(this.getArrayForRange(csv[j]));
+                }
+              }
+            } else if (nodes[i].includes('-')) {
+              newarr = newarr.concat(this.getArrayForRange(nodes[i]));
+            } else {
+              newarr.push(nodes[i]);
+            }
+          } else {
+            newarr.push(0);
           }
-         }
-       } else if (nodes[i].includes('-')) {
-         newarr = newarr.concat(this.getArrayForRange(nodes[i])) ;
-       } else {
-         newarr.push(nodes[i]) ;
-       }
-     }
+        }
+      }
     }
-    return newarr ;
+    return newarr;
   }
 
   public getArrayForRange(range: string) {
-      const r = range.split('-') ;
-      const arr = [] ;
-      r.sort() ;
-      for (let i = parseInt(r[0], 10) ; i <= parseInt(r[1], 10) ; i ++) {
-        arr.push(i) ;
-      }
-      return arr ;
+    const r = range.split('-');
+    const arr = [];
+    r.sort();
+    for (let i = parseInt(r[0], 10); i <= parseInt(r[1], 10); i++) {
+      arr.push(i);
+    }
+    return arr;
   }
 
   updateFilter(event) {
     const val = event.target.value.toLowerCase();
     this.rows = this.comparisons.filter(function (d) {
       return (d['snapshot1_description'].toLowerCase().indexOf(val) !== -1
-      || d['snapshot2_description'].toLowerCase().indexOf(val) !== -1) || !val;
+        || d['snapshot2_description'].toLowerCase().indexOf(val) !== -1) || !val;
     });
   }
 
@@ -163,22 +160,22 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   }
 
   public openAddModal(template: TemplateRef<any>) {
-    this.getDefinitions() ;
+    this.getDefinitions();
     this.backendService.getSnapshots().subscribe((snapshots) => {
       this.snapshots = snapshots.objects;
       this.comparison = new Comparison(this.snapshots[0], this.snapshots[0]);
       if (this.snapshots.length > 0) {
-      this.onSelectSnapshot(this.snapshots[0]._id);
-      this.modalRef = this.modalService.show(template, {
-        animated: true,
-        keyboard: true,
-        backdrop: true,
-        ignoreBackdropClick: false,
-        class: 'modal-lg',
-      });
-    } else {
-      this.notificationService.error('No snapshots available for comparison') ;
-    }
+        this.onSelectSnapshot(this.snapshots[0]._id);
+        this.modalRef = this.modalService.show(template, {
+          animated: true,
+          keyboard: true,
+          backdrop: true,
+          ignoreBackdropClick: false,
+          class: 'modal-lg',
+        });
+      } else {
+        this.notificationService.error('No snapshots available for comparison');
+      }
     }, (err) => {
       this.notificationService.error('Error', 'Could not get snapshot list');
     });
@@ -204,9 +201,9 @@ export class ComparisonComponent implements OnInit, OnDestroy {
       this.backendService.getDefinitions().subscribe((definitions) => {
         this.definitions = definitions.objects;
         if (this.definitions.length > 0) {
-        this.comparison.definition = this.definitions[0].definition ;
+          this.comparison.definition = this.definitions[0].definition;
         } else {
-          this.notificationService.error('No definitions found!') ;
+          this.notificationService.error('No definitions found!');
         }
       }, (err) => {
         this.notificationService.error('Error', 'Could not get definition list');
@@ -215,35 +212,33 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   }
 
   public updateProgress(id: string) {
-    if(id === undefined || id === null) {
-      return ;
-    }
-    const notificationService = this.notificationService ;
-    const progressSubscription = this.backendService.getProgressFor('compare',id).subscribe((response) => {
-      if(response['count'] === 0) {
-        progressSubscription.unsubscribe() ;
-        return ;
-      }
-      for(let row of this.rows) {
-        if(row['_id'] === id) {
-          for(let object of response['objects']) {
-            if(object['_id'] === id) {
-              if(object['status']=== 'error' || object['progress'] === 1) {
-                progressSubscription.unsubscribe() ;
+    if (!(id === undefined || id === null)) {
+      const progressSubscription = this.backendService.getProgressFor('compare', id).subscribe((response) => {
+        if (response['count'] !== 0) {
+          for (let row of this.rows) {
+            if (row['_id'] === id) {
+              for (let object of response['objects']) {
+                if (object['_id'] === id) {
+                  if (object['status'] === 'error' || object['progress'] === 1) {
+                    progressSubscription.unsubscribe();
+                  }
+                  row['status'] = object['status'];
+                  row['progress'] = object['progress'];
+                }
               }
-              row['status'] = object['status'] ;
-              row['progress'] = object['progress'] ;
             }
-          }  
+          }
+        } else {
+          progressSubscription.unsubscribe();
         }
-      }
-    } , (error) => {
-      this.notificationService.error(error['error']['error']) ;
-      progressSubscription.unsubscribe() ;
-    }) ;
+      }, (error) => {
+        this.notificationService.error(error['error']['error']);
+        progressSubscription.unsubscribe();
+      });
+    }
   }
 
   addNodes = (term) => {
-    return {label: term, value: term} ;
+    return {label: term, value: term};
   }
 }

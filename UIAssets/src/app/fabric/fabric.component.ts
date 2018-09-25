@@ -1,4 +1,4 @@
-import {Component, OnInit, TemplateRef, ElementRef, ViewChild, AfterViewInit} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {NotificationsService} from "angular2-notifications";
 import {BsModalRef, BsModalService} from "ngx-bootstrap";
 import {Fabric, FabricList} from "../_model/fabric";
@@ -18,23 +18,23 @@ export class FabricComponent implements OnInit {
   fabric: Fabric;
   editing = {};
   fabrics: Fabric[];
-  confirmPassword: string ;
-  fromAddTemplate = false ;
-  fabricSorts:any ;
-  @ViewChild('editTemplate') editModal: TemplateRef<any> ;
+  confirmPassword: string;
+  fromAddTemplate = false;
+  fabricSorts: any;
+  @ViewChild('editTemplate') editModal: TemplateRef<any>;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
-    private modalService: BsModalService) {
+              private modalService: BsModalService) {
     this.loadingMessage = 'Loading fabrics';
-    this.fabricSorts = this.backendService.prefs.fabric_sort ;
+    this.fabricSorts = this.backendService.prefs.fabric_sort;
   }
 
   ngOnInit(): void {
     this.getFabrics(false);
   }
 
-  onSort(event){
-    this.backendService.prefs.fabric_sort = event.sorts ;
+  onSort(event) {
+    this.backendService.prefs.fabric_sort = event.sorts;
   }
 
   getFabrics(toBeVerified) {
@@ -43,22 +43,22 @@ export class FabricComponent implements OnInit {
       this.fabrics = results.objects;
       this.rows = results.objects;
       if (toBeVerified) {
-        this.verifyFabric(this.fabric) ;
+        this.verifyFabric(this.fabric);
       }
       this.loading = false;
     }, (err) => {
-      if (err['error']['error'] !== undefined) {
-      this.notificationService.error(err['error']['error']) ;
+      if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+        this.notificationService.error(err['error']['error']);
       } else {
-      this.notificationService.error('Error', 'Could not get fabric list');
+        this.notificationService.error('Error', 'Could not get fabric list');
       }
       this.loading = false;
     });
   }
 
   verifyFabric(fabric: Fabric) {
-    const fromAdd = this.fromAddTemplate ;
-    this.fromAddTemplate = false ;
+    const fromAdd = this.fromAddTemplate;
+    this.fromAddTemplate = false;
     this.backendService.verifyFabric(fabric).subscribe((results) => {
       if (results['success']) {
         this.notificationService.success('Success', 'Credentials validated, fetching controllers');
@@ -70,33 +70,32 @@ export class FabricComponent implements OnInit {
           } else {
             this.notificationService.error('Error', results['error']);
             if (fromAdd) {
-              this.modalRef.hide() ;
-              this.openModal(this.editModal , fabric) ;
+              this.modalRef.hide();
+              this.openModal(this.editModal, fabric);
             }
           }
         }, (err) => {
           this.notificationService.error('Error', 'Could not get controllers');
           if (fromAdd) {
-            this.modalRef.hide() ;
-            this.openModal(this.editModal , fabric) ;
+            this.modalRef.hide();
+            this.openModal(this.editModal, fabric);
           }
         });
       } else {
         this.notificationService.error('Error', results['error']);
         if (fromAdd) {
-          this.modalRef.hide() ;
-          this.openModal(this.editModal , fabric) ;
+          this.modalRef.hide();
+          this.openModal(this.editModal, fabric);
         }
       }
     }, (err) => {
       this.notificationService.error('Error', 'Could not verify APIC');
       if (fromAdd) {
-        this.modalRef.hide() ;
-        this.openModal(this.editModal , fabric) ;
+        this.modalRef.hide();
+        this.openModal(this.editModal, fabric);
       }
     });
   }
-
 
   deleteFabric() {
     this.loading = true;
@@ -104,11 +103,11 @@ export class FabricComponent implements OnInit {
       this.getFabrics(false);
       this.modalRef.hide();
     }, (err) => {
-      if (err['error']['error'] !== undefined) {
-        this.notificationService.error(err['error']['error']) ;
-        } else {
+      if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+        this.notificationService.error(err['error']['error']);
+      } else {
         this.notificationService.error('Error', 'Could not delete fabric');
-        }
+      }
       this.loading = false;
     });
   }
@@ -118,28 +117,28 @@ export class FabricComponent implements OnInit {
     this.backendService.createFabric(this.fabric).subscribe((results) => {
       this.getFabrics(true);
     }, (err) => {
-      if (err['error']['error'] !== undefined) {
-        this.notificationService.error(err['error']['error']) ;
-        } else {
+      if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+        this.notificationService.error(err['error']['error']);
+      } else {
         this.notificationService.error('Error', 'Could not add fabric');
-        }
+      }
       this.loading = false;
     });
   }
 
   public updateValue() {
     if (this.confirmPassword !== this.fabric.apic_password) {
-      this.notificationService.error('Passwords do not match') ;
-      return ;
+      this.notificationService.error('Passwords do not match');
+      return;
     }
-    this.confirmPassword = '' ;
-      this.backendService.updateFabric(this.fabric).subscribe((results) => {
-        this.notificationService.success('Success', 'Changes saved');
-        this.getFabrics(true) ;
-      }, (err) => {
-        this.notificationService.error('Error', 'Could not update fabric');
-        this.loading = false;
-      });
+    this.confirmPassword = '';
+    this.backendService.updateFabric(this.fabric).subscribe((results) => {
+      this.notificationService.success('Success', 'Changes saved');
+      this.getFabrics(true);
+    }, (err) => {
+      this.notificationService.error('Error', 'Could not update fabric');
+      this.loading = false;
+    });
   }
 
   updateFilter(event) {
@@ -151,7 +150,7 @@ export class FabricComponent implements OnInit {
 
   public openAddModal(template: TemplateRef<any>) {
     this.fabric = new Fabric();
-    this.fromAddTemplate = true ;
+    this.fromAddTemplate = true;
     this.modalRef = this.modalService.show(template, {
       animated: true,
       keyboard: true,
@@ -164,7 +163,9 @@ export class FabricComponent implements OnInit {
   public openModal(template: TemplateRef<any>, fabric: Fabric) {
     this.selectedFabric = fabric;
     if (this.editModal === template) {
-      this.cloneFabric(fabric) ;
+      this.fabric = new Fabric(
+        fabric.apic_cert, fabric.apic_hostname, fabric.apic_username, fabric.apic_password, fabric.controllers, fabric.fabric
+      );
     }
     this.modalRef = this.modalService.show(template, {
       animated: true,
@@ -173,16 +174,6 @@ export class FabricComponent implements OnInit {
       ignoreBackdropClick: false,
       class: 'modal-lg',
     });
-  }
-
-  public cloneFabric(fabric: Fabric) {
-    this.fabric = new Fabric() ;
-    this.fabric.apic_hostname = fabric.apic_hostname ;
-    this.fabric.apic_password = fabric.apic_password ;
-    this.fabric.apic_username = fabric.apic_username ;
-    this.fabric.controllers = fabric.controllers ;
-    this.fabric.fabric = fabric.fabric ;
-    this.fabric.apic_cert = fabric.apic_cert ;
   }
 
   public hideModal() {

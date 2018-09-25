@@ -14,7 +14,7 @@ import {HashLocationStrategy, LocationStrategy} from "@angular/common";
 import {NgxDatatableModule} from "@swimlane/ngx-datatable";
 import {UserComponent} from "./user/user.component";
 import {LoadingDotsComponent} from "./common/loading-dots.component";
-import {ModalModule, TooltipModule, AccordionModule, CollapseModule} from "ngx-bootstrap";
+import {AccordionModule, ModalModule, TooltipModule} from "ngx-bootstrap";
 import {DefinitionComponent} from "./definition/definition.component";
 import {FabricComponent} from "./fabric/fabric.component";
 import {SnapshotComponent} from "./snapshot/snapshot.component";
@@ -24,17 +24,17 @@ import {ComparisonResultComponent} from "./comparison-result/comparison-result.c
 import {FileSizePipe} from "./common/filesize.pipe";
 import {SnapshotDetailComponent} from "./snapshot-detail/snapshot-detail.component";
 import {ComparisonResultDetailComponent} from "./comparison-result-detail/comparison-result-detail.component";
-import {DiffMatchPatchModule} from "ng-diff-match-patch/dist";
 import {BackendService} from "./_service/backend.service";
 import {BackendInterceptor} from "./_service/backend.interceptor";
 import {AuthGuardService} from "./_service/authguard.service";
 import {LoginComponent} from "./login/login.component";
-import {MomentModule} from "angular2-moment";
 import {DefinitionDetailComponent} from "./definition-detail/definition-detail.component";
 import {CookieService} from "ngx-cookie-service";
 import {ManagedObjectComponent} from "./managed-object/managed-object.component";
 import {ManagedObjectDetailComponent} from "./managed-object-detail/managed-object-detail.component";
 import {NgSelectModule} from "@ng-select/ng-select";
+import {DiffMatchPatchModule} from "ng-diff-match-patch";
+import {MomentModule} from "ngx-moment";
 
 const routes: Routes = [
   {
@@ -104,7 +104,6 @@ const routes: Routes = [
     KonamiModule,
     ModalModule.forRoot(),
     AccordionModule.forRoot(),
-    CollapseModule.forRoot(),
     RouterModule.forRoot(routes),
     NgxDatatableModule,
     SimpleNotificationsModule.forRoot(),

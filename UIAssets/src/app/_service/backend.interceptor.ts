@@ -1,18 +1,18 @@
+import {catchError, map} from 'rxjs/operators';
 import {Injectable} from '@angular/core';
 import {
   HttpErrorResponse,
   HttpEvent,
   HttpHandler,
   HttpInterceptor,
-  HttpParams,
   HttpRequest,
   HttpResponse
 } from '@angular/common/http';
-import {Observable} from 'rxjs/Observable';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
 import {Router} from '@angular/router';
-import {BackendService} from "../_service/backend.service";
+import {BackendService} from "./backend.service";
+import {Observable, throwError} from 'rxjs';
 
 @Injectable()
 export class BackendInterceptor implements HttpInterceptor {
@@ -20,64 +20,49 @@ export class BackendInterceptor implements HttpInterceptor {
   constructor(public router: Router, private cookieService: CookieService, private backendService: BackendService) {
   }
 
-  
-
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    
     if (environment.app_mode) {
-      if(this.backendService.getFileUploadMode()) {
-        this.backendService.setFileUploadMode(false) ;
-        const formData = req.body ;
-        const reqUrl = '/api/' + req.url ;
-        let reqParams = new HttpParams() ;
-        reqParams = reqParams.set('url',reqUrl).set('method',"POST") ;
-        req = req.clone({
-          setHeaders: {
-            'DevCookie': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token'),
-            'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken')
-          },
-          body:formData,
-          url:environment.api_entry,
-          params: reqParams,
-          method:'POST',
-        }) ;
-      } else if(!this.backendService.getFileUploadMode()) {
-      const initialUrlWithParams = req.urlWithParams;
       const initialBody = req.body || {};
-      const initialMethod = req.method;
+      let params;
+      let body;
+      if (this.backendService.isFileUpload()) {
+        this.backendService.setFileUpload(false);
+        params = params.set('url', '/api/' + req.url).set('method', 'post');
+        body = initialBody;
+      } else {
+        body = {
+          'url': '/api/' + req.urlWithParams,
+          'method': req.method,
+          'data': initialBody
+        }
+      }
       req = req.clone({
         setHeaders: {
           'DevCookie': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token'),
-          'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken'),
+          'APIC-Challenge': this.cookieService.get('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken')
         },
-        body: {
-          'url': '/api/' + initialUrlWithParams,
-          'method': initialMethod,
-          'data': initialBody
-        },
-        params: new HttpParams(),
+        body: body,
         url: environment.api_entry,
-        method: 'post'
+        params: params,
+        method: 'post',
       });
     } else if (environment.login_required) {
       req = req.clone({
         withCredentials: true
       });
     }
-  }
-    return next.handle(req).map(resp => {
+    return next.handle(req).pipe(map(resp => {
       if (resp instanceof HttpResponse) {
         return resp;
       }
-    }).catch(err => {
+    }), catchError(err => {
       if (err instanceof HttpErrorResponse && err.status === 401 && localStorage.getItem('isLoggedIn') === 'true') {
         localStorage.removeItem('isLoggedIn');
-        if(!environment.app_mode){
-        this.router.navigate(['login']);
+        if (!environment.app_mode) {
+          this.router.navigate(['login']);
         }
       }
-      return Observable.throw(err);
-    });
-  
-}
+      return throwError(err);
+    }),);
+  }
 }

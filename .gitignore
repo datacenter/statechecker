@@ -111,3 +111,5 @@ UIAssets/node_modules
 # VS code settings
 UIAssets/.vscode
 Service/t1.py
+.idea/
+statechecker.iml

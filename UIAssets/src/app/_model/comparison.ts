@@ -37,7 +37,7 @@ export class ClassComparisonTotal {
 export class Comparison {
   _id: string;
   classnames: string[];
-  definition: string ;
+  definition: string;
   dynamic: boolean;
   error: string;
   nodes: string[];

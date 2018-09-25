@@ -16,9 +16,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search managed objects</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>

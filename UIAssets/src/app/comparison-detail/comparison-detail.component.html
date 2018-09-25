@@ -4,105 +4,106 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparisons']">
       <span class="icon-back"></span>
     </a>
-    Comparison Details
+    Comparison details for
+    {{ comparison.snapshot1_obj.description }}
+    <span class="icon-ethernet icon-medium"></span>
+    {{ comparison.snapshot2_obj.description }}
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparison()'>
       <span class="icon-refresh"></span>
     </button>
   </h4>
   <br>
-  <br>
-    <div class="dropdown" class="accordionPanel">
-    <button class="panel panel--indigo accordionButton" style="width:100%" (click)="isExpanded = !isExpanded" 
-    [attr.aria-expanded]="isExpanded" aria-controls="collapseEvent">
+  <accordion class="panel--bordered">
+    <accordion-group #group [isOpen]='isAccordionOpen' panelClass="no-border">
+      <div style="cursor: pointer" accordion-heading>
         <div class="row">
-            <div class="col-md-11">
-                <div class="pull-left text-large">Definition: <strong>{{comparison.definition}}</strong></div>
+          <div class="col-md-11">
+            <div class="pull-left text-large">Definition <strong>{{ comparison.definition }}</strong></div>
+          </div>
+          <div *ngIf="!group?.isOpen" class="col-md-1">
+            <span class="icon-chevron-down pull-right"></span>
+          </div>
+          <div *ngIf="group?.isOpen" class="col-md-1">
+            <span class="icon-chevron-up pull-right"></span>
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Comparison</h3>
+            <div class="row">
+              <div class="col-md-3">Snapshot 1</div>
+              <div class="col-md-9">{{ comparison.snapshot1_obj.description }}</div>
             </div>
-            <div *ngIf="!isExpanded" class="col-md-1">
-                <span class="icon-chevron-down pull-right"></span>
+            <div class="row">
+              <div class="col-md-3">Snapshot 2</div>
+              <div class="col-md-9">{{ comparison.snapshot2_obj.description }}</div>
             </div>
-            <div *ngIf="isExpanded" class="col-md-1">
-              <span class="icon-chevron-up pull-right"></span>
+            <div class="row">
+              <div class="col-md-3">Definition</div>
+              <div class="col-md-9">{{ comparison.definition }}</div>
             </div>
-        </div> 
-    </button>
-  </div>
-        
-        <div [collapse]="!isExpanded" id="collapseEvent" class="panel panel--well">
-        <div class="row">
-            <div class="col-md-4">
-              <div class="panel panel--indigo panel--raised">
-                <h3>Comparison</h3>
-                <div class="row">
-                  <div class="col-md-3">Snapshot 1</div>
-                  <div class="col-md-9">{{comparison.snapshot1_obj.description}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Snapshot 2</div>
-                  <div class="col-md-9">{{comparison.snapshot2_obj.description}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Definition</div>
-                  <div class="col-md-9">{{comparison.definition}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Node Filter</div>
-                  <div class="col-md-9">{{getNodesCSV(comparison)}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="panel panel--indigo panel--raised">
-                <h3>Runtime</h3>
-                <div class="row">
-                  <div class="col-md-3">Status</div>
-                  <div class="col-md-9">{{comparison.status}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Progress</div>
-                  <div class="col-md-9">{{comparison.progress | percent}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Start time</div>
-                  <div class="col-md-9">{{ (comparison.start_time | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Total time</div>
-                  <div class="col-md-9">{{comparison.total_time | amDuration:'seconds'}}</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="panel panel--indigo panel--raised">
-                <h3>Parameters</h3>
-                <div class="row">
-                  <div class="col-md-3">Remap</div>
-                  <div class="col-md-9">{{comparison.remap}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Serialize</div>
-                  <div class="col-md-9">{{comparison.serialize}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Statistic</div>
-                  <div class="col-md-9">{{comparison.statistic}}</div>
-                </div>
-                <div class="row">
-                  <div class="col-md-3">Timestamp</div>
-                  <div class="col-md-9">{{comparison.timestamp}}</div>
-                </div>
-              </div>
+            <div class="row">
+              <div class="col-md-3">Node Filter</div>
+              <div class="col-md-9">{{ getNodesCSV(comparison)}}</div>
             </div>
           </div>
-          </div>   
-        <br>
+        </div>
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Runtime</h3>
+            <div class="row">
+              <div class="col-md-3">Status</div>
+              <div class="col-md-9">{{ comparison.status }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Progress</div>
+              <div class="col-md-9">{{ comparison.progress | percent }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Start time</div>
+              <div class="col-md-9">{{ (comparison.start_time | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss'}}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Total time</div>
+              <div class="col-md-9">{{ comparison.total_time | amDuration:'seconds' }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="panel panel--indigo panel--raised">
+            <h3>Parameters</h3>
+            <div class="row">
+              <div class="col-md-3">Remap</div>
+              <div class="col-md-9">{{ comparison.remap }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Serialize</div>
+              <div class="col-md-9">{{ comparison.serialize }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Statistic</div>
+              <div class="col-md-9">{{ comparison.statistic }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">Timestamp</div>
+              <div class="col-md-9">{{ comparison.timestamp }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </accordion-group>
+  </accordion>
+  <br>
   <div class="row">
     <div class="col-md-12">
       <div class="row">
         <div class="col-md-12" *ngIf="comparison.status == 'error'">
           <div class="panel panel--danger panel--raised">
-            Error: {{comparison.error}}
+            Error: {{ comparison.error }}
           </div>
         </div>
       </div>
@@ -111,60 +112,60 @@
       </div>
       <div class="row">
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--success">{{comparison.total.equal | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle">Equal</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--success">{{ comparison.total.equal | number }}</div>
+            <div class="card__body text-large text-center">Equal</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--warning-alt">{{comparison.total.created | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--warning-alt">Created</div>
+          <div class="card">
+            <div
+              class="card__header text-huge text-center text--warning-alt">{{ comparison.total.created | number }}</div>
+            <div class="card__body text-large text-center text--warning-alt">Created</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--warning">{{comparison.total.modified | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--warning">Modified</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--warning">{{ comparison.total.modified | number }}</div>
+            <div class="card__body text-large text-center text--warning">Modified</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--danger">{{comparison.total.deleted | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--danger">Deleted</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--danger">{{ comparison.total.deleted | number }}</div>
+            <div class="card__body text-large text-center text--danger">Deleted</div>
           </div>
         </div>
       </div>
       <div class="row">
-          <div class="col-md-12">
-              &nbsp;
-          </div>
+        <div class="col-md-12">
+          &nbsp;
         </div>
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel--raised">
             <div class="row">
               <div class="col-md-3">
-                <label class="switch-icon">
-                  <input
-                    #classModeCheckBox
-                    id="classModeCheckBox"
-                    type="checkbox"
-                    [checked]="nodeMode"
-                    name="classMode"
-                    (change)="onModeChanged(classModeCheckBox.checked)"
-                  >
-                  <span class="switch__label">Class view</span>
-                  <span class="switch__input">
-                      <span class="icon-list-view"></span>
-                      <span class="icon-list-view"></span>
-                    </span>
-                  <span class="switch__label">Node view</span>
-                </label>
+                <div class="row">
+                  <div class="col-md-4">
+                    Class view
+                  </div>
+                  <div class="col-md-8">
+                    <label class="switch">
+                      <input
+                        #classModeCheckBox
+                        id="classModeCheckBox"
+                        type="checkbox"
+                        [checked]="nodeMode"
+                        name="classMode"
+                        (change)="onModeChanged(classModeCheckBox.checked)"
+                      >
+                      <span class="switch__input"></span>
+                      <span class="switch__label hidden-xs">Node view</span>
+                    </label>
+                  </div>
+                </div>
               </div>
               <div class="col-md-3">
                 <label class="switch">
@@ -181,12 +182,13 @@
                 </label>
               </div>
             </div>
+            <br>
             <div class="row">
               <div class="col-md-12">
                 <form>
-                  <div class="form-group">
+                  <div class="form-group label--floated">
                     <div class="form-group__text">
-                      <input id="search" type="search" (keyup)='onFilterChanged($event)'>
+                      <input id="search" type="search" (keyup)='onFilterChanged($event)' required>
                       <label for="search">Search</label>
                       <button type="button" class="link">
                         <span class="icon-search"></span>
@@ -219,7 +221,7 @@
                 pagerPrevious: 'icon-step-backward',
                 pagerNext: 'icon-step-forward'
               }"
-              (sort)="onSort($event)">
+                  (sort)="onSort($event)">
                   <ngx-datatable-column
                     *ngIf="!nodeMode"
                     prop="classname"
@@ -227,9 +229,9 @@
                     [sortable]="true"
                     [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                        <a (click)="goToClassDetails(row['classname'])">
-                            {{row['classname']}}
-                        </a>
+                      <a (click)="goToClassDetails(row['classname'])">
+                        {{ row['classname']}}
+                      </a>
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column
@@ -245,22 +247,22 @@
                   </ngx-datatable-column>
                   <ngx-datatable-column prop="equal" [sortable]="true" [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                      {{row['equal'] | number}}
+                      {{ row['equal'] | number}}
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column prop="created" [sortable]="true" [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                      {{row['created'] | number}}
+                      {{ row['created'] | number}}
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column prop="modified" [sortable]="true" [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                      {{row['modified'] | number}}
+                      {{ row['modified'] | number}}
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column prop="deleted" [sortable]="true" [flexGrow]="0.2">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                      {{row['deleted'] | number}}
+                      {{ row['deleted'] | number}}
                     </ng-template>
                   </ngx-datatable-column>
                   <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">

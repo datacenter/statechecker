@@ -19,9 +19,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search definitions</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>
@@ -56,11 +56,12 @@
                 pagerNext: 'icon-step-forward'
               }"
               (sort)="onSort($event)">
-              <ngx-datatable-column prop="definition" [sortable]="true" [flexGrow]="0.4" [cellClass]="getDefinitionClass"></ngx-datatable-column>
-              <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.4"></ngx-datatable-column>
-              <ngx-datatable-column name="# Objects" [sortable]="true" [flexGrow]="0.2">
+              <ngx-datatable-column prop="definition" [sortable]="true" [flexGrow]="0.1"
+                                    [cellClass]="getDefinitionClass"></ngx-datatable-column>
+              <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.7"></ngx-datatable-column>
+              <ngx-datatable-column name="# Objects" [sortable]="true" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  {{row['managed_objects'].length | number}}
+                  {{ row['managed_objects'].length | number}}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
