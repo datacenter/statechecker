@@ -6,8 +6,8 @@ import {
   HttpHandler,
   HttpInterceptor,
   HttpRequest,
-  HttpParams,
-  HttpResponse
+  HttpResponse,
+  HttpParams
   
 } from '@angular/common/http';
 import {environment} from '../../environments/environment';
