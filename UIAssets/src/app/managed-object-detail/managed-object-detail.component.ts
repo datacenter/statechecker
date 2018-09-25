@@ -4,6 +4,7 @@ import {BsModalService} from "ngx-bootstrap";
 import {BackendService} from "../_service/backend.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ManagedObject, ManagedObjectList} from "../_model/managed-object";
+import {Location} from '@angular/common';
 
 @Component({
   templateUrl: './managed-object-detail.component.html',
@@ -17,9 +18,8 @@ export class ManagedObjectDetailComponent implements OnInit {
   managedObject: ManagedObject;
   prevRoute: any;
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute, private location: Location) {
     this.loadingMessage = 'Loading Managed Object';
-    this.prevRoute = this.backendService.prefs.currentLocation;
   }
 
   ngOnInit(): void {
@@ -43,8 +43,7 @@ export class ManagedObjectDetailComponent implements OnInit {
   }
 
   goToPrevRoute() {
-    console.log(this.prevRoute);
-    this.router.navigate([this.prevRoute]);
+    this.location.back();
   }
 
 }

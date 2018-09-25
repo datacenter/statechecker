@@ -120,7 +120,6 @@ export class ComparisonDetailComponent implements OnInit {
   }
 
   goToClassDetails(classname) {
-    this.backendService.prefs.currentLocation = this.router.url;
     this.router.navigate(['/managed-object', classname]);
   }
 

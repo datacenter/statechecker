@@ -265,7 +265,7 @@
                       {{ row['deleted'] | number}}
                     </ng-template>
                   </ngx-datatable-column>
-                  <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+                  <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                     <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                       <a *ngIf="nodeMode" class="btn btn--small btn--icon btn--primary"
                          [routerLink]="['/comparison', comparison._id, 'results', 'node', row.node_id]">
