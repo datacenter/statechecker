@@ -6,7 +6,9 @@ import {
   HttpHandler,
   HttpInterceptor,
   HttpRequest,
+  HttpParams,
   HttpResponse
+  
 } from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
@@ -23,7 +25,7 @@ export class BackendInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (environment.app_mode) {
       const initialBody = req.body || {};
-      let params;
+      let params = new HttpParams();
       let body;
       if (this.backendService.isFileUpload()) {
         this.backendService.setFileUpload(false);
