@@ -18,6 +18,9 @@ Service/app.json
 UIAssets/app.json
 UIAssets.build/
 
+# ignore build info
+version.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
