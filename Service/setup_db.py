@@ -145,7 +145,7 @@ def db_exists():
     logger.debug("checking if db exists")
     collections = get_db().collection_names()
     logger.debug("current collections: %s" % collections)
-    if len(collections)>0 and ("user" in collections and "settings" in collections):
+    if len(collections)>0 and ("users" in collections and "settings" in collections):
         return True
     return False
 

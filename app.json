@@ -11,7 +11,7 @@
     "contact":{
         "contact-email":"aciappcenter-support@external.cisco.com ",
         "contact-phone":"1-800-553-2447",
-        "contact-url":"https://github.com/datacenter/StateChangeChecker"
+        "contact-url":"https://github.com/datacenter/statechecker"
     },
     "iconfile":"logo.png",
     "name":"StateChangeChecker",

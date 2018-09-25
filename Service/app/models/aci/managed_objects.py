@@ -174,8 +174,9 @@ class ManagedObjects(Rest):
     }
 
     META_ACCESS = {
-        "create": False,
-        "update": False,
+        "create": True,
+        "read": True,
+        "update": True,
         "delete": False,
     }
 
@@ -204,10 +205,15 @@ class ManagedObjects(Rest):
             "default":"",
             "values": ANALYZERS,
         },
-        "uri": {},
+        "uri": {
+            "type": str,
+            "default": "",
+            "description": "custom uri if MO is not queryable via class query",
+        },
         "key": {
             "type": str, 
-            "default":"dn"
+            "default":"dn",
+            "description": "attribute to used as object unique key",
         },
         "severity": severities, 
         "labels": labels,
