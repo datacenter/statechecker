@@ -3,7 +3,6 @@ import {NotificationsService} from 'angular2-notifications';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {User, UserList} from '../_model/user';
 import {BackendService} from '../_service/backend.service';
-import {ViewChild, ElementRef} from '@angular/core' ;
 
 @Component({
   templateUrl: './user.component.html',
@@ -20,31 +19,31 @@ export class UserComponent implements OnInit {
   user: User;
   roles: any[];
   editing = {};
-  modalMessage = 'Add' ;
-  confirmPassword: string ;
-  usernameSort:any ;
-  userRole:number ;
-  userName:string ;
+  confirmPassword: string;
+  usernameSort: any;
+  userRole: number;
+  userName: string;
+
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
-    private modalService: BsModalService) {
+              private modalService: BsModalService) {
     this.loadingMessage = 'Loading users';
     this.roles = [
       {'id': 0, name: 'Admin'},
       {'id': 1, name: 'User'},
       {'id': 2, name: 'Blacklist'},
     ];
-    this.usernameSort = this.backendService.prefs.username_sort ;
-    this.userName = localStorage.getItem('userName') ;
-    this.userRole = parseInt(localStorage.getItem('userRole')) ;
+    this.usernameSort = this.backendService.prefs.username_sort;
+    this.userName = localStorage.getItem('userName');
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {
     this.getUsers();
-   }
+  }
 
-   onSort(event) {
-     this.backendService.prefs.username_sort = event.sorts ;
-   }
+  onSort(event) {
+    this.backendService.prefs.username_sort = event.sorts;
+  }
 
   getUsers() {
     this.loading = true;
@@ -89,21 +88,20 @@ export class UserComponent implements OnInit {
   }
 
   public updateValue() {
-    if (this.confirmPassword !== this.user.password) {
-      this.notificationService.error('Passwords do not match') ;
-      return ;
-    }
-    this.confirmPassword='' ;
+    if (this.confirmPassword === this.user.password) {
+      this.confirmPassword = '';
       this.backendService.updateUser(this.user).subscribe((results) => {
         this.notificationService.success('Success', 'Changes saved');
-        this.hideModal() ;
-        this.getUsers() ;
+        this.hideModal();
+        this.getUsers();
       }, (err) => {
         this.notificationService.error('Error', 'Could not update user');
         this.loading = false;
       });
+    } else {
+      this.notificationService.error('Passwords do not match');
     }
-
+  }
 
   public openAddModal(template: TemplateRef<any>) {
     this.user = new User();
@@ -131,9 +129,8 @@ export class UserComponent implements OnInit {
     this.modalRef.hide();
   }
 
-  public editMode(template: TemplateRef<any> , user: User) {
-    this.user = user ;
-    this.confirmPassword = undefined ;
+  public editMode(template: TemplateRef<any>, user: User) {
+    this.user = user;
     this.modalRef = this.modalService.show(template, {
       animated: true,
       keyboard: true,

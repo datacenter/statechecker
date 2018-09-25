@@ -1,5 +1,8 @@
+import {interval as observableInterval, Observable, of as observableOf, throwError} from 'rxjs';
+
+import {concat, delay, map, mergeMap, retryWhen, switchMap, take} from 'rxjs/operators';
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpParams, HttpRequest, HttpEvent, HttpEventType } from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {User, UserList} from '../_model/user';
 import {Definition, DefinitionList} from '../_model/definition';
 import {Fabric, FabricList} from '../_model/fabric';
@@ -7,34 +10,31 @@ import {Snapshot, SnapshotList} from '../_model/snapshot';
 import {Comparison, ComparisonList} from '../_model/comparison';
 import {Page} from '../_model/page';
 import {ComparisonResultList} from '../_model/comparison-result';
-import {Observable} from 'rxjs/Observable';
 import {environment} from '../../environments/environment';
 import {ManagedObjectList} from '../_model/managed-object';
-import { preferences } from '../_model/preferences';
+import {preferences} from '../_model/preferences';
 
 
 @Injectable()
 export class BackendService {
   private baseUrl = '';
-  public app_status = 'starting app components' ;
-  fileUploadMode = false ;
-  public prefs : preferences ;
+  fileUpload = false;
+  public prefs: preferences;
+
   constructor(private http: HttpClient) {
-    this.prefs = new preferences() ;
+    this.prefs = new preferences();
     if (!environment.app_mode) {
       this.baseUrl = environment.api_entry;
     }
   }
-  
 
-  setFileUploadMode(mode: boolean) {
-    this.fileUploadMode = mode ; 
+  setFileUpload(fileUpload: boolean) {
+    this.fileUpload = fileUpload;
   }
 
-  getFileUploadMode():boolean {
-    return this.fileUploadMode ;
+  isFileUpload(): boolean {
+    return this.fileUpload;
   }
-
 
   login(username, password): Observable<any> {
     return this.http.post(this.baseUrl + 'users/login', {'username': username, 'password': password});
@@ -177,7 +177,7 @@ export class BackendService {
   }
 
   getComparisonResults(comparison: Comparison, page: Page, key: string, value: string,
-    includeEmpty: boolean, sorts): Observable<ComparisonResultList> {
+                       includeEmpty: boolean, sorts): Observable<ComparisonResultList> {
     let params = new HttpParams();
     params = params
       .set('page', page.pageNumber.toString())
@@ -233,31 +233,40 @@ export class BackendService {
   }
 
   getProgressFor(type: string, id: string) {
-  const url = this.baseUrl + '/aci/' + type + '/' + id + '?include=progress,status' ;
-  const httpCopy = this.http ;
-  return Observable.interval(1000).switchMap(() => httpCopy.get(url).map((data: Response) => data)) ;
+    const url = this.baseUrl + 'aci/' + type + '/' + id + '?include=progress,status';
+    const httpCopy = this.http;
+    return observableInterval(1000).pipe(switchMap(() => httpCopy.get(url).pipe(map((data: Response) => data))));
   }
 
-  downloadSnapshot(id , filepath) {
-    const url = this.baseUrl + 'aci/snapshots/' + id + '/download' ;
-    const path = filepath.split('/') ;
-
-    return this.http.get(url, {responseType: 'blob'}).map( (data) => {
+  downloadSnapshot(id, filepath) {
+    const url = this.baseUrl + 'aci/snapshots/' + id + '/download';
+    const path = filepath.split('/');
+    return this.http.get(url, {responseType: 'blob'}).pipe(map((data) => {
       return {
         data: data,
         filename: path[path.length - 1]
-      } ;
-    }) ;
+      };
+    }));
   }
 
   uploadSnapshot(filedata) {
-    const url = this.baseUrl  + 'aci/snapshots/' +  'upload' ;
-    return this.http.post(url, filedata, {reportProgress: true}) ;
+    this.setFileUpload(true);
+    const url = this.baseUrl + 'aci/snapshots/upload';
+    return this.http.post(url, filedata, {reportProgress: true});
   }
 
-  getUserDetails(username:string) {
-    const url = this.baseUrl + 'users/' + username ;
-    return this.http.get(url) ;
+  getUserDetails(username: string) {
+    const url = this.baseUrl + 'users/' + username;
+    return this.http.get(url);
+  }
+
+  getAppStatus() {
+    const url = this.baseUrl + 'aci/app-status/';
+    return this.http.get(url).pipe(retryWhen(error => {
+      return error.pipe(mergeMap((error: any) => {
+        return observableOf(error).pipe(delay(1000));
+      }), take(300), concat(throwError({error: 'App loading failed'})),);
+    }));
   }
 
 }

@@ -26,12 +26,12 @@ export class ComparisonResultComponent implements OnInit {
   public subtotal_created: number;
   public subtotal_modified: number;
   public subtotal_deleted: number;
-  private sort: any;
+  public sort: any;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
-    private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
+              private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison results';
-    this.includeEmpty = this.backendService.prefs.comparisonResult_emptyResults ;
+    this.includeEmpty = this.backendService.prefs.comparisonResult_emptyResults;
     this.sort = this.backendService.prefs.comparisonResult_sort;
   }
 
@@ -98,19 +98,18 @@ export class ComparisonResultComponent implements OnInit {
   onIncludeChanged(checked: boolean) {
     this.includeEmpty = checked;
     this.page.pageNumber = 0;
-    this.backendService.prefs.comparisonResult_emptyResults = checked ;
+    this.backendService.prefs.comparisonResult_emptyResults = checked;
     this.getComparisonResults();
   }
 
   onSort(event) {
     this.sort = event['sorts'];
-    this.backendService.prefs.comparisonResult_sort = this.sort ;
+    this.backendService.prefs.comparisonResult_sort = this.sort;
     this.getComparisonResults(false);
   }
 
-  goToClassDetails(classname){
-    this.backendService.prefs.currentLocation = this.router.url ;
-    this.router.navigate(['/managed-object',classname]) ;
+  goToClassDetails(classname) {
+    this.router.navigate(['/managed-object', classname]);
   }
 
 }

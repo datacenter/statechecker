@@ -4,7 +4,7 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparison', comparison._id]">
       <span class="icon-back"></span>
     </a>
-    Comparison results for {{key}} {{value}}
+    Comparison results for {{ key }} {{ value }}
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResults()'>
       <span class="icon-refresh"></span>
     </button>
@@ -14,31 +14,27 @@
     <div class="col-md-12">
       <div class="row">
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--success">{{subtotal_equal | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle">Equal</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--success">{{ subtotal_equal | number }}</div>
+            <div class="card__body text-large text-center">Equal</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--warning-alt">{{subtotal_created | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--warning-alt">Created</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--warning-alt">{{ subtotal_created | number }}</div>
+            <div class="card__body text-large text-center text--warning-alt">Created</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--warning">{{subtotal_modified | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--warning">Modified</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--warning">{{ subtotal_modified | number }}</div>
+            <div class="card__body text-large text-center text--warning">Modified</div>
           </div>
         </div>
         <div class="col-md-3">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--danger">{{subtotal_deleted | number}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle text--danger">Deleted</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--danger">{{ subtotal_deleted | number }}</div>
+            <div class="card__body text-large text-center text--danger">Deleted</div>
           </div>
         </div>
       </div>
@@ -98,9 +94,9 @@
                 *ngIf="key=='node'" name="Class" [sortable]="true" [flexGrow]="0.2">
 
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                    <a (click)="goToClassDetails(row['classname'])">
-                        {{row['classname']}}
-                    </a>
+                  <a (click)="goToClassDetails(row['classname'])">
+                    {{ row['classname']}}
+                  </a>
                 </ng-template>
 
               </ngx-datatable-column>
@@ -119,9 +115,9 @@
                     key=='class'?row['node_id']:row['classname']
                     ]"
                   >
-                    {{row['total']['equal'] | number}}
+                    {{ row['total']['equal'] | number}}
                   </a>
-                  <span *ngIf="row['total']['equal'] == 0">{{row['total']['equal'] | number}}</span>
+                  <span *ngIf="row['total']['equal'] == 0">{{ row['total']['equal'] | number}}</span>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Created" [sortable]="true" [flexGrow]="0.2">
@@ -139,9 +135,9 @@
                     key=='class'?row['node_id']:row['classname']
                     ]"
                   >
-                    {{row['total']['created'] | number}}
+                    {{ row['total']['created'] | number}}
                   </a>
-                  <span *ngIf="row['total']['created'] == 0">{{row['total']['created'] | number}}</span>
+                  <span *ngIf="row['total']['created'] == 0">{{ row['total']['created'] | number}}</span>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Modified" [sortable]="true" [flexGrow]="0.2">
@@ -159,9 +155,9 @@
                     key=='class'?row['node_id']:row['classname']
                     ]"
                   >
-                    {{row['total']['modified'] | number}}
+                    {{ row['total']['modified'] | number}}
                   </a>
-                  <span *ngIf="row['total']['modified'] == 0">{{row['total']['modified'] | number}}</span>
+                  <span *ngIf="row['total']['modified'] == 0">{{ row['total']['modified'] | number}}</span>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Deleted" [sortable]="true" [flexGrow]="0.2">
@@ -179,9 +175,9 @@
                     key=='class'?row['node_id']:row['classname']
                     ]"
                   >
-                    {{row['total']['deleted'] | number}}
+                    {{ row['total']['deleted'] | number}}
                   </a>
-                  <span *ngIf="row['total']['deleted'] == 0">{{row['total']['deleted'] | number}}</span>
+                  <span *ngIf="row['total']['deleted'] == 0">{{ row['total']['deleted'] | number}}</span>
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>

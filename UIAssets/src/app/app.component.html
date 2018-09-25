@@ -1,20 +1,20 @@
 <simple-notifications [options]="{timeOut:15000}"></simple-notifications>
 <div (konami)="onKonami()"></div>
 <div class="content-fluid">
-    <div *ngIf="!app_loaded">
-        <div class="loading">
-            <br>
-            <h4 class="text-center">Loading StateChecker</h4>
-            <h6 class="text-center">{{app_status}}</h6>
-            <div class="loading-dots loading-dots--info">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <br>
-          </div>
+  <div *ngIf="!app_loaded">
+    <div class="loading">
+      <br>
+      <h4 class="text-center">Loading StateChecker</h4>
+      <h6 class="text-center">{{ app_status }}</h6>
+      <div class="loading-dots loading-dots--info">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <br>
     </div>
-  <main *ngIf="!login_required && (cookies_acquired || !app_mode) && app_loaded">
+  </div>
+  <main *ngIf="!login_required && (cookies_acquired || !app_mode) && app_loaded" style="background: #f5f5f6">
     <header [ngClass]="{'header':true, 'header--compressed': app_mode}">
       <div class="header-bar container">
         <a *ngIf="!app_mode" class="header-bar__logo">
@@ -25,11 +25,11 @@
             <ul class="breadcrumb">
               <li><a routerLink="/">State Checker</a></li>
               <li *ngFor="let breadcrumb of breadcrumbs">
-                <a *ngIf="breadcrumb.params.length > 0" routerLink="{{breadcrumb.url}}">
-                  {{breadcrumb.label}} / {{breadcrumb.params.join(' / ')}}
+                <a *ngIf="breadcrumb.params.length > 0" routerLink="{{ breadcrumb.url }}">
+                  {{ breadcrumb.label }} / {{ breadcrumb.params.join(' / ')}}
                 </a>
-                <a *ngIf="breadcrumb.params.length == 0" routerLink="{{breadcrumb.url}}">
-                  {{breadcrumb.label}}
+                <a *ngIf="breadcrumb.params.length == 0" routerLink="{{ breadcrumb.url }}">
+                  {{ breadcrumb.label }}
                 </a>
               </li>
             </ul>
@@ -46,10 +46,11 @@
           </a>
           <a class="btn btn--small btn--icon" title="Definitions" routerLink="/definitions">
             <span data-balloon="Definitions" data-balloon-pos="left">
-              <span class="icon-pencil"></span>
+              <span class="icon-list-view"></span>
             </span>
           </a>
-          <a class="btn btn--small btn--icon" title="Help" href="http://statechecker.readthedocs.io/en/latest/" target="_blank">
+          <a class="btn btn--small btn--icon" title="Help" href="http://statechecker.readthedocs.io/en/latest/"
+             target="_blank">
             <span data-balloon="Help" data-balloon-pos="left">
               <span class="icon-help"></span>
             </span>
@@ -63,11 +64,10 @@
               <span data-balloon="Logout" data-balloon-pos="left">
                 <span class="icon-sign-out"></span>
               </span>
-            </a>  
+          </a>
         </div>
       </div>
     </header>
-    
     <div class="content">
       <div class="container">
         <div class="row">

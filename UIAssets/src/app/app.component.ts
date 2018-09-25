@@ -1,12 +1,12 @@
+import {fromEvent as observableFromEvent, merge as observableMerge, Observable, of as observableOf} from 'rxjs';
+
+import {filter, map} from 'rxjs/operators';
 import {Component, OnDestroy, OnInit, Renderer2, ViewEncapsulation} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router} from '@angular/router';
-import {Observable} from 'rxjs/Rx' ;
-import {environment} from '../environments/environment' ;
-import {BackendService} from './_service/backend.service' ;
-import {Title} from '@angular/platform-browser' ;
-import {CookieService} from 'ngx-cookie-service' ;
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {NotificationsService} from 'angular2-notifications';
+import {environment} from '../environments/environment';
+import {BackendService} from './_service/backend.service';
+import {Title} from '@angular/platform-browser';
+import {CookieService} from 'ngx-cookie-service';
 
 @Component({
   selector: 'app-root',
@@ -19,47 +19,42 @@ export class AppComponent implements OnInit, OnDestroy {
   konami: boolean;
   login_required: boolean;
   app_mode = environment.app_mode;
+  wait_for_status = environment.wait_for_status;
   private stopListening: () => void;
   breadcrumbs = [];
   private id: any;
-  cookies_acquired = false ;
-  app_loaded = false ;
-  app_status = 'Waiting for tokens' ;
+  cookies_acquired = false;
+  app_loaded = false;
+  app_status = 'Waiting for tokens';
 
-  constructor(public router: Router, private activatedRoute: ActivatedRoute, private backendService: BackendService, 
-    private renderer: Renderer2, private titleService: Title, private cookieService: CookieService,
-  private http: HttpClient, private notificationService: NotificationsService) {
+  constructor(public router: Router, private activatedRoute: ActivatedRoute, private backendService: BackendService,
+              private renderer: Renderer2, private titleService: Title, private cookieService: CookieService) {
     this.stopListening = renderer.listen('window', 'message', this.handleMessage.bind(this));
     this.konami = false;
-    this.isConnected = Observable.merge(
-      Observable.of(navigator.onLine),
-      Observable.fromEvent(window, 'online').map(() => true),
-      Observable.fromEvent(window, 'offline').map(() => false)
+    this.isConnected = observableMerge(
+      observableOf(navigator.onLine),
+      observableFromEvent(window, 'online').pipe(map(() => true)),
+      observableFromEvent(window, 'offline').pipe(map(() => false))
     );
   }
 
   ngOnInit() {
-    this.app_mode = environment.app_mode ;
-    if(!this.app_mode){
-      this.app_status = 'Starting App Components' ;
-      this.backendService.getSnapshots().subscribe( ()=>{
-        
-      } , (error)=>{
-        if(error['status'] === 401) {
-          this.notificationService.error('Invalid session! Please login !') ;
-          this.router.navigate(['login']) ;
-        }
-      }) 
+    if (this.app_mode) {
+      this.app_status = 'Waiting for tokens';
     } else {
-      this.app_status = 'Waiting for tokens' ;
+      this.app_status = 'Starting App Components';
     }
-    this.getAppStatus().subscribe((response) => {
-      this.app_loaded = true ;
-    }, (error) => {
-      this.app_status = error['error'] ;
-    }) ;
+    if (this.wait_for_status) {
+      this.backendService.getAppStatus().subscribe((response) => {
+        this.app_loaded = true;
+      }, (error) => {
+        this.app_status = error['error'];
+      });
+    } else {
+      this.app_loaded = true;
+    }
     this.login_required = (localStorage.getItem('isLoggedIn') != 'true' && environment.login_required);
-    this.router.events.filter(event => event instanceof NavigationEnd).subscribe(event => {
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
         this.login_required = (localStorage.getItem('isLoggedIn') != 'true' && environment.login_required);
         this.breadcrumbs = [];
         let currentRoute: ActivatedRoute = this.activatedRoute.root;
@@ -108,43 +103,25 @@ export class AppComponent implements OnInit, OnDestroy {
 
   handleMessage(event: Event) {
     const message = event as MessageEvent;
-    if (!environment.app_mode) {
-      return ;
-    }
-    const data = JSON.parse(message.data);
-    if (data.hasOwnProperty('token') && data.hasOwnProperty('urlToken')) {
-      this.cookieService.set('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token', data['token']);
-      this.cookieService.set('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken', data['urlToken']);
-      if (!this.cookies_acquired) {
-      this.cookies_acquired = true ;
-      this.app_status = 'Starting App Components' ;
-     }
-    }
-  }
-
-  getAppStatus(): Observable<any> {
-    let statusUrl = '/aci/app-status' ;
-    if (!environment.app_mode) {
-      statusUrl = '/api' + statusUrl ;
-    }
-    return this.http.get(statusUrl).retryWhen(error => {
-      return error.flatMap((error:any) => {
-        if (error.status === 400 || error['status'] === 400) {
-          if (error.hasOwnProperty('error') && error.error.hasOwnProperty('error')) {
-            this.app_status = error['error']['error'] ;
-          }
+    if (environment.app_mode) {
+      const data = JSON.parse(message.data);
+      if (data.hasOwnProperty('token') && data.hasOwnProperty('urlToken')) {
+        this.cookieService.set('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_token', data['token']);
+        this.cookieService.set('app_' + environment.aci_vendor + '_' + environment.aci_appId + '_urlToken', data['urlToken']);
+        if (!this.cookies_acquired) {
+          this.cookies_acquired = true;
+          this.app_status = 'Starting App Components';
         }
-        return Observable.of(error).delay(1000) ;
-      }).take(300).concat(Observable.throw({error: 'App loading failed'})) ;
-    }) ;
+      }
+    }
   }
 
   ngOnDestroy() {
     this.stopListening();
     if (!this.app_mode) {
       localStorage.removeItem('isLoggedIn');
-    this.backendService.logout().subscribe(() => {
-    });
+      this.backendService.logout().subscribe(() => {
+      });
     }
   }
 

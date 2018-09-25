@@ -19,9 +19,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search comparison</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>
@@ -66,32 +66,32 @@
               </ngx-datatable-column>
               <ngx-datatable-column prop="snapshot1" [sortable]="true" [flexGrow]="0.3">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  {{row.snapshot1_description}}
+                  {{ row.snapshot1_description }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column prop="snapshot2" [sortable]="true" [flexGrow]="0.3">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  {{row.snapshot2_description}}
+                  {{ row.snapshot2_description }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column prop="status" [sortable]="true" [flexGrow]="0.1">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
                   <span class='text--danger' *ngIf="row['status'] == 'error'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                   <span class='text--success' *ngIf="row['status'] == 'complete'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                   <span class='text--secondary' *ngIf="row['status'] == 'running'">
-                    {{row['progress']*100}}%
+                    {{ row['progress']*100}}%
                   </span>
                   <span class='text--default'
                         *ngIf="row['status'] != 'error' && row['status'] != 'complete' && row['status'] != 'running'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+              <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/comparison', row._id]">
                     <span class="icon-search"></span>
@@ -139,7 +139,7 @@
                       [(ngModel)]="comparison.snapshot1"
                       class="form-control" id="snapshot1" required name="snapshot1">
                 <option *ngFor="let snapshot of snapshots" [value]="snapshot._id">
-                  {{snapshot.fabric}} - {{snapshot.description}}
+                  {{ snapshot.fabric }} - {{ snapshot.description }}
                 </option>
               </select>
               <label for="snapshot1">Snapshot 1</label>
@@ -151,7 +151,7 @@
             <div class="form-group__text select">
               <select class="form-control" id="snapshot2" required [(ngModel)]="comparison.snapshot2" name="snapshot2">
                 <option *ngFor="let snapshot of snapshots" [value]="snapshot._id">
-                  {{snapshot.fabric}} - {{snapshot.description}}
+                  {{ snapshot.fabric }} - {{ snapshot.description }}
                 </option>
               </select>
               <label for="snapshot2">Snapshot 2</label>
@@ -163,7 +163,7 @@
             <div class="form-group__text select">
               <select class="form-control" id="severity" required [(ngModel)]="comparison.severity" name="severity">
                 <option *ngFor="let severity of severities" [value]="severity">
-                  {{severity}}
+                  {{ severity }}
                 </option>
               </select>
               <label for="severity">Severity</label>
@@ -200,36 +200,36 @@
           </div>
         </div>
         <div class="col-md-12">
-            <div class="form-group">
-              <div class="form-group__text select">
-                <select class="form-control" id="definition" required [(ngModel)]="comparison.definition" name="definition">
-                  <option *ngFor="let definition of definitions" [value]="definition.definition">
-                    {{definition.definition}}
-                  </option>
-                </select>
-                <label for="definition">Definition</label>
-              </div>
+          <div class="form-group">
+            <div class="form-group__text select">
+              <select class="form-control" id="definition" required [(ngModel)]="comparison.definition"
+                      name="definition">
+                <option *ngFor="let definition of definitions" [value]="definition.definition">
+                  {{ definition.definition }}
+                </option>
+              </select>
+              <label for="definition">Definition</label>
             </div>
           </div>
-          <div class="col-md-12">
-              <div class="form-group">
-                  
-                      <label for="nodes">Nodes</label>
-                      <ng-select
-                        class="text-left"
-                        id="nodes"
-                        name="nodes"
-                        [items]="predefinedNodes"
-                        [multiple]="true"
-                        [hideSelected]="true"
-                        bindLabel="label"
-                        bindValue="value"
-                        [addTag] = "addNodes"
-                        [(ngModel)]="comparison.nodes"
-                      >
-                      </ng-select>  
-              </div>
+        </div>
+        <div class="col-md-12">
+          <div class="form-group">
+            <label for="nodes">Nodes</label>
+            <ng-select
+              class="text-left"
+              id="nodes"
+              name="nodes"
+              [items]="predefinedNodes"
+              [multiple]="true"
+              [hideSelected]="true"
+              bindLabel="label"
+              bindValue="value"
+              [addTag]="addNodes"
+              [(ngModel)]="comparison.nodes"
+            >
+            </ng-select>
           </div>
+        </div>
       </div>
     </div>
     <br>

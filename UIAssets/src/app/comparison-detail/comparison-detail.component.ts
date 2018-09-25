@@ -1,4 +1,4 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, ViewEncapsulation} from "@angular/core";
 import {NotificationsService} from "angular2-notifications";
 import {BsModalService} from "ngx-bootstrap";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -12,7 +12,6 @@ import {Snapshot, SnapshotList} from "../_model/snapshot";
 })
 
 export class ComparisonDetailComponent implements OnInit {
-
   public comparison: Comparison;
   public loading: boolean;
   public loadingMessage: string;
@@ -20,23 +19,24 @@ export class ComparisonDetailComponent implements OnInit {
   public includeEmpty: boolean;
   public rows;
   private filter: string;
-  public isExpanded = false ;
-  comparisonDetailSort:any ;
+  comparisonDetailSort: any;
+  isAccordionOpen: boolean;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
-    private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
+              private modalService: BsModalService, public router: Router, private activatedRoute: ActivatedRoute) {
     this.loadingMessage = 'Loading comparison';
-    this.comparisonDetailSort = this.backendService.prefs.comparisonDetail_sort ;
+    this.comparisonDetailSort = this.backendService.prefs.comparisonDetail_sort;
+    this.isAccordionOpen = this.backendService.prefs.comparisonDetail_accordion;
   }
 
   ngOnInit(): void {
-    this.includeEmpty = this.backendService.prefs.comparisonDetail_emptyResults ;
-    this.nodeMode = !this.backendService.prefs.comparisonDetail_classView ;
+    this.includeEmpty = this.backendService.prefs.comparisonDetail_emptyResults;
+    this.nodeMode = !this.backendService.prefs.comparisonDetail_classView;
     this.getComparison();
   }
 
   onSort(event) {
-    this.backendService.prefs.comparisonDetail_sort = event.sorts ;
+    this.backendService.prefs.comparisonDetail_sort = event.sorts;
   }
 
   getComparison() {
@@ -92,13 +92,13 @@ export class ComparisonDetailComponent implements OnInit {
 
   onModeChanged(checked: boolean) {
     this.nodeMode = checked;
-    this.backendService.prefs.comparisonDetail_classView = !checked ;
+    this.backendService.prefs.comparisonDetail_classView = !checked;
     this.filterRows();
   }
 
   onIncludeChanged(checked: boolean) {
     this.includeEmpty = checked;
-    this.backendService.prefs.comparisonDetail_emptyResults = checked ;
+    this.backendService.prefs.comparisonDetail_emptyResults = checked;
     this.filterRows();
   }
 
@@ -108,20 +108,19 @@ export class ComparisonDetailComponent implements OnInit {
   }
 
   getNodesCSV(comparison) {
-    let nodesCSV = '' ;
-    if(comparison.nodes.length === 0) {
-      return 'All Nodes' ;
+    let nodesCSV = '';
+    if (comparison.nodes.length === 0) {
+      return 'All Nodes';
     }
-    for(let node of comparison.nodes) {
-      nodesCSV += node + ',' ;
+    for (let node of comparison.nodes) {
+      nodesCSV += node + ',';
     }
-    
-    return nodesCSV.substring(0,nodesCSV.length - 1) ;
+
+    return nodesCSV.substring(0, nodesCSV.length - 1);
   }
 
   goToClassDetails(classname) {
-    this.backendService.prefs.currentLocation = this.router.url ;
-    this.router.navigate(['/managed-object',classname]) ;
+    this.router.navigate(['/managed-object', classname]);
   }
 
 }

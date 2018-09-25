@@ -5,18 +5,23 @@
       <span class="icon-back"></span>
     </a>
     Available snapshots
-    <button class="btn btn--icon btn--small btn--primary" (click)='getSnapshots()'>
-      <span class="icon-refresh"></span>
+    <button class="btn btn--icon btn--small btn--primary" title="Refresh" (click)='getSnapshots()'>
+      <span data-balloon="Refresh" data-balloon-pos="left">
+        <span class="icon-refresh"></span>
+      </span>
     </button>
-    <button class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
-      <span class="icon-add"></span>
+    <button class="btn btn--icon btn--small btn--success" title="Add" (click)='openAddModal(addtemplate)'>
+      <span data-balloon="Add" data-balloon-pos="left">
+        <span class="icon-add"></span>
+      </span>
     </button>
     <button (click)="fileInput.click()" class="btn btn--icon btn--small" title="Upload">
-      <span data-balloon="Upload" data-balloon-pos="right">
+      <span data-balloon="Upload" data-balloon-pos="left">
       <span class="icon-upload-contain"></span>
     </span>
     </button>
-    <input type="file" style="display:none;" (change)="fileUploadHandler($event)" accept="tgz,application/gzip" #fileInput/>
+    <input type="file" style="display:none;" (change)="fileUploadHandler($event)" accept="tgz,application/gzip"
+           #fileInput/>
   </h4>
   <br>
   <div class="row">
@@ -25,9 +30,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search snapshots</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>
@@ -74,31 +79,37 @@
               <ngx-datatable-column prop="status" [sortable]="true" [flexGrow]="0.1">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-value="value" let-row="row">
                   <span class='text--danger' *ngIf="row['status'] == 'error'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                   <span class='text--success' *ngIf="row['status'] == 'complete'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                   <span class='text--secondary' *ngIf="row['status'] == 'running'">
-                    {{row['progress'] | percent : '2.00'}}
+                    {{ row['progress'] | percent : '2.00'}}
                   </span>
                   <span class='text--default'
                         *ngIf="row['status'] != 'error' && row['status'] != 'complete' && row['status'] != 'running'">
-                    {{row['status']}}
+                    {{ row['status']}}
                   </span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+              <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/snapshot', row._id]">
-                    <span class="icon-search"></span>
+                  <a class="btn btn--small btn--icon btn--primary" title="Display"
+                     [routerLink]="['/snapshot', row._id]">
+                    <span data-balloon="Display" data-balloon-pos="left">
+                      <span class="icon-search"></span>
+                    </span>
                   </a>
-                  <a class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
-                    <span class="icon-trash"></span>
-                  </a>
-                  <a class="btn btn--small btn--icon" title = "Download" (click) = 'fileDownloadHandler(row)'>
+                  <a class="btn btn--small btn--icon" title="Download" (click)='fileDownloadHandler(row)'>
                     <span data-balloon="Download" data-balloon-pos="left">
-                    <span class="icon-download-contain"></span>
+                      <span class="icon-download-contain"></span>
+                    </span>
+                  </a>
+                  <a class="btn btn--small btn--icon btn--negative" title="Delete"
+                     (click)='openModal(deletetemplate, row)'>
+                    <span data-balloon="Delete" data-balloon-pos="left">
+                      <span class="icon-trash"></span>
                     </span>
                   </a>
                 </ng-template>
@@ -113,7 +124,7 @@
 <ng-template #deletetemplate>
   <div class="modal-body">
     <p>
-      Are you sure you want to delete snapshot {{selectedSnapshot.filename}}?
+      Are you sure you want to delete snapshot {{ selectedSnapshot.filename.split("/").pop() }}?
     </p>
   </div>
   <br>
@@ -146,7 +157,7 @@
           <div class="form-group">
             <div class="form-group__text select">
               <select class="form-control" id="fabric" required [(ngModel)]="snapshot.fabric" name="fabric">
-                <option *ngFor="let fabric of fabrics" [value]="fabric.fabric">{{fabric.fabric}}</option>
+                <option *ngFor="let fabric of fabrics" [value]="fabric.fabric">{{ fabric.fabric }}</option>
               </select>
               <label for="fabric">Fabric</label>
             </div>
@@ -155,7 +166,7 @@
         <div *ngIf="app_mode" class="col-md-12" style="display:none">
           <div class="form-group">
             <div class="form-group__text">
-              <input [ngModel] = "fabrics[0].fabric" readonly id="fabric"/>
+              <input [ngModel]="fabrics[0].fabric" readonly id="fabric"/>
               <label for="fabric">Fabric</label>
             </div>
           </div>
@@ -165,7 +176,7 @@
             <div class="form-group__text select">
               <select class="form-control" id="definition" required [(ngModel)]="snapshot.definition" name="definition">
                 <option *ngFor="let definition of definitions" [value]="definition.definition">
-                  {{definition.definition}}
+                  {{ definition.definition }}
                 </option>
               </select>
               <label for="definition">Definition</label>

@@ -1,10 +1,7 @@
 ngx-datatable.fixed-header {
   padding: 0 0 0 0;
 }
-.accordionPanel {
-  width: 100%;
-}
 
-.accordionButton {
-  cursor: pointer;
+:host >>> .card.no-border{
+  border: 0;
 }

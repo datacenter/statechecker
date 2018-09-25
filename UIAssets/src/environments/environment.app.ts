@@ -5,5 +5,6 @@ export const environment = {
   production: true,
   login_required: false,
   app_mode: true,
-  api_entry: '/appcenter/Cisco/StateChangeChecker/proxy.json'
+  api_entry: '/appcenter/Cisco/StateChangeChecker/proxy.json',
+  wait_for_status: true
 };

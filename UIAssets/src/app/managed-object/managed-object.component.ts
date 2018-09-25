@@ -1,6 +1,5 @@
 import {Component, OnInit} from "@angular/core";
 import {NotificationsService} from "angular2-notifications";
-import {BsModalRef, BsModalService} from "ngx-bootstrap";
 import {BackendService} from "../_service/backend.service";
 import {ManagedObject, ManagedObjectList} from "../_model/managed-object";
 
@@ -15,7 +14,7 @@ export class ManagedObjectComponent implements OnInit {
   loadingMessage: string;
   managedObjects: ManagedObject[];
 
-  constructor(private backendService: BackendService, private notificationService: NotificationsService, private modalService: BsModalService) {
+  constructor(private backendService: BackendService, private notificationService: NotificationsService) {
     this.loadingMessage = 'Loading Managed Objects';
   }
 

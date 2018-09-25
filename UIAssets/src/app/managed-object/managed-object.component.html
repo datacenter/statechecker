@@ -16,9 +16,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search managed objects</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>
@@ -54,7 +54,7 @@
               }">
               <ngx-datatable-column prop="classname" [sortable]="true" [flexGrow]="0.2"></ngx-datatable-column>
               <ngx-datatable-column prop="description" [sortable]="true" [flexGrow]="0.7"></ngx-datatable-column>
-              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+              <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/managed-object', row.classname]">
                     <span class="icon-search"></span>

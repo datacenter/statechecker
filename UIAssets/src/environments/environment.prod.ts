@@ -5,5 +5,6 @@ export const environment = {
   production: true,
   login_required: true,
   app_mode: false,
-  api_entry: 'https://esc-aci-fab3.cisco.com:8052/api/'
+  api_entry: 'https://agossett-bld.insieme.local:5443/api/',
+  wait_for_status: true
 };

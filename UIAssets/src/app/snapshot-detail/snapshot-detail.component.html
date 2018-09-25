@@ -15,7 +15,7 @@
       <div class="row">
         <div class="col-md-12" *ngIf="snapshot.status == 'error'">
           <div class="panel panel--danger panel--raised">
-            Error: {{snapshot.error}}
+            Error: {{ snapshot.error }}
           </div>
         </div>
       </div>
@@ -24,17 +24,15 @@
       </div>
       <div class="row">
         <div class="col-md-6">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title text--success">{{snapshot.progress | percent}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle">Progress</div>
+          <div class="card">
+            <div class="card__header text-huge text-center text--success">{{ snapshot.progress | percent }}</div>
+            <div class="card__body text-large text-center">Progress</div>
           </div>
         </div>
         <div class="col-md-6">
-          <div class="scoreboard scoreboard--raised">
-            <div class="scoreboard__title">{{snapshot.filesize | filesize}}</div>
-            <hr class="text-muted">
-            <div class="scoreboard__subtitle">Size</div>
+          <div class="card">
+            <div class="card__header text-huge text-center">{{ snapshot.filesize | filesize }}</div>
+            <div class="card__body text-large text-center">Size</div>
           </div>
         </div>
       </div>
@@ -43,36 +41,36 @@
       </div>
       <div class="row">
         <div class="col-md-6">
-          <div class="panel panel--dkblue panel--raised">
+          <div class="panel panel--vibblue panel--raised">
             <h3>Snapshot</h3>
             <div class="row">
               <div class="col-md-3">Id</div>
-              <div class="col-md-9">{{snapshot._id}}</div>
+              <div class="col-md-9">{{ snapshot._id }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Description</div>
-              <div class="col-md-9">{{snapshot.description}}</div>
+              <div class="col-md-9">{{ snapshot.description }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Definition</div>
-              <div class="col-md-9">{{snapshot.definition}}</div>
+              <div class="col-md-9">{{ snapshot.definition }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Fabric</div>
-              <div class="col-md-9">{{snapshot.fabric}}</div>
+              <div class="col-md-9">{{ snapshot.fabric }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Fabric domain</div>
-              <div class="col-md-9">{{snapshot.fabric_domain}}</div>
+              <div class="col-md-9">{{ snapshot.fabric_domain }}</div>
             </div>
           </div>
         </div>
         <div class="col-md-6">
-          <div class="panel panel--dkblue panel--raised">
+          <div class="panel panel--vibblue panel--raised">
             <h3>Runtime</h3>
             <div class="row">
               <div class="col-md-3">Status</div>
-              <div class="col-md-9">{{snapshot.status}}</div>
+              <div class="col-md-9">{{ snapshot.status }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Start time</div>
@@ -81,15 +79,15 @@
             </div>
             <div class="row">
               <div class="col-md-3">Total time</div>
-              <div class="col-md-9">{{snapshot.total_time | amDuration:'seconds'}}</div>
+              <div class="col-md-9">{{ snapshot.total_time | amDuration:'seconds' }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">Wait time</div>
-              <div class="col-md-9">{{snapshot.wait_time | amDuration:'seconds'}}</div>
+              <div class="col-md-9">{{ snapshot.wait_time | amDuration:'seconds' }}</div>
             </div>
             <div class="row">
               <div class="col-md-3">File name</div>
-              <div class="col-md-9">{{snapshot.filename}}</div>
+              <div class="col-md-9">{{ snapshot.filename.split("/").pop() }}</div>
             </div>
           </div>
         </div>

@@ -1,9 +1,9 @@
 <loading-dots *ngIf="loading" [text]="loadingMessage"></loading-dots>
 <div *ngIf="!loading">
   <h4>
-      <a class="btn btn--icon btn--primary" (click)="goToPrevRoute()">
-        <span class="icon-back"></span>
-      </a>
+    <a class="btn btn--icon btn--primary" (click)="goToPrevRoute()">
+      <span class="icon-back"></span>
+    </a>
     Managed object details
     <button class="btn btn--icon btn--small btn--primary" (click)='getManagedObject()'>
       <span class="icon-refresh"></span>
@@ -12,7 +12,7 @@
   <br>
   <div class="row">
     <div class="col-md-12">
-      <div class="panel panel--raised panel--dkblue">
+      <div class="panel panel--raised panel--indigo">
         <div class="row">
           <div class="col-md-2"><b>Name</b></div>
           <div class="col-md-10">{{ managedObject['classname'] }}</div>

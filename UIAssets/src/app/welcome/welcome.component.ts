@@ -9,12 +9,12 @@ import {environment} from '../../environments/environment';
 })
 
 export class WelcomeComponent implements OnInit {
-  app_mode = false ;
+  app_mode = environment.app_mode;
+
   constructor(public router: Router) {
   }
 
   ngOnInit() {
-    this.app_mode = environment.app_mode ;
   }
 
   goToFabric() {

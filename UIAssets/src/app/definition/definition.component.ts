@@ -18,12 +18,12 @@ export class DefinitionComponent implements OnInit {
   definition: Definition;
   definitions: Definition[];
   managedObjects: any[];
-  definitionSort:any ;
+  definitionSort: any;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
-    private modalService: BsModalService) {
+              private modalService: BsModalService) {
     this.loadingMessage = 'Loading definitions';
-    this.definitionSort = this.backendService.prefs.definition_sort ;
+    this.definitionSort = this.backendService.prefs.definition_sort;
   }
 
   ngOnInit(): void {
@@ -31,7 +31,7 @@ export class DefinitionComponent implements OnInit {
   }
 
   onSort(event) {
-    this.backendService.prefs.definition_sort = event.sorts ;
+    this.backendService.prefs.definition_sort = event.sorts;
   }
 
   getDefinitions() {
@@ -52,11 +52,11 @@ export class DefinitionComponent implements OnInit {
     this.backendService.deleteDefinition(this.selectedDefinition).subscribe((results) => {
       this.getDefinitions();
     }, (err) => {
-      if (err['error']['error'] !== undefined) {
+      if (err['error'] !== undefined && err['error']['error'] !== undefined) {
         this.notificationService.error(err['error']['error']);
-        } else {
-          this.notificationService.error('Error', 'Could not delete definition') ;
-        }
+      } else {
+        this.notificationService.error('Error', 'Could not delete definition');
+      }
       this.loading = false;
     });
   }
@@ -67,10 +67,10 @@ export class DefinitionComponent implements OnInit {
       this.getDefinitions();
       this.modalRef.hide();
     }, (err) => {
-      if (err['error']['error'] !== undefined){
-      this.notificationService.error(err['error']['error']);
+      if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+        this.notificationService.error(err['error']['error']);
       } else {
-        this.notificationService.error('Error', 'Could not create definition') ;
+        this.notificationService.error('Error', 'Could not create definition');
       }
       this.loading = false;
     });
@@ -124,7 +124,7 @@ export class DefinitionComponent implements OnInit {
   public getDefinitionClass(row): any {
     if (row.hasOwnProperty('row') && row['row'].hasOwnProperty('template')) {
       if (row['row']['template'] === true) {
-      return ' datatable-header-cell-label' ;
+        return ' datatable-header-cell-label';
       }
     }
   }

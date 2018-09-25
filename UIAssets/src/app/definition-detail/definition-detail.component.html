@@ -4,23 +4,18 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/definitions']">
       <span class="icon-back"></span>
     </a>
-    Definition details
+    Definition details for {{ definition.definition }}
     <button class="btn btn--icon btn--small btn--primary" (click)='getDefinition()'>
       <span class="icon-refresh"></span>
     </button>
   </h4>
   <br>
-  <div class="panel panel--raised wordwrap">
-      <div class="row half-margin-bottom">
-          <div class="col-md-12">
-                <h5><strong>{{definition.definition}}</strong></h5>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-            <h6>{{definition.description}}</h6>
-          </div>
-        </div>
+  <div class="panel panel--vibblue panel--raised">
+    <div class="row">
+      <div class="col-md-12">
+        {{ definition.description }}
+      </div>
+    </div>
   </div>
   <br>
   <div class="row">
@@ -29,9 +24,9 @@
         <div class="row">
           <div class="col-md-12">
             <form>
-              <div class="form-group">
+              <div class="form-group label--floated">
                 <div class="form-group__text">
-                  <input id="search" type="search" (keyup)='updateFilter($event)'>
+                  <input id="search" type="search" (keyup)='updateFilter($event)' required>
                   <label for="search">Search objects</label>
                   <button type="button" class="link">
                     <span class="icon-search"></span>
@@ -67,7 +62,7 @@
               }">
               <ngx-datatable-column prop="name" name="Object" [sortable]="true" [flexGrow]="0.9">
               </ngx-datatable-column>
-              <ngx-datatable-column name="Actions" prop="name" [sortable]="true" [flexGrow]="0.1">
+              <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/managed-object', row.name]">
                     <span class="icon-search"></span>
