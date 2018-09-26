@@ -18,7 +18,7 @@ export class User {
 
   constructor(
     username: string = '',
-    role: number = 2,
+    role: number = 1,
     password: string = '',
     last_login: number = 0,
     is_new: boolean = true,
