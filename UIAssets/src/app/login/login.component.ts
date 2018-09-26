@@ -3,7 +3,6 @@ import {Router} from "@angular/router";
 import {BackendService} from "../_service/backend.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {NotificationsService} from "angular2-notifications";
-import {CookieService} from "ngx-cookie-service";
 
 @Component({
   templateUrl: './login.component.html',
@@ -14,8 +13,7 @@ export class LoginComponent implements OnInit {
   username: string;
   password: string;
 
-  constructor(public router: Router, private backendService: BackendService,
-              private notificationService: NotificationsService, private cookieService: CookieService) {
+  constructor(public router: Router, private backendService: BackendService, private notificationService: NotificationsService) {
   }
 
   ngOnInit(): void {

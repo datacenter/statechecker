@@ -19,11 +19,13 @@ export class DefinitionComponent implements OnInit {
   definitions: Definition[];
   managedObjects: any[];
   definitionSort: any;
+  userRole: number;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
     this.loadingMessage = 'Loading definitions';
     this.definitionSort = this.backendService.prefs.definition_sort;
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {

@@ -128,7 +128,7 @@
               <label for="password_confirm">Confirm password</label>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" *ngIf="user.is_new || usserierRole == 0">
             <div class="form-group__text select">
               <select class="form-control" id="role" required [(ngModel)]="user.role" name="role">
                 <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>

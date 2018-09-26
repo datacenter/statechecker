@@ -21,7 +21,7 @@ export class User {
     role: number = 2,
     password: string = '',
     last_login: number = 0,
-    is_new: boolean = false,
+    is_new: boolean = true,
     password_confirm: string = ''
   ) {
     this.username = username;
