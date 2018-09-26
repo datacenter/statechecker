@@ -28,7 +28,6 @@ export class UserComponent implements OnInit {
     this.roles = [
       {'id': 0, name: 'Admin'},
       {'id': 1, name: 'User'},
-      {'id': 2, name: 'Blacklist'},
     ];
     this.usernameSort = this.backendService.prefs.username_sort;
     this.userName = localStorage.getItem('userName');
