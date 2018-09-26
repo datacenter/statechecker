@@ -4,7 +4,8 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparison', comparison._id]">
       <span class="icon-back"></span>
     </a>
-    Comparison results for {{ key }} {{ value }}
+    <span *ngIf="key != 'node' || value != '0'"> Comparison results for {{ key }} {{ value }} </span>
+    <span *ngIf="key == 'node' && value == '0'"> Global comparison results </span>
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResults()'>
       <span class="icon-refresh"></span>
     </button>
