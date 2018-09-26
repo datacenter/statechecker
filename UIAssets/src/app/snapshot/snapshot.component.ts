@@ -218,7 +218,6 @@ export class SnapshotComponent implements OnInit {
     if (row.status === 'complete') {
       this.backendService.downloadSnapshot(row._id, row.filename).subscribe(
         (data) => {
-          console.log(data);
           const blob = new Blob([data.data], {type: 'application/gzip'});
           const blobUrl = window.URL.createObjectURL(blob);
           const a = document.createElement('a');

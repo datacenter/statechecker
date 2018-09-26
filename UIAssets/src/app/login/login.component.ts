@@ -29,7 +29,6 @@ export class LoginComponent implements OnInit {
       localStorage.setItem('userName', this.username);
       this.backendService.getUserDetails(this.username).subscribe((response) => {
         const userDetails = response['objects'][0];
-        console.log(this.cookieService.get('session'));
         localStorage.setItem('userRole', userDetails['role']);
       }, (error) => {
         this.notificationService.error('Could not get user details');

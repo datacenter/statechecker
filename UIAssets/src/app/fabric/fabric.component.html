@@ -77,8 +77,8 @@
               </ngx-datatable-column>
               <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
-                  <a class="btn btn--small btn--icon btn--primary" title="Update" (click)='openModal(editTemplate,row)'>
-                    <span data-balloon="Update" data-balloon-pos="left">
+                  <a class="btn btn--small btn--icon btn--primary" title="Edit" (click)='openModal(addtemplate,row)'>
+                    <span data-balloon="Edit" data-balloon-pos="left">
                     <span class="icon-pencil"></span>
                   </span>
                   </a>
@@ -112,14 +112,14 @@
 <ng-template #addtemplate>
   <form #fabricForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="modal-body">
-      <h6>
-        Add a new fabric
-      </h6>
+      <h6 *ngIf="fabric.is_new"> Add a new fabric </h6>
+      <h6 *ngIf="!fabric.is_new"> Edit fabric </h6>
       <div class="row">
         <div class="col-md-12">
           <div class="form-group">
             <div class="form-group__text">
-              <input id="fabric" type="text" required [(ngModel)]="fabric.fabric" name="name">
+              <input id="fabric" type="text" [disabled]="!fabric.is_new" [required]="fabric.is_new"
+                     [(ngModel)]="fabric.fabric" name="name">
               <label for="fabric">Name</label>
             </div>
           </div>
@@ -137,65 +137,24 @@
           </div>
           <div class="form-group">
             <div class="form-group__text">
-              <input id="apic_password" type="password" required [(ngModel)]="fabric.apic_password"
+              <input id="apic_password" type="password" [required]="fabric.is_new" [(ngModel)]="fabric.apic_password"
                      name="apic_password">
               <label for="apic_password">Password</label>
             </div>
           </div>
-        </div>
-        <div class="col-md-12">
-          &nbsp;
-        </div>
-      </div>
-    </div>
-    <br>
-    <div class="modal-footer">
-      <button type="submit" class="btn btn--small btn--primary" [disabled]="!fabricForm.form.valid">Add</button>
-      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
-    </div>
-  </form>
-</ng-template>
-<ng-template #editTemplate>
-  <form #editfabricForm="ngForm" (ngSubmit)="updateValue()">
-    <div class="modal-body">
-      <h6>
-        Edit fabric
-      </h6>
-      <div class="row">
-        <div class="col-md-12">
-          <div class="form-group">
+          <div class="form-group" [ngClass]="{'form-group--error':fabric.apic_password !== fabric.password_confirm}">
             <div class="form-group__text">
-              <input id="editfabric" type="text" required [ngModel]="fabric.fabric" name="name" readonly>
-              <label for="editfabric">Name</label>
+              <input id="password_confirm" type="password" [required]="fabric.is_new" [(ngModel)]="fabric.password_confirm"
+                     name="password_confirm">
+              <label for="password_confirm">Confirm password</label>
             </div>
           </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="edit_apic_hostname" type="text" required [(ngModel)]="fabric.apic_hostname"
-                     name="apic_hostname">
-              <label for="edit_apic_hostname">Hostname</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="edit_apic_username" type="text" required [(ngModel)]="fabric.apic_username"
-                     name="apic_username">
-              <label for="edit_apic_username">Username</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="edit_apic_password" type="password" required [(ngModel)]="fabric.apic_password"
-                     name="apic_password">
-              <label for="edit_apic_password">Password</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="confirm_apic_password" type="password" required [(ngModel)]="confirmPassword"
-                     name="confirm_apic_password">
-              <label for="confirm_apic_password">Confirm Password</label>
-            </div>
+          <div class="form-group form-group--inline">
+            <label class="checkbox">
+              <input type="checkbox" [(ngModel)]="fabric.validate" name="validate">
+              <span class="checkbox__input"></span>
+              <span class="checkbox__label">Validate credentials</span>
+            </label>
           </div>
         </div>
         <div class="col-md-12">
@@ -205,7 +164,9 @@
     </div>
     <br>
     <div class="modal-footer">
-      <button type="submit" class="btn btn--small btn--primary" [disabled]="!editfabricForm.form.valid">Update</button>
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!fabricForm.form.valid">
+        {{ fabric.is_new?'Add':'Save'}}
+      </button>
       <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
     </div>
   </form>
