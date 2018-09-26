@@ -27,6 +27,7 @@ export class SnapshotComponent implements OnInit {
   definitions: Definition[];
   app_mode: boolean;
   snapshotSorts: any;
+  userRole: number;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
@@ -35,6 +36,7 @@ export class SnapshotComponent implements OnInit {
     this.loadingMessage = this.appLoadMessage;
     this.app_mode = environment.app_mode;
     this.snapshotSorts = this.backendService.prefs.snapshot_sort;
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {

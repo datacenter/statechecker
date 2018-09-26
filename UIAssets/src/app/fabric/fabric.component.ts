@@ -18,11 +18,13 @@ export class FabricComponent implements OnInit {
   fabric: Fabric;
   fabrics: Fabric[];
   fabricSorts: any;
+  userRole: number;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
     this.loadingMessage = 'Loading fabrics';
     this.fabricSorts = this.backendService.prefs.fabric_sort;
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {
@@ -99,39 +101,38 @@ export class FabricComponent implements OnInit {
   }
 
   public onSubmit() {
-    if (this.fabric.apic_password !== undefined && this.fabric.apic_password != '' && this.fabric.apic_password == this.fabric.password_confirm) {
-      const validate = this.fabric.validate;
-      if (this.fabric.is_new) {
-        this.backendService.createFabric(this.fabric).subscribe((results) => {
-          if (validate) {
-            this.verifyFabric(this.fabric);
-          } else {
-            this.getFabrics();
-          }
-        }, (err) => {
-          if (err['error'] !== undefined && err['error']['error'] !== undefined) {
-            this.notificationService.error(err['error']['error']);
-          } else {
-            this.notificationService.error('Error', 'Could not add fabric');
-          }
-          this.loading = false;
-        });
-      } else {
-        this.backendService.updateFabric(this.fabric).subscribe((results) => {
-          if (validate) {
-            this.verifyFabric(this.fabric);
-          } else {
-            this.getFabrics();
-          }
-        }, (err) => {
-          if (err['error'] !== undefined && err['error']['error'] !== undefined) {
-            this.notificationService.error(err['error']['error']);
-          } else {
-            this.notificationService.error('Error', 'Could not update fabric');
-          }
-          this.loading = false;
-        });
-      }
+    this.hideModal();
+    const validate = this.fabric.validate;
+    if (this.fabric.is_new) {
+      this.backendService.createFabric(this.fabric).subscribe((results) => {
+        if (validate) {
+          this.verifyFabric(this.fabric);
+        } else {
+          this.getFabrics();
+        }
+      }, (err) => {
+        if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+          this.notificationService.error(err['error']['error']);
+        } else {
+          this.notificationService.error('Error', 'Could not add fabric');
+        }
+        this.loading = false;
+      });
+    } else {
+      this.backendService.updateFabric(this.fabric).subscribe((results) => {
+        if (validate) {
+          this.verifyFabric(this.fabric);
+        } else {
+          this.getFabrics();
+        }
+      }, (err) => {
+        if (err['error'] !== undefined && err['error']['error'] !== undefined) {
+          this.notificationService.error(err['error']['error']);
+        } else {
+          this.notificationService.error('Error', 'Could not update fabric');
+        }
+        this.loading = false;
+      });
     }
   }
 
