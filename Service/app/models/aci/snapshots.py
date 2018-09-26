@@ -18,6 +18,7 @@ from flask import request
 from flask import send_from_directory
 from natsort import natsorted as sorted
 
+import base64
 import hashlib
 import json
 import logging
@@ -93,8 +94,8 @@ def upload_snapshot():
                     snap.status = 'complete'
                     snap.error = False
                     snap.source = 'upload'
-                    snap.filename = "snapshot.%s.%s.tgz" % (snap.fabric, 
-                                                format_timestamp(snap.start_time,msec=True))
+                    snap.filename = get_unique_filename(dst,
+                        "snapshot.%s.%s.tgz"%(snap.fabric,format_timestamp(snap.start_time,msec=True)))
                     snap.filename = os.path.join(dst,snap.filename)
                     # create the directory if not present
                     if not os.path.isdir(dst): os.makedirs(dst)
@@ -269,6 +270,19 @@ class Snapshots(Rest):
                 abort(500,'Error downloading the file') 
         abort(400, "no file available for this snapshot")
 
+def get_unique_filename(directory, filename):
+    """ if filename already exists within directory, add random string to make the filename unique
+        return unique filename
+    """
+    filename_no_ext = ".".join(filename.split(".")[:-1])
+    ext = filename.split(".")[-1]
+    fname = ".".join([filename_no_ext, ext])
+    while os.path.exists("%s/%s" % (directory, fname)):
+        fname = ".".join([
+            "%s_%s" % (filename_no_ext,  base64.b64encode("%s" % uuid.uuid4())[:8]),
+            ext
+        ])
+    return fname
 
 def execute_snapshot(snapshot_id):
     """ perform snapshot operation for provided fabric name and definition name.
@@ -305,6 +319,7 @@ def execute_snapshot(snapshot_id):
         return
     
     filename = "snapshot.%s.%s.tgz"% (s.fabric, format_timestamp(ts,msec=True))
+    filename = get_unique_filename(dst, filename)
     src = "%s/%s"%(src, re.sub("\.tgz$","", filename))
 
     # update snapshot state with error message and error status
