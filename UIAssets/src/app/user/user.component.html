@@ -73,7 +73,7 @@
               <ngx-datatable-column name="Actions" [flexGrow]="0.1">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a class="btn btn--small btn--icon btn--primary" *ngIf="row.username === userName || userRole === 0"
-                     (click)="editMode(editTemplate,row)">
+                     (click)="openModal(addtemplate,row)">
                     <span class="icon-pencil"></span>
                   </a>
                   <a class="btn btn--small btn--icon btn--negative" *ngIf="row.username === userName || userRole === 0"
@@ -104,21 +104,28 @@
 <ng-template #addtemplate>
   <form #userForm="ngForm" (ngSubmit)="onSubmit()">
     <div class="modal-body">
-      <h6>
-        Add a new user
-      </h6>
+      <h6 *ngIf="user.is_new"> Add a new user </h6>
+      <h6 *ngIf="!user.is_new"> Edit user </h6>
       <div class="row">
         <div class="col-md-12">
           <div class="form-group">
             <div class="form-group__text">
-              <input id="username" type="text" required [(ngModel)]="user.username" name="username">
+              <input id="username" type="text" [disabled]="!user.is_new" [required]="user.is_new"
+                     [(ngModel)]="user.username" name="username">
               <label for="username">Username</label>
             </div>
           </div>
           <div class="form-group">
             <div class="form-group__text">
-              <input id="password" type="password" required [(ngModel)]="user.password" name="password">
+              <input id="password" type="password" [required]="user.is_new" [(ngModel)]="user.password" name="password">
               <label for="password">Password</label>
+            </div>
+          </div>
+          <div class="form-group" [ngClass]="{'form-group--error':user.password !== user.password_confirm}">
+            <div class="form-group__text">
+              <input id="password_confirm" type="password" [required]="user.is_new" [(ngModel)]="user.password_confirm"
+                     name="password_confirm">
+              <label for="password_confirm">Confirm password</label>
             </div>
           </div>
           <div class="form-group">
@@ -137,57 +144,9 @@
     </div>
     <br>
     <div class="modal-footer">
-      <button type="submit" class="btn btn--small btn--primary" [disabled]="!userForm.form.valid">Add</button>
-      <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
-    </div>
-  </form>
-</ng-template>
-<ng-template #editTemplate>
-  <form #editForm="ngForm" (ngSubmit)="updateValue()">
-    <div class="modal-body">
-      <h6>
-        Update user
-      </h6>
-      <div class="row">
-        <div class="col-md-12">
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="update_username" name="update_username" [ngModel]="user.username" readonly>
-              <label for="update_username">Username</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text select">
-              <select class="form-control" id="update_role" required [(ngModel)]="user.role" name="update_role"
-                      [disabled]="userRole === 1">
-                <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
-              </select>
-              <label for="update_role">Role</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="update_password" type="password" [required]="userRole === 1" [(ngModel)]="user.password"
-                     name="update_password">
-              <label for="update_password">Password</label>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="form-group__text">
-              <input id="confirmPassword" [required]="userRole === 1" type="password" [(ngModel)]="confirmPassword"
-                     name="confirmPassword">
-              <label for="confirmPassword">Confirm Password</label>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-12">
-          &nbsp;
-        </div>
-      </div>
-    </div>
-    <br>
-    <div class="modal-footer">
-      <button type="submit" class="btn btn--small btn--primary" [disabled]="!editForm.form.valid">Update</button>
+      <button type="submit" class="btn btn--small btn--primary" [disabled]="!userForm.form.valid">
+        {{ user.is_new?'Add':'Save'}}
+      </button>
       <button type="reset" class="btn btn--small" (click)="hideModal()">Cancel</button>
     </div>
   </form>

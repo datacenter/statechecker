@@ -7,6 +7,7 @@ import {environment} from '../environments/environment';
 import {BackendService} from './_service/backend.service';
 import {Title} from '@angular/platform-browser';
 import {CookieService} from 'ngx-cookie-service';
+import {UserList} from "./_model/user";
 
 @Component({
   selector: 'app-root',
@@ -52,6 +53,10 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     } else {
       this.app_loaded = true;
+    }
+    if (environment.login_required) {
+      this.backendService.getUsers().subscribe((results: UserList) => {
+      });
     }
     this.login_required = (localStorage.getItem('isLoggedIn') != 'true' && environment.login_required);
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
