@@ -5,7 +5,15 @@
        [routerLink]="['/comparison',comparison._id, 'results',key,value]">
       <span class="icon-back"></span>
     </a>
-    {{ type | titlecase }} entries for {{ key }} {{ value }} and {{ subkey }} {{ subvalue }}
+    <span *ngIf="value != '0' && subvalue != '0'">
+      {{ type | titlecase }} entries for {{ key }} {{ value }} and {{ subkey }} {{ subvalue }}
+    </span>
+    <span *ngIf="value == '0'">
+      Global {{ type }} entries for {{ subkey }} {{ subvalue }}
+    </span>
+    <span *ngIf="subvalue == '0'">
+      Global {{ type }} entries for {{ key }} {{ value }}
+    </span>
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResultDetails()'>
       <span class="icon-refresh"></span>
     </button>
