@@ -31,7 +31,7 @@ if os.path.exists(appfile):
             if "appid" in js:
                 app_vars["APP_ID"] = js["appid"]
             if "version" in js:
-                app_var["APP_VERSION"] = js["version"]
+                app_vars["APP_VERSION"] = js["version"]
     except Exception as e: pass
 
 # version.txt is created at build and should be in the following format
