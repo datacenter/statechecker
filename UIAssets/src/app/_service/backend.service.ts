@@ -13,6 +13,7 @@ import {ComparisonResultList} from '../_model/comparison-result';
 import {environment} from '../../environments/environment';
 import {ManagedObjectList} from '../_model/managed-object';
 import {preferences} from '../_model/preferences';
+import {Version} from "../_model/version";
 
 
 @Injectable()
@@ -304,6 +305,11 @@ export class BackendService {
         return observableOf(error).pipe(delay(1000));
       }), take(300), concat(throwError({error: 'App loading failed'})),);
     }));
+  }
+
+  getVersion(): Observable<Version> {
+    const url = this.baseUrl + 'aci/app-status/version';
+    return this.http.get<Version>(url);
   }
 
 }

@@ -3,6 +3,7 @@ import {Router} from "@angular/router";
 import {BackendService} from "../_service/backend.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {NotificationsService} from "angular2-notifications";
+import {Version} from "../_model/version";
 
 @Component({
   templateUrl: './login.component.html',
@@ -12,11 +13,15 @@ export class LoginComponent implements OnInit {
   loading: boolean;
   username: string;
   password: string;
+  version: Version;
 
   constructor(public router: Router, private backendService: BackendService, private notificationService: NotificationsService) {
   }
 
   ngOnInit(): void {
+    this.backendService.getVersion().subscribe((results) => {
+      this.version = results;
+    });
   }
 
   public onSubmit() {
