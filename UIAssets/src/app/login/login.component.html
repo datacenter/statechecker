@@ -51,7 +51,8 @@
           <div class="row">&nbsp;</div>
           <div class="row">
             <div class="col-md-2"></div>
-            <div class="col-md-8">Version <b>1.0</b></div>
+            <div *ngIf="version" class="col-md-8">Version <b>{{ version.version }}</b></div>
+            <div *ngIf="!version" class="col-md-8">Fetching version...</div>
             <div class="col-md-2"></div>
           </div>
         </div>
