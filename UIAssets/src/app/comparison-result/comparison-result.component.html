@@ -4,7 +4,8 @@
     <a class="btn btn--icon btn--primary" [routerLink]="['/comparison', comparison._id]">
       <span class="icon-back"></span>
     </a>
-    Comparison results for {{ key }} {{ value }}
+    <span *ngIf="key != 'node' || value != '0'"> Comparison results for {{ key }} {{ value }} </span>
+    <span *ngIf="key == 'node' && value == '0'"> Global comparison results </span>
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparisonResults()'>
       <span class="icon-refresh"></span>
     </button>
@@ -87,18 +88,18 @@
             pagerNext: 'icon-step-forward'
           }"
             >
-              <ngx-datatable-column
-                *ngIf="key=='class'" prop="node_id" name="Node" [sortable]="true" [flexGrow]="0.2">
+              <ngx-datatable-column *ngIf="key=='class'" prop="node_id" name="Node" [sortable]="true" [flexGrow]="0.2">
+                <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
+                  <span *ngIf="row['node_id'] === 0">Global</span>
+                  <span *ngIf="row['node_id'] !== 0">{{ row['node_id'] | number }}</span>
+                </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column
-                *ngIf="key=='node'" name="Class" [sortable]="true" [flexGrow]="0.2">
-
+              <ngx-datatable-column *ngIf="key=='node'" name="Class" [sortable]="true" [flexGrow]="0.2">
                 <ng-template let-row="row" let-value="value" ngx-datatable-cell-template>
                   <a (click)="goToClassDetails(row['classname'])">
                     {{ row['classname']}}
                   </a>
                 </ng-template>
-
               </ngx-datatable-column>
               <ngx-datatable-column name="Equal" [sortable]="true" [flexGrow]="0.1">
                 <ng-template ngx-datatable-cell-template let-rowIndex="rowIndex" let-row="row">

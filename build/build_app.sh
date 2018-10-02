@@ -18,8 +18,14 @@ standalone_https_port="5001"
 
 # create version.txt with commit info
 function add_version() {
-    git log -1 > ./version.txt
-
+    # example output:
+    # 923797471c147b67b1e71004a8873d61db8d8f82      - commit
+    # 2018-09-27T10:12:48-04:00                     - date (iso format)
+    # 1538057568                                    - date (unix timestamp)
+    # agccie@users.noreply.github.com               - commit author
+    # master                                        - commit branch
+    git log --pretty=format:%H%n%aI%n%at%n%ae%n -1 > ./version.txt
+    git rev-parse --abbrev-ref HEAD >> ./version.txt
 }
 
 # build and deploy standalone container

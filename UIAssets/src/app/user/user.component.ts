@@ -17,12 +17,10 @@ export class UserComponent implements OnInit {
   selectedUser: User;
   users: User[];
   user: User;
-  roles: any[];
-  editing = {};
-  confirmPassword: string;
   usernameSort: any;
   userRole: number;
   userName: string;
+  roles: ({ id: number; name: string })[];
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
@@ -30,7 +28,6 @@ export class UserComponent implements OnInit {
     this.roles = [
       {'id': 0, name: 'Admin'},
       {'id': 1, name: 'User'},
-      {'id': 2, name: 'Blacklist'},
     ];
     this.usernameSort = this.backendService.prefs.username_sort;
     this.userName = localStorage.getItem('userName');
@@ -79,27 +76,20 @@ export class UserComponent implements OnInit {
   public onSubmit() {
     this.modalRef.hide();
     this.loading = true;
-    this.backendService.createUser(this.user).subscribe((results) => {
-      this.getUsers();
-    }, (err) => {
-      this.notificationService.error('Error', 'Could not add user');
-      this.loading = false;
-    });
-  }
-
-  public updateValue() {
-    if (this.confirmPassword === this.user.password) {
-      this.confirmPassword = '';
+    if (this.user.is_new) {
+      this.backendService.createUser(this.user).subscribe((results) => {
+        this.getUsers();
+      }, (err) => {
+        this.notificationService.error('Error', 'Could not add user');
+        this.loading = false;
+      });
+    } else {
       this.backendService.updateUser(this.user).subscribe((results) => {
-        this.notificationService.success('Success', 'Changes saved');
-        this.hideModal();
         this.getUsers();
       }, (err) => {
         this.notificationService.error('Error', 'Could not update user');
         this.loading = false;
       });
-    } else {
-      this.notificationService.error('Passwords do not match');
     }
   }
 
@@ -116,6 +106,13 @@ export class UserComponent implements OnInit {
 
   public openModal(template: TemplateRef<any>, user: User) {
     this.selectedUser = user;
+    this.user = new User(
+      user.username,
+      user.role,
+      user.password,
+      user.last_login,
+      false
+    );
     this.modalRef = this.modalService.show(template, {
       animated: true,
       keyboard: true,
@@ -127,16 +124,5 @@ export class UserComponent implements OnInit {
 
   public hideModal() {
     this.modalRef.hide();
-  }
-
-  public editMode(template: TemplateRef<any>, user: User) {
-    this.user = user;
-    this.modalRef = this.modalService.show(template, {
-      animated: true,
-      keyboard: true,
-      backdrop: false,
-      ignoreBackdropClick: false,
-      class: 'modal-lg',
-    });
   }
 }

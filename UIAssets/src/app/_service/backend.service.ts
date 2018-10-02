@@ -13,6 +13,7 @@ import {ComparisonResultList} from '../_model/comparison-result';
 import {environment} from '../../environments/environment';
 import {ManagedObjectList} from '../_model/managed-object';
 import {preferences} from '../_model/preferences';
+import {Version} from "../_model/version";
 
 
 @Injectable()
@@ -52,19 +53,30 @@ export class BackendService {
   }
 
   createUser(user: User): Observable<any> {
-    return this.http.post(this.baseUrl + 'users', user);
+    let toSave = new User(
+      user.username,
+      user.role,
+      user.password
+    );
+    delete toSave.last_login;
+    delete toSave.is_new;
+    delete toSave.password_confirm;
+    return this.http.post(this.baseUrl + 'users', toSave);
   }
 
   updateUser(user: User): Observable<any> {
-    if (user.role === 'Admin') {
-      user.role = 0;
-    } else if (user.role === 'User') {
-      user.role = 1;
-    } else if (user.role === 'Blacklist') {
-      user.role = 2;
+    let toSave = new User(
+      user.username,
+      user.role,
+      user.password
+    );
+    delete toSave.is_new;
+    delete toSave.password_confirm;
+    delete toSave.last_login;
+    if (toSave.password == '') {
+      delete toSave.password;
     }
-    delete user.last_login;
-    return this.http.patch(this.baseUrl + 'users/' + user.username, user);
+    return this.http.patch(this.baseUrl + 'users/' + toSave.username, toSave);
   }
 
   deleteUser(user: User): Observable<any> {
@@ -110,7 +122,19 @@ export class BackendService {
   }
 
   createFabric(fabric: Fabric): Observable<any> {
-    return this.http.post(this.baseUrl + 'aci/fabrics', fabric);
+    let toSave = new Fabric(
+      fabric.apic_cert,
+      fabric.apic_hostname,
+      fabric.apic_username,
+      fabric.apic_password,
+      fabric.controllers,
+      fabric.fabric
+    );
+    delete toSave.controllers;
+    delete toSave.validate;
+    delete toSave.is_new;
+    delete toSave.password_confirm;
+    return this.http.post(this.baseUrl + 'aci/fabrics', toSave);
   }
 
   getFabrics(): Observable<FabricList> {
@@ -121,8 +145,22 @@ export class BackendService {
   }
 
   updateFabric(fabric: Fabric): Observable<any> {
-    delete fabric.controllers;
-    return this.http.patch(this.baseUrl + 'aci/fabrics/' + fabric.fabric, fabric);
+    let toSave = new Fabric(
+      fabric.apic_cert,
+      fabric.apic_hostname,
+      fabric.apic_username,
+      fabric.apic_password,
+      fabric.controllers,
+      fabric.fabric
+    );
+    delete toSave.controllers;
+    delete toSave.validate;
+    delete toSave.is_new;
+    delete toSave.password_confirm;
+    if (toSave.apic_password == '') {
+      delete toSave.apic_password;
+    }
+    return this.http.patch(this.baseUrl + 'aci/fabrics/' + toSave.fabric, toSave);
   }
 
   deleteFabric(fabric: Fabric): Observable<any> {
@@ -267,6 +305,11 @@ export class BackendService {
         return observableOf(error).pipe(delay(1000));
       }), take(300), concat(throwError({error: 'App loading failed'})),);
     }));
+  }
+
+  getVersion(): Observable<Version> {
+    const url = this.baseUrl + 'aci/app-status/version';
+    return this.http.get<Version>(url);
   }
 
 }

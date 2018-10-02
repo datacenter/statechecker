@@ -269,6 +269,12 @@ function main(){
     log "======================================================================"
     log `rm -f $STARTED_FILE 2>&1`
 
+    # include commit version into start of log
+    if [ -f "$SCRIPT_DIR/version.txt" ] ; then
+        v=`cat $SCRIPT_DIR/version.txt`
+        log "$v"
+    fi
+
     # setup required directories with proper write access and custom app config
     setup_directories
     create_app_config_file

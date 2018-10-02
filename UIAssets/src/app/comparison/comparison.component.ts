@@ -26,11 +26,13 @@ export class ComparisonComponent implements OnInit, OnDestroy {
   updateQueue: any = [];
   predefinedNodes: any = ['global'];
   comparisonSort: any;
+  userRole: number;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
     this.loadingMessage = 'Loading comparisons';
     this.comparisonSort = this.backendService.prefs.comparison_sort;
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {

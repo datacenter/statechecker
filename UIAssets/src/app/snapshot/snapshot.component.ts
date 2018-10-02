@@ -27,6 +27,7 @@ export class SnapshotComponent implements OnInit {
   definitions: Definition[];
   app_mode: boolean;
   snapshotSorts: any;
+  userRole: number;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
@@ -35,6 +36,7 @@ export class SnapshotComponent implements OnInit {
     this.loadingMessage = this.appLoadMessage;
     this.app_mode = environment.app_mode;
     this.snapshotSorts = this.backendService.prefs.snapshot_sort;
+    this.userRole = parseInt(localStorage.getItem('userRole'));
   }
 
   ngOnInit(): void {
@@ -218,7 +220,6 @@ export class SnapshotComponent implements OnInit {
     if (row.status === 'complete') {
       this.backendService.downloadSnapshot(row._id, row.filename).subscribe(
         (data) => {
-          console.log(data);
           const blob = new Blob([data.data], {type: 'application/gzip'});
           const blobUrl = window.URL.createObjectURL(blob);
           const a = document.createElement('a');

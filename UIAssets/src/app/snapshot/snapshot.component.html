@@ -10,12 +10,12 @@
         <span class="icon-refresh"></span>
       </span>
     </button>
-    <button class="btn btn--icon btn--small btn--success" title="Add" (click)='openAddModal(addtemplate)'>
+    <button *ngIf="userRole == 0" class="btn btn--icon btn--small btn--success" title="Add" (click)='openAddModal(addtemplate)'>
       <span data-balloon="Add" data-balloon-pos="left">
         <span class="icon-add"></span>
       </span>
     </button>
-    <button (click)="fileInput.click()" class="btn btn--icon btn--small" title="Upload">
+    <button *ngIf="userRole == 0" (click)="fileInput.click()" class="btn btn--icon btn--small" title="Upload">
       <span data-balloon="Upload" data-balloon-pos="left">
       <span class="icon-upload-contain"></span>
     </span>
@@ -101,12 +101,12 @@
                       <span class="icon-search"></span>
                     </span>
                   </a>
-                  <a class="btn btn--small btn--icon" title="Download" (click)='fileDownloadHandler(row)'>
+                  <a *ngIf="userRole == 0" class="btn btn--small btn--icon" title="Download" (click)='fileDownloadHandler(row)'>
                     <span data-balloon="Download" data-balloon-pos="left">
                       <span class="icon-download-contain"></span>
                     </span>
                   </a>
-                  <a class="btn btn--small btn--icon btn--negative" title="Delete"
+                  <a *ngIf="userRole == 0" class="btn btn--small btn--icon btn--negative" title="Delete"
                      (click)='openModal(deletetemplate, row)'>
                     <span data-balloon="Delete" data-balloon-pos="left">
                       <span class="icon-trash"></span>
@@ -124,7 +124,7 @@
 <ng-template #deletetemplate>
   <div class="modal-body">
     <p>
-      Are you sure you want to delete snapshot {{ selectedSnapshot.filename.split("/").pop() }}?
+      Are you sure you want to delete snapshot {{ selectedSnapshot.description }}?
     </p>
   </div>
   <br>

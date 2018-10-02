@@ -1,12 +1,15 @@
 import {fromEvent as observableFromEvent, merge as observableMerge, Observable, of as observableOf} from 'rxjs';
 
 import {filter, map} from 'rxjs/operators';
-import {Component, OnDestroy, OnInit, Renderer2, ViewEncapsulation} from '@angular/core';
+import {Component, OnDestroy, OnInit, Renderer2, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router} from '@angular/router';
 import {environment} from '../environments/environment';
 import {BackendService} from './_service/backend.service';
 import {Title} from '@angular/platform-browser';
 import {CookieService} from 'ngx-cookie-service';
+import {User, UserList} from "./_model/user";
+import {BsModalRef, BsModalService} from "ngx-bootstrap";
+import {Version} from "./_model/version";
 
 @Component({
   selector: 'app-root',
@@ -15,6 +18,7 @@ import {CookieService} from 'ngx-cookie-service';
 })
 
 export class AppComponent implements OnInit, OnDestroy {
+  modalRef: BsModalRef;
   isConnected: Observable<boolean>;
   konami: boolean;
   login_required: boolean;
@@ -22,13 +26,15 @@ export class AppComponent implements OnInit, OnDestroy {
   wait_for_status = environment.wait_for_status;
   private stopListening: () => void;
   breadcrumbs = [];
-  private id: any;
   cookies_acquired = false;
   app_loaded = false;
   app_status = 'Waiting for tokens';
+  version: Version;
+  authors = ['Andy Gossett', 'Axel Bodart', 'Hrishikesh Deshpande'];
 
   constructor(public router: Router, private activatedRoute: ActivatedRoute, private backendService: BackendService,
-              private renderer: Renderer2, private titleService: Title, private cookieService: CookieService) {
+              private renderer: Renderer2, private titleService: Title, private cookieService: CookieService,
+              private modalService: BsModalService) {
     this.stopListening = renderer.listen('window', 'message', this.handleMessage.bind(this));
     this.konami = false;
     this.isConnected = observableMerge(
@@ -36,6 +42,16 @@ export class AppComponent implements OnInit, OnDestroy {
       observableFromEvent(window, 'online').pipe(map(() => true)),
       observableFromEvent(window, 'offline').pipe(map(() => false))
     );
+  }
+
+  shuffleAuthor() {
+    var j, x, i;
+    for (i = this.authors.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      x = this.authors[i];
+      this.authors[i] = this.authors[j];
+      this.authors[j] = x;
+    }
   }
 
   ngOnInit() {
@@ -52,6 +68,10 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     } else {
       this.app_loaded = true;
+    }
+    if (environment.login_required) {
+      this.backendService.getUsers().subscribe((results: UserList) => {
+      });
     }
     this.login_required = (localStorage.getItem('isLoggedIn') != 'true' && environment.login_required);
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
@@ -138,5 +158,23 @@ export class AppComponent implements OnInit, OnDestroy {
 
   noKonami() {
     this.konami = false;
+  }
+
+  public openModal(template: TemplateRef<any>, user: User) {
+    this.backendService.getVersion().subscribe((results) => {
+      this.version = results;
+      this.shuffleAuthor();
+      this.modalRef = this.modalService.show(template, {
+        animated: true,
+        keyboard: true,
+        backdrop: true,
+        ignoreBackdropClick: false,
+        class: 'modal',
+      });
+    });
+  }
+
+  public hideModal() {
+    this.modalRef.hide();
   }
 }

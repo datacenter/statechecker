@@ -49,15 +49,14 @@
               <span class="icon-list-view"></span>
             </span>
           </a>
-          <a class="btn btn--small btn--icon" title="Help" href="http://statechecker.readthedocs.io/en/latest/"
-             target="_blank">
-            <span data-balloon="Help" data-balloon-pos="left">
-              <span class="icon-help"></span>
+          <a class="btn btn--small btn--icon" title="Managed objects" routerLink="/managed-objects">
+            <span data-balloon="Managed objects" data-balloon-pos="left">
+              <span class="icon-folder"></span>
             </span>
           </a>
-          <a class="btn btn--small btn--icon" title="Feedback" href="mailto:aciappcenter-support@external.cisco.com?Subject=Feedback for Statechecker app">
-            <span data-balloon="Feedback" data-balloon-pos="left">
-              <span class="icon-feedback"></span>
+          <a class="btn btn--small btn--icon" title="About" (click)='openModal(abouttemplate)'>
+            <span data-balloon="About" data-balloon-pos="left">
+              <span class="icon-info"></span>
             </span>
           </a>
           <a *ngIf="!app_mode" class="btn btn--small btn--icon" title="Logout" (click)="logout()">
@@ -100,3 +99,44 @@
     </router-outlet>
   </main>
 </div>
+<ng-template #abouttemplate>
+  <div class="modal-body text-left">
+    <h5 class="text-center">StateChecker {{ version.version }}</h5>
+    <br>
+    <div class="panel panel--vibblue panel--raised">
+      <div class="row">
+        <div class="col-md-4">Documentation</div>
+        <div class="col-md-8"><a target="_blank" href="http://statechecker.readthedocs.io/en/latest/">https://statechecker.readthedocs.io/en/latest/</a>
+        </div>
+      </div>
+      <div class="row text-left">
+        <div class="col-md-4">Feedback</div>
+        <div class="col-md-8"><a
+          href="mailto:aciappcenter-support@external.cisco.com?Subject=Feedback for Statechecker app">aciappcenter-support@external.cisco.com</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">Build date</div>
+        <div class="col-md-8">{{ (version.timestamp | amFromUnix) | amDateFormat: 'MMM DD YYYY - HH:mm:ss' }}
+          ({{ (version.timestamp | amFromUnix) | amTimeAgo }})
+        </div>
+      </div>
+      <div class="row text-left">
+        <div class="col-md-4">Branch</div>
+        <div class="col-md-8">{{ version.branch }}</div>
+      </div>
+      <div class="row text-left">
+        <div class="col-md-4">Commit id</div>
+        <div class="col-md-8">{{ version.commit }}</div>
+      </div>
+      <div class="row text-left">
+        <div class="col-md-4">Authors</div>
+        <div class="col-md-8">{{ authors }}</div>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="modal-footer">
+    <button type="reset" class="btn btn--primary btn--small" (click)="hideModal()">Close</button>
+  </div>
+</ng-template>

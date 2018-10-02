@@ -3,7 +3,7 @@ import {Router} from "@angular/router";
 import {BackendService} from "../_service/backend.service";
 import {HttpErrorResponse} from "@angular/common/http";
 import {NotificationsService} from "angular2-notifications";
-import {CookieService} from "ngx-cookie-service";
+import {Version} from "../_model/version";
 
 @Component({
   templateUrl: './login.component.html',
@@ -13,12 +13,15 @@ export class LoginComponent implements OnInit {
   loading: boolean;
   username: string;
   password: string;
+  version: Version;
 
-  constructor(public router: Router, private backendService: BackendService,
-              private notificationService: NotificationsService, private cookieService: CookieService) {
+  constructor(public router: Router, private backendService: BackendService, private notificationService: NotificationsService) {
   }
 
   ngOnInit(): void {
+    this.backendService.getVersion().subscribe((results) => {
+      this.version = results;
+    });
   }
 
   public onSubmit() {
@@ -29,7 +32,6 @@ export class LoginComponent implements OnInit {
       localStorage.setItem('userName', this.username);
       this.backendService.getUserDetails(this.username).subscribe((response) => {
         const userDetails = response['objects'][0];
-        console.log(this.cookieService.get('session'));
         localStorage.setItem('userRole', userDetails['role']);
       }, (error) => {
         this.notificationService.error('Could not get user details');
