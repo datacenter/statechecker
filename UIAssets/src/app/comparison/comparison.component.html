@@ -8,7 +8,7 @@
     <button class="btn btn--icon btn--small btn--primary" (click)='getComparisons()'>
       <span class="icon-refresh"></span>
     </button>
-    <button *ngIf="userRole == 0" class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
+    <button *ngIf="userRole == 0 || app_mode" class="btn btn--icon btn--small btn--success" (click)='openAddModal(addtemplate)'>
       <span class="icon-add"></span>
     </button>
   </h4>
