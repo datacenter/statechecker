@@ -3,6 +3,7 @@ import {NotificationsService} from "angular2-notifications";
 import {BsModalRef, BsModalService} from "ngx-bootstrap";
 import {Definition, DefinitionList} from "../_model/definition";
 import {BackendService} from "../_service/backend.service";
+import {environment} from '../../environments/environment';
 
 @Component({
   templateUrl: './definition.component.html',
@@ -20,12 +21,14 @@ export class DefinitionComponent implements OnInit {
   managedObjects: any[];
   definitionSort: any;
   userRole: number;
+  app_mode:boolean ;
 
   constructor(private backendService: BackendService, private notificationService: NotificationsService,
               private modalService: BsModalService) {
     this.loadingMessage = 'Loading definitions';
     this.definitionSort = this.backendService.prefs.definition_sort;
     this.userRole = parseInt(localStorage.getItem('userRole'));
+    this.app_mode = environment.app_mode ;
   }
 
   ngOnInit(): void {
