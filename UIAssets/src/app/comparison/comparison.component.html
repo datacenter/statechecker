@@ -96,7 +96,7 @@
                   <a class="btn btn--small btn--icon btn--primary" [routerLink]="['/comparison', row._id]">
                     <span class="icon-search"></span>
                   </a>
-                  <a *ngIf="userRole == 0" class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
+                  <a *ngIf="userRole == 0 || app_mode" class="btn btn--small btn--icon btn--negative" (click)='openModal(deletetemplate, row)'>
                     <span class="icon-trash"></span>
                   </a>
                 </ng-template>

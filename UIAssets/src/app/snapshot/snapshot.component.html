@@ -101,12 +101,12 @@
                       <span class="icon-search"></span>
                     </span>
                   </a>
-                  <a *ngIf="userRole == 0" class="btn btn--small btn--icon" title="Download" (click)='fileDownloadHandler(row)'>
+                  <a *ngIf="userRole == 0 || app_mode" class="btn btn--small btn--icon" title="Download" (click)='fileDownloadHandler(row)'>
                     <span data-balloon="Download" data-balloon-pos="left">
                       <span class="icon-download-contain"></span>
                     </span>
                   </a>
-                  <a *ngIf="userRole == 0" class="btn btn--small btn--icon btn--negative" title="Delete"
+                  <a *ngIf="userRole == 0 || app_mode" class="btn btn--small btn--icon btn--negative" title="Delete"
                      (click)='openModal(deletetemplate, row)'>
                     <span data-balloon="Delete" data-balloon-pos="left">
                       <span class="icon-trash"></span>
