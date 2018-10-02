@@ -57,6 +57,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     if (this.app_mode) {
       this.app_status = 'Waiting for tokens';
+      localStorage.setItem('userRole','0') ;
     } else {
       this.app_status = 'Starting App Components';
     }
