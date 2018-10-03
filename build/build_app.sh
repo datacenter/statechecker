@@ -106,11 +106,13 @@ RUN \$SRC_DIR/build/build_frontend.sh -r \
 
 WORKDIR \$SRC_DIR/Service
 CMD \$SRC_DIR/Service/start.sh
+EXPOSE 443/tcp
 EOL
     # build container image
     local cmd="docker build -t $external_docker_image_name -f $dockerfile ."
     log "executing docker build: $cmd"
     eval $cmd
+    rm -f $dockerfile
 }
 
 # used to prep container image with bundled src code - executed from within container after git pull
