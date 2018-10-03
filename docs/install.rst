@@ -39,12 +39,27 @@ Pre-build OVA
 
 .. warning:: Details to come
 
-Manual Install
---------------
+Deployment
+----------
 
 The app has been developed to be deployed as an all-in-one container. This relaxes the requirements
-on the host machine as everything will be dynamically installed when the container is built.  The
-only requirements on the host/VM is the following:
+on the host machine as all dependencies are already installed within the container.  To deploy the
+app in ``standalone`` mode, install docker and execute the following command:
+
+.. code-block:: bash
+
+    docker run --name statechecker -p 5000:443 -d agccie/statechecker:latest
+
+The container will be pulled from Dockerhub and started with an HTTPS web server running on port 
+**5000**. The application can be access via `http://localhost:5000 <http://localhost:5000>`_.
+
+Deployment (Development)
+------------------------
+
+The application can also be deployed in ``standalone`` mode by manually building the container and
+mounting the source code into the appropriate directories. Similar to the all-in-one approach, all
+dependencies are still installed within the container so the host machine only requires the
+following:
 
 - git
 - docker
@@ -69,6 +84,7 @@ respectively.
     $ ./statechecker/build/build_app.sh -h
 
     Help documentation for ./statechecker/build/build_app.sh
+        -a [name] build all-in-one container image (used for creating docker hub image only)
         -i [image] docker image to bundled into app (.tgz format)
         -h display this help message
         -k [file] private key uses for signing app
