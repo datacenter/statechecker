@@ -51,7 +51,7 @@ app in ``standalone`` mode, install docker and execute the following command:
     docker run --name statechecker -p 5000:443 -d agccie/statechecker:latest
 
 The container will be pulled from Dockerhub and started with an HTTPS web server running on port 
-**5000**. The application can be access via `http://localhost:5000 <http://localhost:5000>`_.
+**5000**. The application can be access via `https://localhost:5000 <https://localhost:5000>`_.
 
 Deployment (Development)
 ------------------------
