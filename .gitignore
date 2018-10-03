@@ -12,6 +12,7 @@ pytest.ini
 aci_app_packager.log
 *.aci
 *.mp4
+.tmpDocker
 
 # ignore auto-copied app.json to Service/ or UIAssets/
 Service/app.json
