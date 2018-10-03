@@ -13,8 +13,11 @@ private_key=""
 enable_proxy="0"
 relax_build_checks="0"
 build_standalone="0"
+build_all_in_one="0"
 standalone_http_port="5000"
 standalone_https_port="5001"
+docker_image_name=""            # set by build_standalone_container
+external_docker_image_name=""   # set by user arg when using -l option
 
 # create version.txt with commit info
 function add_version() {
@@ -28,10 +31,10 @@ function add_version() {
     git rev-parse --abbrev-ref HEAD >> ./version.txt
 }
 
-# build and deploy standalone container
+# build development standalone container
 function build_standalone_container() {
     set -e
-    log "deploying standalone container $APP_VENDOR_DOMAIN/$APP_ID:$APP_VERSION"
+    log "building standalone container $APP_VENDOR_DOMAIN/$APP_ID:$APP_VERSION"
     add_version
 
     # cp app.json to Service directory for consumption by config.py
@@ -40,17 +43,23 @@ function build_standalone_container() {
 
     # build docker container
     log "building container"
-    docker_name=`echo "aci/$APP_ID:$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
-    container_name=`echo "$APP_ID\_$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
+    docker_image_name=`echo "aci/$APP_ID:$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
     ba="--build-arg APP_MODE=0 "
     if [ "$enable_proxy" == "1" ] ; then
         if [ "$https_proxy" ] ; then ba="$ba --build-arg https_proxy=$https_proxy" ; fi
         if [ "$http_proxy" ] ; then ba="$ba --build-arg http_proxy=$http_proxy" ; fi
         if [ "$no_proxy" ] ; then ba="$ba --build-arg no_proxy=$no_proxy" ; fi
     fi
-    log "cmd: docker build -t $docker_name $ba ./build/"
-    docker build -t $docker_name $ba ./build/
+    log "cmd: docker build -t $docker_image_name $ba ./build/"
+    docker build -t $docker_image_name $ba ./build/
 
+}
+
+# run container previously built by build_standalone_container
+function run_standalone_container() {
+
+    log "deploying standalone container $APP_VENDOR_DOMAIN/$APP_ID:$APP_VERSION"
+    container_name=`echo "$APP_ID\_$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
     # run the container with volume mount based on BASE_DIR and user provided http and https ports
     local cmd="docker run -dit --restart always --name $container_name "
     cmd="$cmd -v $BASE_DIR/Service:/home/app/src/Service:ro "
@@ -62,12 +71,49 @@ function build_standalone_container() {
     if [ "$standalone_https_port" -gt "0" ] ; then
         cmd="$cmd -p $standalone_https_port:443 "
     fi
-    cmd="$cmd $docker_name "
+    cmd="$cmd $docker_image_name "
     log "starting container: $cmd"
     eval $cmd
 }
 
-# build aci app
+# used to prep container image with bundled src code - executed from within container after git pull
+# trigger build of container image that can be pushed to docker hub.  This first creates a docker 
+# image with the required dependencies using the ./build/Dockerfile. Then, it creates a new
+# Dockerfile that references the new image, pulls the latest image from github within the container,
+# executes the local internal build, and saves the finally container.
+function build_all_in_one_image(){
+
+    log "building all-in-one container image"
+    set -e
+    dockerfile=".tmpDocker"
+    build_standalone_container
+    # create tmp dockerfile
+cat >$dockerfile <<EOL
+FROM $docker_image_name
+ENV SRC_DIR="/home/app/src"
+# copy src into container
+RUN mkdir -p \$SRC_DIR/Service && mkdir -p \$SRC_DIR/UIAssets.src && mkdir -p \$SRC_DIR/build
+COPY ./Service/ \$SRC_DIR/Service/
+COPY ./UIAssets/ \$SRC_DIR/UIAssets.src/
+COPY ./build/ \$SRC_DIR/build/
+# trigger frontend build
+RUN \$SRC_DIR/build/build_frontend.sh -r \
+    -s \$SRC_DIR/UIAssets.src \
+    -d \$SRC_DIR/UIAssets \
+    -t /tmp/build \
+    -m standalone && \
+    rm -rf /root/.npm && rm -rf /usr/lib/node_modules && rm -rf /tmp/build 
+
+WORKDIR \$SRC_DIR/Service
+CMD \$SRC_DIR/Service/start.sh
+EOL
+    # build container image
+    local cmd="docker build -t $external_docker_image_name -f $dockerfile ."
+    log "executing docker build: $cmd"
+    eval $cmd
+}
+
+# used to prep container image with bundled src code - executed from within container after git pull
 function build_app() {
     set -e
     log "building application $APP_VENDOR_DOMAIN/$APP_ID"
@@ -139,20 +185,20 @@ function build_app() {
         cp $docker_image > $TMP_DIR/$APP_ID/Image/aci_appcenter_docker_image.tgz
     else
         log "building container"
-        docker_name=`echo "aci/$APP_ID:$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
+        docker_image_name=`echo "aci/$APP_ID:$APP_VERSION" | tr '[:upper:]' '[:lower:]'`
         if [ "$enable_proxy" == "1" ] ; then
             ba=""
             if [ "$https_proxy" ] ; then ba="$ba --build-arg https_proxy=$https_proxy" ; fi
             if [ "$http_proxy" ] ; then ba="$ba --build-arg http_proxy=$http_proxy" ; fi
             if [ "$no_proxy" ] ; then ba="$ba --build-arg no_proxy=$no_proxy" ; fi
-            log "cmd: docker build -t $docker_name $ba --build-arg APP_MODE=1 ./"
-            docker build -t $docker_name $ba --build-arg APP_MODE=1 ./build/
+            log "cmd: docker build -t $docker_image_name $ba --build-arg APP_MODE=1 ./"
+            docker build -t $docker_image_name $ba --build-arg APP_MODE=1 ./build/
         else
-            log "cmd: docker build -t $docker_name --build-arg APP_MODE=1 ./"
-            docker build -t $docker_name --build-arg APP_MODE=1 ./build/
+            log "cmd: docker build -t $docker_image_name --build-arg APP_MODE=1 ./"
+            docker build -t $docker_image_name --build-arg APP_MODE=1 ./build/
         fi
         log "saving docker container image to application"
-        docker save $docker_name | gzip -c > $TMP_DIR/$APP_ID/Image/aci_appcenter_docker_image.tgz
+        docker save $docker_image_name | gzip -c > $TMP_DIR/$APP_ID/Image/aci_appcenter_docker_image.tgz
     fi
 
     # execute packager
@@ -173,10 +219,12 @@ function build_app() {
     set +e
 }
 
+
 # help options
 function display_help() {
     echo ""
     echo "Help documentation for $self"
+    echo "    -a [name] build all-in-one container image (used for creating docker hub image only)"
     echo "    -i [image] docker image to bundled into app (.tgz format)"
     echo "    -h display this help message"
     echo "    -k [file] private key uses for signing app"
@@ -191,7 +239,7 @@ function display_help() {
 }
 
 
-optspec=":i:v:k:p:P:hxrs"
+optspec=":i:v:k:p:P:a:hxrs"
 while getopts "$optspec" optchar; do
   case $optchar in
     i)
@@ -250,6 +298,10 @@ while getopts "$optspec" optchar; do
     s)
         build_standalone="1"
         ;;
+    a)
+        build_all_in_one="1"
+        external_docker_image_name=$OPTARG
+        ;;
     h)
         display_help
         exit 0
@@ -269,6 +321,9 @@ done
 if [ "$build_standalone" == "1" ] ; then
     check_build_tools "backend"
     build_standalone_container
+    run_standalone_container
+elif [ "$build_all_in_one" == "1" ] ; then
+    build_all_in_one_image
 else
     check_build_tools 
     build_app

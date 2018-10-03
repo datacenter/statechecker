@@ -289,12 +289,12 @@ function main(){
         log "checking for frontend UI build"
         local cmd="$APP_DIR/src/build/build_frontend.sh -r -s $src -d $dst -t $tmp -m standalone"
         cmd="$cmd >> $LOG_FILE 2>> $LOG_FILE"
-        # bail out if frontend src files don't exist or already built
-        if [ ! -d $src ] ; then
-            set_status "frontend source ($src) does not exist"
-            exit_script
-        fi
         if [ -z "$(ls -A $dst)" ] ; then
+            # bail out if frontend src files don't exist or already built
+            if [ ! -d $src ] ; then
+                set_status "frontend source ($src) does not exist"
+                exit_script
+            fi
             log "building: $cmd"
             set_status "building frontend UI, please wait"
             eval $cmd
