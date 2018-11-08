@@ -52,9 +52,9 @@ implemented to allow it to run on the APIC.  For the proxy, all requests are sen
 - **data**
   The original data sent via POST, PATCH requests.
 
-The user most also have admin read access on the APIC and use the APIC aaaLogin api to acquire a 
-``token`` and ``urlToken`` for accessing the app API. The ``token`` must be included in all 
-requests as a cookie named **APIC-Cookie** or an HTTP header named **DevCookie**.  The ``urlToken`` 
+The user must also have admin read access on the APIC and use the APIC aaaLogin api to acquire a 
+``token`` for accessing the app API. The ``token`` must be included in all requests as a cookie 
+named **APIC-Cookie** or an HTTP header named **DevCookie**.  The ``urlToken`` 
 must be included in all requests as a url parameter named **url-token** or HTTP header named 
 **APIC-Challenge**
 
@@ -62,42 +62,24 @@ For example:
 
 .. code-block:: bash
 
-    # login
-    curl -kX POST "https://<apic-ip>/api/aaaLogin.json?gui-token-request=yes" \
+    # login - update credentials with appropriate username and password
+    export token=`curl -skX POST "https://127.0.0.1/api/aaaLogin.json" \
         -H "Content-Type: application/json" \
-        -d '{"aaaUser":{"attributes":{"name":"<username>", "pwd":"<password>"}}}' \
-        | python -m json.tool
+        -d '{"aaaUser":{"attributes":{"name":"username", "pwd":"password"}}}' \
+            | python -m json.tool | grep token | cut -d'"' -f4`
 
-    {"imdata": [
-        {"aaaLogin": {
-                "attributes": {
-                    "buildTime": "Thu Apr 19 17:17:39 PDT 2018",
-                    "changePassword": "no",
-                    "creationTime": "1536530859",
-                    "firstLoginTime": "1536530859",
-                    "firstName": "",
-                    "guiIdleTimeoutSeconds": "65525",
-                    "lastName": "",
-                    "maximumLifetimeSeconds": "86400",
-                    "node": "topology/pod-1/node-1",
-                    "refreshTimeoutSeconds": "9600",
-                    "remoteUser": "false",
-                    "restTimeoutSeconds": "90",
-                    "sessionId": "weTl7S7hSx6CQ4KkkLZ21g==",
-                    "siteFingerprint": "B4NoUf+/99ZZsL5K",
-                    "token": "OxAAAAAAAAAAAAAAAAAAAHQGVL9YKcIy2...", <---- token
-                    "unixUserId": "15374",
-                    "urlToken": "2f70d689cb5fd9aa3ff63046...",  <--------- urlToken
-                    "userName": "admin",
-                    "version": "3.1(2o)"
-                },
-    <snip>
+    # read local app fabrics objects: /api/aci/fabrics
+    curl --cookie "APIC-cookie=$token" \
+        --header "DevCookie: $token" \
+        --header "Content-Type: application/json" \
+        -skX POST "https://127.0.0.1/appcenter/Cisco/StateChangeChecker/proxy.json" \
+        -d '{
+     	    "method": "GET",
+     	    "url":"/api/aci/fabrics",
+     	    "data": {}
+        }'
 
-    # access app api
-    curl --header "DevCookie: AAAAAAAAAAAAAAAAAAAHQGVL9YKcIy2..." \
-    	 --header "APIC-Challenge: 2f70d689cb5fd9aa3ff63046..." \
-    	 -kX POST "https://<apic-ip>/appcenter/Cisco/StateChangeChecker/proxy.json" \
-    	 -d '{"url": "/api/aci/snapshots", "method":"GET"}'
+    {"count":1,"objects":[{"apic_cert":"/home/app/credentials/plugin.key","apic_hostname":"https://172.17.0.1","apic_username":"Cisco_StateChangeChecker","controllers":[],"event_count":0,"events":[],"fabric":"esc-aci-fab4","max_events":1024,"ssh_username":"admin"}]}
  
 
 More information on using the Cisco API is available on `Cisco APIC REST API Configuration Guide
