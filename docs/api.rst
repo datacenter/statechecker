@@ -54,9 +54,7 @@ implemented to allow it to run on the APIC.  For the proxy, all requests are sen
 
 The user must also have admin read access on the APIC and use the APIC aaaLogin api to acquire a 
 ``token`` for accessing the app API. The ``token`` must be included in all requests as a cookie 
-named **APIC-Cookie** or an HTTP header named **DevCookie**.  The ``urlToken`` 
-must be included in all requests as a url parameter named **url-token** or HTTP header named 
-**APIC-Challenge**
+named **APIC-Cookie** or an HTTP header named **DevCookie**.  
 
 For example:
 
