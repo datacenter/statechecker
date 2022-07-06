@@ -31,7 +31,7 @@
     "angular2-notifications": "^1.0.4",
     "core-js": "^2.5.7",
     "inquirer": "^6.2.0",
-    "moment": "^2.22.2",
+    "moment": "^2.29.4",
     "ng-diff-match-patch": "^3.0.1",
     "ngx-bootstrap": "^3.0.1",
     "ngx-cookie-service": "^1.0.10",
